@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<meta charset="UTF-8">
+<title>保存フォルダ</title>
+
+{% if is_guest %}
+<div class="alert-box">
+ログインすると論文を保存できます。
+</div>
+{% endif %}
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f7f8fb;
+padding:40px;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+}
+
+.folder{
+background:white;
+padding:20px;
+margin-bottom:12px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.folder a{
+font-size:20px;
+text-decoration:none;
+color:#2563eb;
+font-weight:bold;
+}
+
+.alert-box {
+    margin: 16px 0;
+    padding: 12px;
+    background: #fef3c7;
+    border-radius: 8px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>保存フォルダ</h1>
+
+<a href="/">トップへ</a>
+
+{% for folder_name, papers in folders.items() %}
+
+<div class="folder">
+
+<a href="/saved/{{ folder_name }}">
+📁 {{ folder_name }} ({{ papers|length }})
+
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</body>
+</html>

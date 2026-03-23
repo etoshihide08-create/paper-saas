@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>検索結果</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f7f8fb;
+            color: #222;
+            margin: 0;
+            padding: 40px 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        h2 {
+            margin: 0 0 12px 0;
+            font-size: 22px;
+            line-height: 1.5;
+        }
+
+        h2 a {
+            color: #111827;
+            text-decoration: none;
+        }
+
+        h2 a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+
+        .english-title {
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4b5563;
+        }
+
+        .score-line {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #b45309;
+        }
+
+        .summary-box {
+            margin-top: 16px;
+            background: #f0f7ff;
+            border-radius: 12px;
+            padding: 16px;
+            white-space: pre-wrap;
+            line-height: 1.7;
+        }
+
+        .saved-badge {
+            display: inline-block;
+            margin-top: 12px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 999px;
+        }
+
+        .action-row {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .like-button {
+            border: none;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .like-button:hover {
+            opacity: 0.92;
+        }
+
+        .like-button.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        a.button {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a.button:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="button">← 戻る</a>
+
+        <h1>検索結果</h1>
+        <p>入力キーワード: {{ keyword }}</p>
+        <p>検索語: {{ converted_keyword }}</p>
+
+        {% if papers %}
+            {% for paper in papers %}
+                <div class="card">
+                    <h2>
+                        <a href="/paper?id={{ paper.id }}" class="paper-link">
+                            {{ paper.jp_title or paper.title }}
+                        </a>
+                    </h2>
+
+                    {% if paper.jp_title %}
+                        <div class="english-title">英語タイトル: {{ paper.title }}</div>
+                    {% endif %}
+
+                    <div class="meta">PubMed ID: {{ paper.id }}</div>
+                    <div class="meta">著者: {{ paper.authors }}</div>
+                    <div class="meta">雑誌: {{ paper.journal }}</div>
+                    <div class="meta">公開日: {{ paper.pubdate }}</div>
+
+                    {% if paper.is_saved %}
+                        <div class="saved-badge">保存済み要約あり</div>
+                    {% endif %}
+
+                    {% if paper.clinical_score %}
+                        <div class="score-line">臨床参考度: {{ paper.clinical_score }} / 5.0</div>
+                    {% endif %}
+
+                    {% if paper.summary_jp %}
+                        <div class="summary-box">{{ paper.summary_jp }}</div>
+                    {% endif %}
+
+                    <div class="action-row">
+                        <button
+                            type="button"
+                            class="like-button"
+                            data-pubmed-id="{{ paper.id }}"
+                            onclick="addLike('{{ paper.id }}', this)"
+                        >
+                            👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>論文が見つかりませんでした。</p>
+        {% endif %}
+    </div>
+
+<script>
+    const SCROLL_KEY = "search_scroll_y";
+    const SEARCH_URL_KEY = "search_scroll_url";
+
+    function hasLiked(pubmedId) {
+        const liked = localStorage.getItem("liked_" + pubmedId);
+        return liked === "1";
+    }
+
+    function setLiked(pubmedId) {
+        localStorage.setItem("liked_" + pubmedId, "1");
+    }
+
+    function disableLikedButtons() {
+        const buttons = document.querySelectorAll(".like-button");
+
+        buttons.forEach((button) => {
+            const pubmedId = button.dataset.pubmedId;
+
+            if (hasLiked(pubmedId)) {
+                button.classList.add("disabled");
+                button.disabled = true;
+            }
+        });
+    }
+
+    async function addLike(pubmedId, button) {
+        if (hasLiked(pubmedId)) {
+            button.classList.add("disabled");
+            button.disabled = true;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/like/${pubmedId}`, {
+                method: "POST"
+            });
+
+            const data = await response.json();
+
+            if (data.ok) {
+                const countSpan = button.querySelector(".like-count");
+                if (countSpan) {
+                    countSpan.textContent = data.likes;
+                }
+
+                setLiked(pubmedId);
+                button.classList.add("disabled");
+                button.disabled = true;
+            }
+        } catch (error) {
+            alert("いいねの更新に失敗しました");
+        }
+    }
+
+    function saveSearchState() {
+        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+        sessionStorage.setItem(SEARCH_URL_KEY, window.location.href);
+    }
+
+    function restoreSearchScroll() {
+        const savedUrl = sessionStorage.getItem(SEARCH_URL_KEY);
+        const savedY = sessionStorage.getItem(SCROLL_KEY);
+
+        if (savedUrl === window.location.href && savedY !== null) {
+            window.scrollTo(0, parseInt(savedY, 10));
+        }
+    }
+
+    document.querySelectorAll(".paper-link").forEach((link) => {
+        link.addEventListener("click", saveSearchState);
+    });
+
+    window.addEventListener("beforeunload", saveSearchState);
+    window.addEventListener("load", restoreSearchScroll);
+    window.addEventListener("load", disableLikedButtons);
+</script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ folder_name }}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f7f8fb;
+            color: #222;
+            margin: 0;
+            padding: 40px 16px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .top-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+
+        .sort-box {
+            margin-bottom: 20px;
+        }
+
+        .sort-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .paper-card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .paper-title {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.5;
+        }
+
+        .paper-title a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .paper-title a:hover {
+            text-decoration: underline;
+        }
+
+        .action-row {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .favorite-button {
+            border: none;
+            background: #fff7ed;
+            color: #c2410c;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .favorite-button:hover {
+            opacity: 0.92;
+        }
+
+        .favorite-button.active {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .like-button {
+            border: none;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .like-button:hover {
+            opacity: 0.92;
+        }
+
+        .like-button.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .public-button {
+            border: none;
+            background: #ecfdf5;
+            color: #047857;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .public-button:hover {
+            opacity: 0.92;
+        }
+
+        .public-button.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .score-box {
+            margin-top: 18px;
+            background: #fff8e8;
+            border-radius: 14px;
+            padding: 16px 18px;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .score-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #b45309;
+            margin-bottom: 8px;
+        }
+
+        .score-stars {
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        .score-number {
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .score-reason-title {
+            margin-top: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #b45309;
+        }
+
+        .score-reason {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        .score-note {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .summary-box {
+            margin-top: 18px;
+            background: #f8fafc;
+            border-left: 5px solid #2563eb;
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 8px;
+        }
+
+        .summary-text {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .meta {
+            margin-top: 18px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .jp-box {
+            margin-top: 18px;
+            background: #fcfcfd;
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
+        .jp-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .jp-text {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .empty-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .english-title-box {
+            margin-top: 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .english-title-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .english-title-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4b5563;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/saved" class="top-link">← フォルダ一覧へ戻る</a>
+
+        <h1>フォルダ: {{ folder_name }}</h1>
+
+        <div class="sort-box">
+            <form method="get" action="/saved/{{ folder_name }}" class="sort-form">
+                <label for="sort">並び替え:</label>
+                <select name="sort" id="sort" class="sort-select" onchange="this.form.submit()">
+                    <option value="saved" {% if sort == "saved" %}selected{% endif %}>保存順</option>
+                    <option value="score" {% if sort == "score" %}selected{% endif %}>臨床参考度順</option>
+                    <option value="favorite" {% if sort == "favorite" %}selected{% endif %}>お気に入り順</option>
+                </select>
+            </form>
+        </div>
+
+        {% if papers %}
+            {% for paper in papers %}
+                <div class="paper-card">
+                    <h2 class="paper-title">
+                        <a href="/paper?id={{ paper.pubmed_id }}">
+                            {{ paper.jp_title or paper.title }}
+                        </a>
+                    </h2>
+
+                    {% if paper.jp_title %}
+                    <div class="english-title-box">
+                        <div class="english-title-label">英語タイトル</div>
+                        <div class="english-title-text">{{ paper.title }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="action-row">
+                        <button
+                            type="button"
+                            class="favorite-button {% if paper.is_favorite %}active{% endif %}"
+                            onclick="toggleFavorite('{{ paper.pubmed_id }}', this)"
+                        >
+                            {% if paper.is_favorite %}
+                                ★ お気に入り済み
+                            {% else %}
+                                ☆ お気に入りに追加
+                            {% endif %}
+                        </button>
+
+                        <button
+                            type="button"
+                            class="like-button"
+                            data-pubmed-id="{{ paper.pubmed_id }}"
+                            onclick="addLike('{{ paper.pubmed_id }}', this)"
+                        >
+                            👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="public-button {% if paper.is_public %}active{% endif %}"
+                            onclick="togglePublic('{{ paper.pubmed_id }}', this)"
+                        >
+                            {% if paper.is_public %}
+                                公開中
+                            {% else %}
+                                公開する
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    {% if paper.clinical_score %}
+                    <div class="score-box">
+                        <div class="score-label">【臨床参考度】</div>
+                        <div class="score-stars">
+                            {% set score = paper.clinical_score|float %}
+                            {% if score >= 0.5 %}★ {% else %}☆ {% endif %}
+                            {% if score >= 1.5 %}★ {% else %}☆ {% endif %}
+                            {% if score >= 2.5 %}★ {% else %}☆ {% endif %}
+                            {% if score >= 3.5 %}★ {% else %}☆ {% endif %}
+                            {% if score >= 4.5 %}★{% else %}☆{% endif %}
+                        </div>
+                        <div class="score-number">{{ paper.clinical_score }} / 5.0</div>
+                        <div class="score-note">※ abstractベースの参考指標です</div>
+
+                        {% if paper.clinical_reason %}
+                        <div class="score-reason-title">【参考度の理由】</div>
+                        <div class="score-reason">{{ paper.clinical_reason }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if paper.summary_jp %}
+                    <div class="summary-box">
+                        <div class="summary-label">要点要約</div>
+                        <div class="summary-text">{{ paper.summary_jp }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="meta">
+                        <div>PubMed ID: {{ paper.pubmed_id }}</div>
+                        <div>著者: {{ paper.authors }}</div>
+                        <div>雑誌: {{ paper.journal }}</div>
+                        <div>公開日: {{ paper.pubdate }}</div>
+                    </div>
+
+                    {% if paper.jp %}
+                    <div class="jp-box">
+                        <div class="jp-label">日本語訳</div>
+                        <div class="jp-text">{{ paper.jp }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-card">
+                このフォルダにはまだ論文がありません。
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function hasLiked(pubmedId) {
+            const liked = localStorage.getItem("liked_" + pubmedId);
+            return liked === "1";
+        }
+
+        function setLiked(pubmedId) {
+            localStorage.setItem("liked_" + pubmedId, "1");
+        }
+
+        function disableLikedButtons() {
+            const buttons = document.querySelectorAll(".like-button");
+
+            buttons.forEach((button) => {
+                const pubmedId = button.dataset.pubmedId;
+
+                if (hasLiked(pubmedId)) {
+                    button.classList.add("disabled");
+                    button.disabled = true;
+                }
+            });
+        }
+
+        async function addLike(pubmedId, button) {
+            if (hasLiked(pubmedId)) {
+                button.classList.add("disabled");
+                button.disabled = true;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/like/${pubmedId}`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    const countSpan = button.querySelector(".like-count");
+                    if (countSpan) {
+                        countSpan.textContent = data.likes;
+                    }
+
+                    setLiked(pubmedId);
+                    button.classList.add("disabled");
+                    button.disabled = true;
+                }
+            } catch (error) {
+                alert("いいねの更新に失敗しました");
+            }
+        }
+
+        async function toggleFavorite(pubmedId, button) {
+            try {
+                const response = await fetch(`/favorite/${pubmedId}`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    if (data.is_favorite) {
+                        button.textContent = "★ お気に入り済み";
+                        button.classList.add("active");
+                    } else {
+                        button.textContent = "☆ お気に入りに追加";
+                        button.classList.remove("active");
+                    }
+                }
+            } catch (error) {
+                alert("お気に入りの更新に失敗しました");
+            }
+        }
+
+        async function togglePublic(pubmedId, button) {
+            try {
+                const response = await fetch(`/public/${pubmedId}`, {
+                    method: "POST"
+                });
+
+                const data = await response.json();
+
+                if (data.ok) {
+                    if (data.is_public) {
+                        button.textContent = "公開中";
+                        button.classList.add("active");
+                    } else {
+                        button.textContent = "公開する";
+                        button.classList.remove("active");
+                    }
+                }
+            } catch (error) {
+                alert("公開設定の更新に失敗しました");
+            }
+        }
+
+        disableLikedButtons();
+    </script>
+</body>
+</html>

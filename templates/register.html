@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>新規登録</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 60px 16px;
+            color: #222;
+        }
+
+        .card {
+            max-width: 520px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.92;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #b91c1c;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>新規登録</h1>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form action="/register" method="post">
+            <div class="field">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="field">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit">登録する</button>
+        </form>
+
+        <a href="/login" class="link">ログインはこちら</a>
+    </div>
+</body>
+</html>

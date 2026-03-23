@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>料金プラン</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 48px 16px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .top-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .top-link:hover {
+            text-decoration: underline;
+        }
+
+        .hero-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 34px;
+            line-height: 1.4;
+        }
+
+        .hero-lead {
+            color: #555;
+            line-height: 1.8;
+            font-size: 16px;
+            margin-bottom: 0;
+        }
+
+        .plan-info-box {
+            margin-top: 18px;
+            padding: 14px 16px;
+            background: #eef2ff;
+            border-radius: 14px;
+            color: #1f2937;
+            line-height: 1.9;
+            font-size: 14px;
+        }
+
+        .billing-toggle-wrap {
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .billing-label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 700;
+        }
+
+        .billing-toggle {
+            display: inline-flex;
+            background: #eef2ff;
+            padding: 4px;
+            border-radius: 999px;
+            gap: 4px;
+        }
+
+        .billing-btn {
+            border: none;
+            background: transparent;
+            color: #374151;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .billing-btn.active {
+            background: #111827;
+            color: #fff;
+        }
+
+        .billing-note {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .referral-apply-card,
+        .referral-own-card,
+        .compare-card,
+        .notes-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-top: 24px;
+        }
+
+        .referral-apply-card h3,
+        .referral-own-card h3,
+        .compare-card h2,
+        .notes-card h2 {
+            margin-top: 0;
+        }
+
+        .referral-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .referral-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .referral-button {
+            border: none;
+            background: #111827;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .referral-button:hover {
+            opacity: 0.92;
+        }
+
+        .referral-success {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .referral-error {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .referral-toggle {
+            border: none;
+            background: #111827;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .referral-toggle:hover {
+            opacity: 0.92;
+        }
+
+        .referral-code-label {
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .referral-code-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .referral-code-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #f9fafb;
+        }
+
+        .referral-copy-btn {
+            border: none;
+            background: #2563eb;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .referral-copy-btn:hover {
+            opacity: 0.92;
+        }
+
+        .referral-note {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: stretch;
+            margin-top: 24px;
+        }
+
+        .plan-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 26px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            border: 2px solid transparent;
+        }
+
+        .plan-card.current {
+            border-color: #2563eb;
+        }
+
+        .plan-card.recommended {
+            border-color: #16a34a;
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            min-height: 28px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge-current {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-recommended {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .plan-name {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .price-line {
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 46px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .plan-period {
+            font-size: 18px;
+            color: #444;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .plan-sub {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 18px;
+            line-height: 1.7;
+            min-height: 52px;
+        }
+
+        .plan-footer {
+            margin: 8px 0 18px 0;
+        }
+
+        .plan-footer form {
+            margin: 0;
+        }
+
+        .plan-button {
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            padding: 13px 16px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            background: #111827;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .plan-button:hover {
+            opacity: 0.92;
+        }
+
+        .plan-button.secondary {
+            background: #2563eb;
+        }
+
+        .plan-button.current {
+            background: #6b7280;
+            cursor: default;
+        }
+
+        .feature-list {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.95;
+            color: #333;
+            font-size: 15px;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        th {
+            font-size: 14px;
+            color: #374151;
+            background: #f8fafc;
+        }
+
+        .notes-card p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .annual-only {
+            display: none;
+        }
+
+        .monthly-only {
+            display: inline;
+        }
+
+        body.annual-mode .annual-only {
+            display: inline;
+        }
+
+        body.annual-mode .monthly-only {
+            display: none;
+        }
+
+        @media (max-width: 980px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .plan-name {
+                font-size: 28px;
+            }
+
+            .plan-price {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="top-link">← トップへ戻る</a>
+
+        <div class="hero-card">
+            <h1 class="hero-title">プランを選択</h1>
+            <p class="hero-lead">
+                使用回数・保存数・ランキング表示などの制限が変わります。
+            </p>
+
+            {% if current_user %}
+            <div class="plan-info-box">
+                <div><strong>現在のプラン：</strong>{{ current_plan }}</div>
+
+                {% if trial_days_left %}
+                <div><strong>無料体験：</strong>残り {{ trial_days_left }} 日</div>
+                {% endif %}
+
+                {% if plan_renews_at %}
+                <div><strong>次回更新：</strong>{{ plan_renews_at }}</div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="plan-info-box">
+                <div><strong>現在の状態：</strong>未登録</div>
+            </div>
+            {% endif %}
+
+            <div class="billing-toggle-wrap">
+                <span class="billing-label">料金表示</span>
+
+                <div class="billing-toggle">
+                    <button type="button" class="billing-btn active" id="monthly-btn" onclick="setBillingMode('monthly')">
+                        月額
+                    </button>
+                    <button type="button" class="billing-btn" id="annual-btn" onclick="setBillingMode('annual')">
+                        年額
+                    </button>
+                </div>
+
+                <span class="billing-note">年額は10か月分の価格です</span>
+            </div>
+        </div>
+
+        {% if current_user %}
+        <div class="referral-apply-card">
+            <h3>紹介コードを使う</h3>
+
+            <form action="/apply-referral" method="post" class="referral-form">
+                <input type="text" name="ref_code" class="referral-input" placeholder="紹介コードを入力">
+                <button type="submit" class="referral-button">適用する</button>
+            </form>
+
+            {% if referral_message %}
+                <div class="{% if referral_success %}referral-success{% else %}referral-error{% endif %}">
+                    {{ referral_message }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="referral-own-card">
+            <h3>紹介する</h3>
+
+            <button type="button" class="referral-toggle" onclick="toggleReferralBox()">
+                紹介コードを表示する
+            </button>
+
+            <div id="referral-box" style="display:none;">
+                <div class="referral-code-label">あなたの紹介コード</div>
+
+                <div class="referral-code-row">
+                    <input id="refCode" class="referral-code-input" value="{{ ref_code }}" readonly>
+                    <button type="button" class="referral-copy-btn" onclick="copyRefCode()">コピー</button>
+                </div>
+
+                <div class="referral-note">
+                    紹介された人は Pro 7日、紹介した人は +7日。延長は最大60日までです。
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="plans-grid">
+            <div class="plan-card {% if current_plan == 'free' or not current_user %}current{% endif %}">
+                <div class="badge-row">
+                    {% if not current_user %}
+                        <span class="badge badge-current">現在の状態</span>
+                    {% elif current_plan == 'free' %}
+                        <span class="badge badge-current">現在のプラン</span>
+                    {% endif %}
+                </div>
+
+                <div class="plan-name">Free</div>
+
+                <div class="price-line">
+                    <span class="plan-price">¥0</span>
+                    <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                </div>
+
+                <div class="plan-sub">まずは試して価値を体験したい人向け</div>
+
+                <div class="plan-footer">
+                    {% if not current_user %}
+                        <a href="/register" class="plan-button secondary">無料ではじめる</a>
+                    {% elif current_plan == 'free' %}
+                        <button class="plan-button current" type="button">利用中</button>
+                    {% else %}
+                        <form action="/set-plan" method="post">
+                            <input type="hidden" name="plan" value="free">
+                            <button class="plan-button" type="submit">Freeに変更</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <ul class="feature-list">
+                    <li>詳細・要約 5回 / 日</li>
+                    <li>総合人気ランキング TOP20</li>
+                    <li>総合臨床参考度ランキング TOP20</li>
+                    <li>保存 10件まで</li>
+                    <li>保存候補・履歴管理</li>
+                </ul>
+            </div>
+
+            <div class="plan-card recommended {% if current_plan == 'pro' %}current{% endif %}">
+                <div class="badge-row">
+                    <span class="badge badge-recommended">おすすめ</span>
+                    {% if current_plan == 'pro' %}
+                        <span class="badge badge-current">現在のプラン</span>
+                    {% endif %}
+                </div>
+
+                <div class="plan-name">Pro</div>
+
+                <div class="price-line">
+                    <span class="plan-price monthly-only">¥1,500</span>
+                    <span class="plan-price annual-only">¥15,000</span>
+                    <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                </div>
+
+                <div class="plan-sub">臨床で継続的に使いたい人向けの主力プラン</div>
+
+                <div class="plan-footer">
+                    {% if not current_user %}
+                        <a href="/login" class="plan-button secondary">ログインしてProを始める</a>
+                    {% elif current_plan == 'pro' %}
+                        <button class="plan-button current" type="button">利用中</button>
+                    {% else %}
+                        <form action="/set-plan" method="post">
+                            <input type="hidden" name="plan" value="pro">
+                            <button class="plan-button secondary" type="submit">
+                                <span class="monthly-only">Proを始める</span>
+                                <span class="annual-only">Pro年額を始める</span>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <ul class="feature-list">
+                    <li>詳細・要約 50回 / 日</li>
+                    <li>総合人気ランキング TOP100</li>
+                    <li>総合臨床参考度ランキング TOP100</li>
+                    <li>保存 150件まで</li>
+                    <li>分野別ランキング 解放予定</li>
+                    <li>7日間無料体験（キャンペーン時は14日）</li>
+                </ul>
+            </div>
+
+            <div class="plan-card {% if current_plan == 'expert' %}current{% endif %}">
+                <div class="badge-row">
+                    {% if current_plan == 'expert' %}
+                        <span class="badge badge-current">現在のプラン</span>
+                    {% endif %}
+                </div>
+
+                <div class="plan-name">Expert</div>
+
+                <div class="price-line">
+                    <span class="plan-price monthly-only">¥4,980</span>
+                    <span class="plan-price annual-only">¥49,800</span>
+                    <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                </div>
+
+                <div class="plan-sub">大学院生・研究者・本格運用向け</div>
+
+                <div class="plan-footer">
+                    {% if not current_user %}
+                        <a href="/login" class="plan-button secondary">ログインしてExpertを始める</a>
+                    {% elif current_plan == 'expert' %}
+                        <button class="plan-button current" type="button">利用中</button>
+                    {% else %}
+                        <form action="/set-plan" method="post">
+                            <input type="hidden" name="plan" value="expert">
+                            <button class="plan-button secondary" type="submit">
+                                <span class="monthly-only">Expertを始める</span>
+                                <span class="annual-only">Expert年額を始める</span>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <ul class="feature-list">
+                    <li>詳細・要約 無制限</li>
+                    <li>総合人気ランキング TOP300</li>
+                    <li>総合臨床参考度ランキング TOP300</li>
+                    <li>保存 無制限</li>
+                    <li>優先処理</li>
+                    <li>ダウンロード機能</li>
+                    <li>研究用の引用整理</li>
+                    <li>要約テンプレ切替（臨床向け / 研究向け）</li>
+                    <li>7日間無料体験（キャンペーン時は14日）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="compare-card">
+            <h2>プラン比較</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>Free</th>
+                        <th>Pro</th>
+                        <th>Expert</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>詳細・要約回数</td>
+                        <td>5回 / 日</td>
+                        <td>50回 / 日</td>
+                        <td>無制限</td>
+                    </tr>
+                    <tr>
+                        <td>総合人気ランキング</td>
+                        <td>TOP20</td>
+                        <td>TOP100</td>
+                        <td>TOP300</td>
+                    </tr>
+                    <tr>
+                        <td>総合臨床参考度ランキング</td>
+                        <td>TOP20</td>
+                        <td>TOP100</td>
+                        <td>TOP300</td>
+                    </tr>
+                    <tr>
+                        <td>保存件数</td>
+                        <td>10件まで</td>
+                        <td>150件まで</td>
+                        <td>無制限</td>
+                    </tr>
+                    <tr>
+                        <td>分野別ランキング</td>
+                        <td>—</td>
+                        <td>対応予定</td>
+                        <td>対応予定</td>
+                    </tr>
+                    <tr>
+                        <td>優先処理</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>○</td>
+                    </tr>
+                    <tr>
+                        <td>ダウンロード機能</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>○</td>
+                    </tr>
+                    <tr>
+                        <td>研究用の引用整理</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>○</td>
+                    </tr>
+                    <tr>
+                        <td>要約テンプレ切替</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>○</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="notes-card">
+            <h2>補足</h2>
+            <p>ProとExpertは通常7日間の無料体験を想定しています。キャンペーン時は14日まで拡張できます。</p>
+            <p>無料体験の期間中は、ProとExpertの間で変更できる設計にすると導入ハードルを下げやすいです。</p>
+            <p>年額は10か月分の価格として表示し、割引を強く見せすぎない構成にしています。</p>
+        </div>
+    </div>
+
+    <script>
+        function setBillingMode(mode) {
+            const body = document.body;
+            const monthlyBtn = document.getElementById("monthly-btn");
+            const annualBtn = document.getElementById("annual-btn");
+
+            if (mode === "annual") {
+                body.classList.add("annual-mode");
+                annualBtn.classList.add("active");
+                monthlyBtn.classList.remove("active");
+                localStorage.setItem("billing_mode", "annual");
+            } else {
+                body.classList.remove("annual-mode");
+                monthlyBtn.classList.add("active");
+                annualBtn.classList.remove("active");
+                localStorage.setItem("billing_mode", "monthly");
+            }
+        }
+
+        function toggleReferralBox() {
+            const box = document.getElementById("referral-box");
+            if (!box) return;
+
+            if (box.style.display === "none" || box.style.display === "") {
+                box.style.display = "block";
+            } else {
+                box.style.display = "none";
+            }
+        }
+
+        function copyRefCode() {
+            const input = document.getElementById("refCode");
+            if (!input) return;
+
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("紹介コードをコピーしました");
+        }
+
+        window.addEventListener("load", function () {
+            const savedMode = localStorage.getItem("billing_mode");
+
+            if (savedMode === "annual") {
+                setBillingMode("annual");
+            } else {
+                setBillingMode("monthly");
+            }
+        });
+    </script>
+</body>
+</html>

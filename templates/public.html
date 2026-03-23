@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ paper.title }}</title>
+
+    <style>
+
+        body {
+            font-family: sans-serif;
+            background: #f7f8fb;
+            margin: 0;
+            padding: 40px 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .score-box {
+            background: #fff8e8;
+            padding: 16px;
+            border-left: 5px solid #f59e0b;
+            border-radius: 12px;
+        }
+
+        .stars {
+            font-size: 22px;
+            color: orange;
+        }
+
+        .abstract {
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+
+        .like-box {
+            margin-top: 18px;
+        }
+
+        .like-button {
+            border: none;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .like-button:hover {
+            opacity: 0.92;
+        }
+
+        .like-button.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>{{ paper.title }}</h1>
+
+<p>PubMed ID: {{ paper.pubmed_id }}</p>
+<p>{{ paper.journal }} / {{ paper.pubdate }}</p>
+<div class="like-box">
+    <button
+    type="button"
+    class="like-button"
+    data-pubmed-id="{{ paper.pubmed_id }}"
+    onclick="addLike('{{ paper.pubmed_id }}', this)"
+>
+    👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
+</button>
+</div>
+
+</div>
+
+
+{% if paper.clinical_score %}
+
+<div class="card score-box">
+
+<h3>臨床参考度</h3>
+
+<div class="stars">
+
+{% set s = paper.clinical_score|float %}
+
+{% if s >= 0.5 %}★{% else %}☆{% endif %}
+{% if s >= 1.5 %}★{% else %}☆{% endif %}
+{% if s >= 2.5 %}★{% else %}☆{% endif %}
+{% if s >= 3.5 %}★{% else %}☆{% endif %}
+{% if s >= 4.5 %}★{% else %}☆{% endif %}
+
+</div>
+
+<p>{{ paper.clinical_score }} / 5.0</p>
+
+<p>{{ paper.clinical_reason }}</p>
+
+</div>
+
+{% endif %}
+
+
+{% if paper.summary_jp %}
+
+<div class="card">
+
+<h3>要約</h3>
+
+<div class="abstract">
+{{ paper.summary_jp }}
+</div>
+
+</div>
+
+{% endif %}
+
+
+{% if paper.jp %}
+
+<div class="card">
+
+<h3>日本語訳</h3>
+
+<div class="abstract">
+{{ paper.jp }}
+</div>
+
+</div>
+
+{% endif %}
+
+
+<div class="card">
+
+<h3>Abstract</h3>
+
+<div class="abstract">
+{{ paper.abstract }}
+</div>
+
+</div>
+
+
+</div>
+
+<script>
+    function hasLiked(pubmedId) {
+        const liked = localStorage.getItem("liked_" + pubmedId);
+        return liked === "1";
+    }
+
+    function setLiked(pubmedId) {
+        localStorage.setItem("liked_" + pubmedId, "1");
+    }
+
+    function disableLikedButtons() {
+        const buttons = document.querySelectorAll(".like-button");
+
+        buttons.forEach((button) => {
+            const pubmedId = button.dataset.pubmedId;
+
+            if (hasLiked(pubmedId)) {
+                button.classList.add("disabled");
+                button.disabled = true;
+            }
+        });
+    }
+
+    async function addLike(pubmedId, button) {
+        if (hasLiked(pubmedId)) {
+            button.classList.add("disabled");
+            button.disabled = true;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/like/${pubmedId}`, {
+                method: "POST"
+            });
+
+            const data = await response.json();
+
+            if (data.ok) {
+                const countSpan = button.querySelector(".like-count");
+                if (countSpan) {
+                    countSpan.textContent = data.likes;
+                }
+
+                setLiked(pubmedId);
+                button.classList.add("disabled");
+                button.disabled = true;
+            }
+        } catch (error) {
+            alert("いいねの更新に失敗しました");
+        }
+    }
+
+    disableLikedButtons();
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ page_title }}</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    background: #f7f8fb;
+    padding: 40px 16px;
+    color: #222;
+    margin: 0;
+}
+
+.container {
+    max-width: 960px;
+    margin: auto;
+}
+
+.top-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.top-link:hover {
+    text-decoration: underline;
+}
+
+.hero {
+    background: white;
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+}
+
+.hero h1 {
+    margin: 0 0 10px 0;
+    font-size: 30px;
+}
+
+.hero p {
+    margin: 0;
+    color: #555;
+    line-height: 1.7;
+}
+
+.sort-box {
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+}
+
+.sort-title {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.sort-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sort-link {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.sort-link.active {
+    background: #2563eb;
+    color: white;
+}
+
+.sort-link:hover {
+    opacity: 0.92;
+}
+
+.paper {
+    background: white;
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.rank {
+    display: inline-block;
+    min-width: 36px;
+    font-weight: 800;
+    color: #2563eb;
+    font-size: 18px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.title a {
+    text-decoration: none;
+    color: #111827;
+}
+
+.title a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.metrics {
+    margin-top: 12px;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-weight: 700;
+}
+
+.likes {
+    color: #1d4ed8;
+}
+
+.score {
+    color: #b45309;
+}
+
+.meta {
+    margin-top: 12px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.summary {
+    margin-top: 16px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    background: #f8fafc;
+    border-left: 4px solid #2563eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.open-link {
+    display: inline-block;
+    margin-top: 16px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.open-link:hover {
+    text-decoration: underline;
+}
+
+.empty-box {
+    background: white;
+    padding: 24px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    color: #666;
+    line-height: 1.8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <a href="/" class="top-link">← トップへ戻る</a>
+
+    <div class="hero">
+        <h1>{{ page_title }}</h1>
+        <p>{{ page_description }}</p>
+    </div>
+
+    <div class="sort-box">
+        <div class="sort-title">並び替え</div>
+        <div class="sort-links">
+            <a href="{{ base_path }}?sort=likes" class="sort-link {% if sort == 'likes' %}active{% endif %}">いいね順</a>
+            <a href="{{ base_path }}?sort=score" class="sort-link {% if sort == 'score' %}active{% endif %}">臨床参考度順</a>
+            <a href="{{ base_path }}?sort=new" class="sort-link {% if sort == 'new' %}active{% endif %}">新着</a>
+        </div>
+    </div>
+
+    {% if papers %}
+        {% for paper in papers %}
+            <div class="paper">
+                <div class="rank">#{{ loop.index }}</div>
+
+                <div class="title">
+                    <a href="/p/{{ paper.pubmed_id }}">
+                        {{ paper.title }}
+                    </a>
+                </div>
+
+                <div class="metrics">
+                    <div class="likes">👍 {{ paper.likes or 0 }}</div>
+                    <div class="score">臨床参考度: {{ paper.clinical_score or "0.0" }} / 5.0</div>
+                </div>
+
+                <div class="meta">
+                    <div>PubMed ID: {{ paper.pubmed_id }}</div>
+                    <div>雑誌: {{ paper.journal }}</div>
+                    <div>公開日: {{ paper.pubdate }}</div>
+                    <div>保存フォルダ: {{ paper.folder_name }}</div>
+                </div>
+
+                {% if paper.summary_jp %}
+                <div class="summary">{{ paper.summary_jp }}</div>
+                {% endif %}
+
+                <a href="/p/{{ paper.pubmed_id }}" class="open-link">公開ページを見る →</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-box">
+            {{ empty_message }}
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>
