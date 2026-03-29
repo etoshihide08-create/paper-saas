@@ -1,262 +1,756 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>検索結果</title>
     <style>
+      :root {
+        --bg: #f6f8fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --blue-soft: #eff6ff;
+        --blue-soft-hover: #dbeafe;
+        --amber: #d97706;
+        --gray-btn: #f3f4f6;
+        --gray-btn-hover: #e5e7eb;
+        --green-bg: #dcfce7;
+        --green-text: #166534;
+        --shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 24px 14px 40px;
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      .top-link {
+        display: inline-block;
+        margin-bottom: 18px;
+        color: var(--blue);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .top-link:hover {
+        text-decoration: underline;
+      }
+
+      .page-header {
+        margin-bottom: 20px;
+      }
+
+      .page-title {
+        margin: 0 0 8px;
+        font-size: 28px;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+      }
+
+      .search-info {
+        margin: 0;
+        color: var(--subtext);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .search-info strong {
+        color: var(--text);
+      }
+
+      .result-list {
+        margin-top: 22px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px 18px 16px;
+        box-shadow: var(--shadow);
+        margin-bottom: 14px;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+      }
+
+      .paper-title {
+        margin: 0 0 10px;
+        font-size: 20px;
+        line-height: 1.5;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+
+      .paper-title a {
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .paper-title a:hover {
+        color: var(--blue);
+        text-decoration: underline;
+      }
+
+      .tag-row {
+        margin: 8px 0 6px;
+      }
+
+      .tag {
+        display: inline-block;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 4px 8px;
+        margin-right: 6px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .tag:hover {
+        background: #dbeafe;
+        transform: translateY(-1px);
+      }
+
+      .score-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--amber);
+      }
+
+      .score-line span {
+        color: #374151;
+        font-weight: 700;
+      }
+
+      .saved-badge {
+        display: inline-block;
+        margin: 0 0 12px 8px;
+        background: var(--green-bg);
+        color: var(--green-text);
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 10px;
+        border-radius: 999px;
+        vertical-align: middle;
+      }
+
+      .summary-toggle {
+        margin-top: 4px;
+      }
+
+      .summary-toggle summary {
+        list-style: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+        border: none;
+        background: var(--blue-soft);
+        color: #1d4ed8;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .summary-toggle summary:hover {
+        background: var(--blue-soft-hover);
+        transform: translateY(-1px);
+      }
+
+      .summary-toggle summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .summary-box {
+        margin-top: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 15px;
+        white-space: pre-wrap;
+        line-height: 1.8;
+        color: #374151;
+        font-size: 14px;
+      }
+
+      .action-row {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .action-button,
+      .like-button {
+        border: none;
+        background: var(--gray-btn);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease,
+          opacity 0.15s ease;
+      }
+
+      .action-button:hover,
+      .like-button:hover {
+        background: var(--gray-btn-hover);
+        transform: translateY(-1px);
+      }
+
+      .like-button {
+        background: var(--blue-soft);
+        color: #1d4ed8;
+      }
+
+      .like-button:hover {
+        background: var(--blue-soft-hover);
+      }
+
+      .like-button.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .like-button.liked {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .like-button.animate-pop {
+        transform: scale(1.06);
+        transition: transform 0.2s ease;
+      }
+
+      .meta {
+        margin-top: 12px;
+        display: grid;
+        gap: 4px;
+        color: var(--subtext);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .meta-item {
+        display: block;
+      }
+
+      .meta-item strong {
+        color: #374151;
+        font-weight: 700;
+      }
+
+      .empty-box {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px 18px;
+        box-shadow: var(--shadow);
+        color: var(--subtext);
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 20px 0 18px;
+        flex-wrap: wrap;
+      }
+
+      .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        height: 42px;
+        padding: 0 12px;
+        background: #f3f4f6;
+        color: #111827;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .page-btn:hover {
+        background: #e5e7eb;
+        transform: translateY(-1px);
+      }
+
+      .page-btn.active {
+        background: #2563eb;
+        color: #ffffff;
+      }
+
+      .tag-ranking {
+        margin: 20px 0;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 10px;
+      }
+
+      .tag-ranking-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #1e293b;
+      }
+
+      .tag-ranking-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag-ranking-btn {
+        display: inline-block;
+        padding: 6px 10px;
+        background: #e2e8f0;
+        color: #1e293b;
+        border-radius: 6px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: background 0.15s ease;
+      }
+
+      .tag-ranking-btn:hover {
+        background: #cbd5f5;
+      }
+
+      .summary-loading {
+        display: none;
+        margin-top: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+      }
+
+      .summary-toggle.is-loading .summary-loading {
+        display: block;
+      }
+
+      .summary-toggle.is-loading .summary-box {
+        display: none;
+      }
+
+      .like-button.liked::after {
+        content: " ✓";
+      }
+      @media (max-width: 640px) {
         body {
-            font-family: sans-serif;
-            background: #f7f8fb;
-            color: #222;
-            margin: 0;
-            padding: 40px 16px;
+          padding: 16px 12px 28px;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
+        .page-title {
+          font-size: 24px;
         }
 
         .card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            margin-bottom: 16px;
+          padding: 16px 14px 14px;
+          border-radius: 16px;
         }
 
-        h1 {
-            margin-top: 0;
-        }
-
-        h2 {
-            margin: 0 0 12px 0;
-            font-size: 22px;
-            line-height: 1.5;
-        }
-
-        h2 a {
-            color: #111827;
-            text-decoration: none;
-        }
-
-        h2 a:hover {
-            color: #2563eb;
-            text-decoration: underline;
-        }
-
-        .meta {
-            color: #666;
-            font-size: 14px;
-            margin-top: 8px;
-            line-height: 1.7;
-        }
-
-        .english-title {
-            margin-top: 10px;
-            font-size: 14px;
-            line-height: 1.7;
-            color: #4b5563;
+        .paper-title {
+          font-size: 18px;
+          line-height: 1.45;
         }
 
         .score-line {
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #b45309;
+          font-size: 14px;
         }
 
-        .summary-box {
-            margin-top: 16px;
-            background: #f0f7ff;
-            border-radius: 12px;
-            padding: 16px;
-            white-space: pre-wrap;
-            line-height: 1.7;
-        }
-
-        .saved-badge {
-            display: inline-block;
-            margin-top: 12px;
-            background: #dcfce7;
-            color: #166534;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 6px 10px;
-            border-radius: 999px;
+        .summary-toggle summary,
+        .action-button,
+        .like-button {
+          width: 100%;
+          justify-content: center;
+          min-height: 44px;
         }
 
         .action-row {
-            margin-top: 16px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
+          gap: 8px;
         }
 
-        .like-button {
-            border: none;
-            background: #eff6ff;
-            color: #1d4ed8;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
+        .saved-badge {
+          display: inline-block;
+          margin: 10px 0 0;
         }
-
-        .like-button:hover {
-            opacity: 0.92;
-        }
-
-        .like-button.disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        a.button {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        a.button:hover {
-            text-decoration: underline;
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <a href="/" class="button">← 戻る</a>
+      <a href="/" class="top-link">← 戻る</a>
 
-        <h1>検索結果</h1>
-        <p>入力キーワード: {{ keyword }}</p>
-        <p>検索語: {{ converted_keyword }}</p>
+      <div class="page-header">
+        <h1 class="page-title">検索結果</h1>
+        <p class="search-info">
+          <strong>入力キーワード:</strong> {{ keyword }}
+        </p>
+        <p class="search-info">
+          <strong>検索語:</strong> {{ converted_keyword }}
+        </p>
+      </div>
 
-        {% if papers %}
-            {% for paper in papers %}
-                <div class="card">
-                    <h2>
-                        <a href="/paper?id={{ paper.id }}" class="paper-link">
-                            {{ paper.jp_title or paper.title }}
-                        </a>
-                    </h2>
+      {% if papers %}
+      <div class="result-list">
+        {% set start_page = page - 2 if page - 2 > 1 else 1 %} {% set end_page =
+        page + 2 if page + 2 < total_pages else total_pages %} {% if
+        total_pages|int > 1 %}
+        <div class="pagination">
+          {% if page|int > 1 %}
+          <a
+            class="page-btn"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}"
+            >←</a
+          >
+          {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
+          page %}
+          <span class="page-btn active">{{ p }}</span>
+          {% else %}
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}"
+            >{{ p }}</a
+          >
+          {% endif %} {% endfor %} {% if page|int < total_pages|int %}
+          <a
+            class="page-btn"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}"
+            >→</a
+          >
+          {% endif %}
+        </div>
+        {% endif %} {% for paper in papers %}
+        <article class="card">
+          <h2 class="paper-title">
+            <a href="/paper?id={{ paper.id }}" class="paper-link">
+              {{ paper.jp_title or paper.title }}
+            </a>
+          </h2>
 
-                    {% if paper.jp_title %}
-                        <div class="english-title">英語タイトル: {{ paper.title }}</div>
-                    {% endif %}
-
-                    <div class="meta">PubMed ID: {{ paper.id }}</div>
-                    <div class="meta">著者: {{ paper.authors }}</div>
-                    <div class="meta">雑誌: {{ paper.journal }}</div>
-                    <div class="meta">公開日: {{ paper.pubdate }}</div>
-
-                    {% if paper.is_saved %}
-                        <div class="saved-badge">保存済み要約あり</div>
-                    {% endif %}
-
-                    {% if paper.clinical_score %}
-                        <div class="score-line">臨床参考度: {{ paper.clinical_score }} / 5.0</div>
-                    {% endif %}
-
-                    {% if paper.summary_jp %}
-                        <div class="summary-box">{{ paper.summary_jp }}</div>
-                    {% endif %}
-
-                    <div class="action-row">
-                        <button
-                            type="button"
-                            class="like-button"
-                            data-pubmed-id="{{ paper.id }}"
-                            onclick="addLike('{{ paper.id }}', this)"
-                        >
-                            👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
-                        </button>
-                    </div>
-                </div>
+          <!-- prettier-ignore -->
+          {% if paper.tags %}
+          <div class="tag-row">
+            {% for tag in paper.tags %}
+            <a class="tag" href="/search?keyword={{ tag }}">{{ tag }}</a>
             {% endfor %}
-        {% else %}
-            <p>論文が見つかりませんでした。</p>
+          </div>
+          {% endif %}
+
+          <!-- prettier-ignore -->
+          {% if paper.clinical_score %}
+          <div class="score-line">
+            ⭐ {{ paper.clinical_score }} <span>臨床参考度</span>
+          </div>
+          {% endif %} {% if paper.is_saved %}
+          <div class="saved-badge">保存済み要約あり</div>
+          {% endif %} {% if paper.summary_jp %}
+          <details class="summary-toggle js-summary-toggle">
+            <summary>▶ 要約を見る</summary>
+
+            <div class="summary-loading">要約中...</div>
+
+            <div class="summary-box">{{ paper.summary_jp }}</div>
+          </details>
+          {% endif %}
+
+          <div class="action-row">
+            <button
+              type="button"
+              class="like-button"
+              data-pubmed-id="{{ paper.id }}"
+              onclick="addLike('{{ paper.id }}', this)"
+            >
+              👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="action-button share-button"
+              data-title="{{ paper.jp_title or paper.title }}"
+              data-url="/paper?id={{ paper.id }}"
+            >
+              ↗ 共有
+            </button>
+          </div>
+
+          <div class="meta">
+            <span class="meta-item"
+              ><strong>PubMed ID:</strong> {{ paper.id }}</span
+            >
+
+            {% if paper.authors %}
+            <span class="meta-item"
+              ><strong>著者:</strong> {{ paper.authors }}</span
+            >
+            {% endif %} {% if paper.journal %}
+            <span class="meta-item"
+              ><strong>雑誌:</strong> {{ paper.journal }}</span
+            >
+            {% endif %} {% if paper.pubdate %}
+            <span class="meta-item"
+              ><strong>公開日:</strong> {{ paper.pubdate }}</span
+            >
+            {% endif %}
+            <span class="meta-item">
+              <strong>論文URL:</strong>
+              <a
+                href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.id }}/"
+                target="_blank"
+              >
+                PubMedで見る
+              </a>
+            </span>
+          </div>
+        </article>
+        <!-- prettier-ignore -->
+        {% endfor %}
+
+        {% set start_page = page - 2 if page - 2 > 1 else 1 %}
+        {% set end_page = page + 2 if page + 2 < total_pages else total_pages %}
+
+        {% if total_pages|int > 1 %}
+        <div class="pagination">
+          {% if page|int > 1 %}
+          <a
+            class="page-btn"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}"
+            >←</a
+          >
+          {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
+          page %}
+          <span class="page-btn active">{{ p }}</span>
+          {% else %}
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}"
+            >{{ p }}</a
+          >
+          {% endif %} {% endfor %} {% if page|int < total_pages|int %}
+          <a
+            class="page-btn"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}"
+            >→</a
+          >
+          {% endif %}
+        </div>
         {% endif %}
+
+        <div class="tag-ranking">
+          <p class="tag-ranking-title">関連テーマから探す</p>
+
+          <div class="tag-ranking-list">
+            <a href="/search?keyword=脳卒中" class="tag-ranking-btn">脳卒中</a>
+            <a href="/search?keyword=歩行" class="tag-ranking-btn">歩行</a>
+            <a href="/search?keyword=膝OA" class="tag-ranking-btn">膝OA</a>
+            <a href="/search?keyword=パーキンソン病" class="tag-ranking-btn"
+              >パーキンソン病</a
+            >
+            <a href="/search?keyword=脊髄損傷" class="tag-ranking-btn"
+              >脊髄損傷</a
+            >
+            <a href="/search?keyword=呼吸リハ" class="tag-ranking-btn"
+              >呼吸リハ</a
+            >
+            <a href="/search?keyword=疼痛" class="tag-ranking-btn">疼痛</a>
+            <a href="/search?keyword=高齢者" class="tag-ranking-btn">高齢者</a>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-box">論文が見つかりませんでした。</div>
+      {% endif %}
     </div>
+    <script>
+      const SCROLL_KEY = "search_scroll_y";
+      const SEARCH_URL_KEY = "search_scroll_url";
 
-<script>
-    const SCROLL_KEY = "search_scroll_y";
-    const SEARCH_URL_KEY = "search_scroll_url";
-
-    function hasLiked(pubmedId) {
+      function hasLiked(pubmedId) {
         const liked = localStorage.getItem("liked_" + pubmedId);
         return liked === "1";
-    }
+      }
 
-    function setLiked(pubmedId) {
+      function setLiked(pubmedId) {
         localStorage.setItem("liked_" + pubmedId, "1");
-    }
+      }
 
-    function disableLikedButtons() {
+      function disableLikedButtons() {
         const buttons = document.querySelectorAll(".like-button");
 
         buttons.forEach((button) => {
-            const pubmedId = button.dataset.pubmedId;
+          const pubmedId = button.dataset.pubmedId;
+          const countSpan = button.querySelector(".like-count");
+          const likeCount = countSpan ? countSpan.textContent.trim() : "0";
 
-            if (hasLiked(pubmedId)) {
-                button.classList.add("disabled");
-                button.disabled = true;
-            }
-        });
-    }
-
-    async function addLike(pubmedId, button) {
-        if (hasLiked(pubmedId)) {
-            button.classList.add("disabled");
+          if (hasLiked(pubmedId)) {
+            button.textContent = "👍 いいね " + likeCount;
+            button.classList.add("liked");
             button.disabled = true;
-            return;
+          }
+        });
+      }
+
+      async function addLike(pubmedId, button) {
+        if (hasLiked(pubmedId)) {
+          button.classList.add("liked");
+          button.disabled = true;
+          return;
         }
 
         try {
-            const response = await fetch(`/like/${pubmedId}`, {
-                method: "POST"
-            });
+          const response = await fetch(`/like/${pubmedId}`, {
+            method: "POST",
+          });
 
-            const data = await response.json();
+          if (!response.ok) {
+            alert("いいねAPIでエラーが発生しました: " + response.status);
+            return;
+          }
 
-            if (data.ok) {
-                const countSpan = button.querySelector(".like-count");
-                if (countSpan) {
-                    countSpan.textContent = data.likes;
-                }
+          const data = await response.json();
+          console.log("like response:", data);
 
-                setLiked(pubmedId);
-                button.classList.add("disabled");
-                button.disabled = true;
+          const countSpan = button.querySelector(".like-count");
+
+          if (typeof data.likes !== "undefined") {
+            button.textContent = "👍 いいね " + data.likes;
+
+            setLiked(pubmedId);
+            button.classList.add("liked");
+            button.classList.add("animate-pop");
+            button.disabled = true;
+
+            if (navigator.vibrate) {
+              navigator.vibrate(20);
             }
-        } catch (error) {
-            alert("いいねの更新に失敗しました");
-        }
-    }
 
-    function saveSearchState() {
+            setTimeout(() => {
+              button.classList.remove("animate-pop");
+            }, 250);
+
+            return;
+          }
+
+          alert("いいねは送れましたが、返り値の形式が想定と違います");
+        } catch (error) {
+          console.error(error);
+          alert("いいねの更新に失敗しました");
+        }
+      }
+
+      async function sharePaper(title, url) {
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, url });
+            return;
+          }
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+            alert("リンクをコピーしました");
+            return;
+          }
+
+          prompt("このリンクをコピーしてください", url);
+        } catch (error) {
+          alert("共有に失敗しました");
+        }
+      }
+
+      function saveSearchState() {
         sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
         sessionStorage.setItem(SEARCH_URL_KEY, window.location.href);
-    }
+      }
 
-    function restoreSearchScroll() {
+      function restoreSearchScroll() {
         const savedUrl = sessionStorage.getItem(SEARCH_URL_KEY);
         const savedY = sessionStorage.getItem(SCROLL_KEY);
 
         if (savedUrl === window.location.href && savedY !== null) {
-            window.scrollTo(0, parseInt(savedY, 10));
+          window.scrollTo(0, parseInt(savedY, 10));
         }
-    }
+      }
 
-    document.querySelectorAll(".paper-link").forEach((link) => {
+      document.querySelectorAll(".paper-link").forEach((link) => {
         link.addEventListener("click", saveSearchState);
-    });
+      });
 
-    window.addEventListener("beforeunload", saveSearchState);
-    window.addEventListener("load", restoreSearchScroll);
-    window.addEventListener("load", disableLikedButtons);
-</script>
-</body>
+      document.querySelectorAll(".share-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          sharePaper(button.dataset.title, button.dataset.url);
+        });
+      });
+
+      window.addEventListener("beforeunload", saveSearchState);
+      window.addEventListener("load", restoreSearchScroll);
+      window.addEventListener("load", disableLikedButtons);
+      window.addEventListener("load", setupSummaryLoading);
+
+      function setupSummaryLoading() {
+        const summaryToggles = document.querySelectorAll(".js-summary-toggle");
+
+        summaryToggles.forEach((details) => {
+          details.addEventListener("toggle", () => {
+            if (!details.open) {
+              details.classList.remove("is-loading");
+              return;
+            }
+
+            details.classList.add("is-loading");
+
+            setTimeout(() => {
+              if (details.open) {
+                details.classList.remove("is-loading");
+              }
+            }, 400);
+          });
+        });
+      }
+    </script>
+  </body>
 </html>

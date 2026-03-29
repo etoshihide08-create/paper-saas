@@ -1,5 +1,6 @@
 import re
 import os
+import hashlib
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request, Form
@@ -8,6 +9,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from Bio import Entrez
 from openai import OpenAI
 from datetime import datetime, timedelta
+from fastapi import FastAPI, Request, Query
 from db import (
     init_db,
     save_paper,
@@ -330,6 +332,12 @@ def convert_japanese_keyword_to_english(keyword: str) -> str:
 def contains_japanese(text: str) -> bool:
     return re.search(r"[ぁ-んァ-ン一-龥]", text) is not None
 
+keyword_cache = {}
+
+def stable_score_offset(pubmed_id: str) -> float:
+    seed = hashlib.md5(pubmed_id.encode("utf-8")).hexdigest()
+    value = int(seed[:8], 16) / 0xFFFFFFFF
+    return (value * 0.16) - 0.08
 
 def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
     converted = convert_japanese_keyword_to_english(keyword)
@@ -360,6 +368,75 @@ def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
 
     except Exception:
         return converted
+    
+def generate_tags(title: str, abstract: str):
+    tags = []
+    text = f"{title} {abstract}".lower()
+
+    # ===== Sランク =====
+    if "stroke" in text:
+        tags.append("脳卒中")
+
+    if "gait" in text or "walking" in text:
+        tags.append("歩行")
+
+    if "rehabilitation" in text:
+        tags.append("リハビリ")
+
+    if "balance" in text:
+        tags.append("バランス")
+
+    if "adl" in text or "activities of daily living" in text:
+        tags.append("ADL")
+
+    if "fall" in text or "falls" in text:
+        tags.append("転倒")
+
+    if "strength" in text or "muscle strength" in text:
+        tags.append("筋力")
+
+    if "cognitive" in text or "cognition" in text:
+        tags.append("認知機能")
+
+    # ===== Aランク =====
+    if "spinal cord" in text:
+        tags.append("脊髄損傷")
+
+    if "parkinson" in text:
+        tags.append("パーキンソン病")
+
+    if "elderly" in text or "older adult" in text:
+        tags.append("高齢者")
+
+    if "exercise therapy" in text or "exercise" in text:
+        tags.append("運動療法")
+
+    if "neuroplasticity" in text:
+        tags.append("神経可塑性")
+
+    if "gait analysis" in text:
+        tags.append("歩行分析")
+
+    if "posture" in text or "postural control" in text:
+        tags.append("姿勢制御")
+
+    if "emg" in text or "electromyography" in text:
+        tags.append("筋電図")
+
+    # ===== Bランク =====
+    if "respiratory" in text:
+        tags.append("呼吸リハ")
+
+    if "knee osteoarthritis" in text or "knee oa" in text:
+        tags.append("膝OA")
+
+    if "pain" in text:
+        tags.append("疼痛")
+
+    if "range of motion" in text or "rom" in text:
+        tags.append("可動域")
+
+    return tags[:5]
     
 def translate_title_to_japanese(title: str) -> str:
     if not title:
@@ -633,57 +710,217 @@ def plans(request: Request):
     )
 
 @app.get("/search")
-def search(request: Request, keyword: str):
-    converted_keyword = convert_keyword_with_gpt_if_needed(keyword)
+def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     current_user = get_current_user(request)
-    current_user_id = current_user["id"] if current_user else None
+    PER_PAGE = 25
 
-    handle = Entrez.esearch(
-        db="pubmed",
-        term=converted_keyword,
-        retmax=5
-    )
-    record = Entrez.read(handle)
-    handle.close()
+    if not keyword.strip():
+        return templates.TemplateResponse(
+            "search.html",
+            {
+                "request": request,
+                "papers": [],
+                "keyword": keyword,
+                "converted_keyword": ""
+            }
+        )
 
-    ids = record["IdList"]
+    if keyword in keyword_cache:
+        converted_keyword = keyword_cache[keyword]
+    else:
+        try:
+            converted_keyword = convert_keyword_with_gpt_if_needed(keyword)
+        except Exception:
+            converted_keyword = keyword
+
+        keyword_cache[keyword] = converted_keyword
+
+    try:
+        handle = Entrez.esearch(
+            db="pubmed",
+            term=converted_keyword,
+            retmax=250
+        )
+        record = Entrez.read(handle)
+        handle.close()
+    except Exception:
+        return templates.TemplateResponse(
+            "search.html",
+            {
+                "request": request,
+                "papers": [],
+                "keyword": keyword,
+                "converted_keyword": converted_keyword
+            }
+        )
+
+    id_list = record.get("IdList", [])
+
+    if not id_list:
+        return templates.TemplateResponse(
+            "search.html",
+            {
+                "request": request,
+                "papers": [],
+                "keyword": keyword,
+                "converted_keyword": converted_keyword,
+                "page": 1,
+                "total_pages": 1,
+            }
+        )
+
+    total_count = len(id_list)
+    total_pages = max(1, (total_count + PER_PAGE - 1) // PER_PAGE)
+
+    if page < 1:
+        page = 1
+    if page > total_pages:
+        page = total_pages
+
+    start_idx = (page - 1) * PER_PAGE
+    end_idx = start_idx + PER_PAGE
+    page_id_list = id_list[start_idx:end_idx]
+
+    saved_papers = get_saved_papers(current_user["id"]) if current_user else get_saved_papers()
+    saved_map = {str(p["pubmed_id"]): p for p in saved_papers}
+
     papers = []
 
-    if ids:
-        handle = Entrez.esummary(
-            db="pubmed",
-            id=",".join(ids)
-        )
-        summary = Entrez.read(handle)
-        handle.close()
+    saved_ids = [pmid for pmid in page_id_list if str(pmid) in saved_map]
+    unsaved_ids = [pmid for pmid in page_id_list if str(pmid) not in saved_map]
 
-        for item in summary:
-            paper_id = item["Id"]
-            saved = get_saved_paper_by_id(paper_id, user_id=current_user_id)
+    # まずDB保存済み論文をそのまま使う
+    for pmid in saved_ids:
+        try:
+            saved = saved_map.get(str(pmid))
+            if not saved:
+                continue
 
-            papers.append(
+            title = saved.get("title", "") or ""
+            jp_title = saved.get("jp_title", "") or title
+            authors_text = saved.get("authors", "") or ""
+            journal = saved.get("journal", "") or ""
+            pubdate = saved.get("pubdate", "") or ""
+            abstract = saved.get("abstract", "") or ""
+
+            papers.append({
+                "id": str(pmid),
+                "pubmed_id": str(pmid),
+                "title": title,
+                "jp_title": jp_title,
+                "authors": authors_text,
+                "journal": journal,
+                "pubdate": pubdate,
+                "abstract": abstract or "",
+                "tags": generate_tags(title, abstract or ""),
+                "summary_jp": saved.get("summary_jp", "") or "",
+                "clinical_score": saved.get("clinical_score", "") or "",
+                "clinical_reason": saved.get("clinical_reason", "") or "",
+                "likes": saved.get("likes", 0) if saved.get("likes") is not None else 0,
+                "is_saved": True,
+            })
+        except Exception:
+            continue
+
+    # DBにない論文だけPubMedから取得する
+    if unsaved_ids:
+        try:
+            handle = Entrez.efetch(
+                db="pubmed",
+                id=",".join(unsaved_ids),
+                retmode="xml"
+            )
+            records = Entrez.read(handle)
+            handle.close()
+        except Exception:
+            return templates.TemplateResponse(
+                "search.html",
                 {
-                    "id": paper_id,
-                    "title": item.get("Title", ""),
-                    "jp_title": saved.get("jp_title", "") if saved else "",
-                    "authors": ", ".join(item.get("AuthorList", [])),
-                    "journal": item.get("FullJournalName", ""),
-                    "pubdate": item.get("PubDate", ""),
-                    "is_saved": saved is not None,
-                    "summary_jp": saved["summary_jp"] if saved else "",
-                    "clinical_score": saved["clinical_score"] if saved else "",
-                    "likes": int(saved["likes"]) if saved and saved.get("likes") is not None else 0,
+                    "request": request,
+                    "papers": papers,
+                    "keyword": keyword,
+                    "converted_keyword": converted_keyword,
+                    "page": page,
+                    "total_pages": total_pages,
                 }
             )
+
+        for article in records.get("PubmedArticle", []):
+            try:
+                citation = article.get("MedlineCitation", {})
+                pmid = str(citation.get("PMID", ""))
+
+                article_data = citation.get("Article", {})
+                saved = saved_map.get(pmid)
+
+                raw_title = str(article_data.get("ArticleTitle", ""))
+
+                authors = []
+                if "AuthorList" in article_data:
+                    for a in article_data["AuthorList"]:
+                        last = a.get("LastName", "")
+                        fore = a.get("ForeName", "")
+                        full_name = f"{last} {fore}".strip()
+                        if full_name:
+                            authors.append(full_name)
+
+                raw_authors = ", ".join(authors)
+
+                raw_journal = ""
+                raw_pubdate = ""
+                if "Journal" in article_data:
+                    raw_journal = article_data["Journal"].get("Title", "")
+                    issue = article_data["Journal"].get("JournalIssue", {})
+                    pub = issue.get("PubDate", {})
+                    year = pub.get("Year", "")
+                    month = pub.get("Month", "")
+                    day = pub.get("Day", "")
+                    raw_pubdate = " ".join([year, month, day]).strip()
+
+                raw_abstract = ""
+                if "Abstract" in article_data:
+                    parts = article_data["Abstract"].get("AbstractText", [])
+                    raw_abstract = "\n\n".join([str(p) for p in parts])
+
+                title = saved.get("title", raw_title) if saved else raw_title
+                authors_text = saved.get("authors", raw_authors) if saved else raw_authors
+                journal = saved.get("journal", raw_journal) if saved else raw_journal
+                pubdate = saved.get("pubdate", raw_pubdate) if saved else raw_pubdate
+                abstract = saved.get("abstract", raw_abstract) if saved else raw_abstract
+
+                papers.append({
+                    "id": pmid,
+                    "pubmed_id": pmid,
+                    "title": title,
+                    "jp_title": saved["jp_title"] if saved and saved.get("jp_title") else title,
+                    "authors": authors_text,
+                    "journal": journal,
+                    "pubdate": pubdate,
+                    "abstract": abstract or "",
+                    "tags": generate_tags(title, abstract or ""),
+                    "summary_jp": saved["summary_jp"] if saved else "",
+                    "clinical_score": saved["clinical_score"] if saved else "",
+                    "clinical_reason": saved["clinical_reason"] if saved else "",
+                    "likes": saved["likes"] if saved and saved.get("likes") is not None else 0,
+                    "is_saved": bool(saved),
+                })
+            except Exception:
+                continue
+
+
+    papers_map = {str(p["pubmed_id"]): p for p in papers}
+    papers = [papers_map[str(pmid)] for pmid in page_id_list if str(pmid) in papers_map]
 
     return templates.TemplateResponse(
         "search.html",
         {
             "request": request,
+            "papers": papers,
             "keyword": keyword,
             "converted_keyword": converted_keyword,
-            "papers": papers,
-        },
+            "page": page,
+            "total_pages": total_pages,
+        }
     )
 
 @app.get("/paper")
@@ -842,44 +1079,48 @@ def paper(
 
 
 @app.post("/save")
-def save(
+def save_paper_route(
     request: Request,
     pubmed_id: str = Form(...),
-    title: str = Form(...),
+    title: str = Form(""),
     jp_title: str = Form(""),
-    authors: str = Form(...),
-    journal: str = Form(...),
-    pubdate: str = Form(...),
+    authors: str = Form(""),
+    journal: str = Form(""),
+    pubdate: str = Form(""),
     abstract: str = Form(""),
     jp: str = Form(""),
     summary_jp: str = Form(""),
     folder_name: str = Form(""),
     clinical_score: str = Form(""),
-    clinical_reason: str = Form("")
+    clinical_reason: str = Form(""),
 ):
     current_user = get_current_user(request)
-    current_user_id = current_user["id"] if current_user else None
 
     if not current_user:
-        return RedirectResponse(
-            url=f"/paper?id={pubmed_id}&save_error=login_required",
-            status_code=303
+        return JSONResponse(
+            {"ok": False, "message": "ログインしてください"},
+            status_code=401
         )
 
-    plan = get_user_plan(current_user)
-    limits = get_plan_limits(plan)
+    save_paper(
+        pubmed_id=pubmed_id,
+        title=title,
+        jp_title=jp_title,
+        authors=authors,
+        journal=journal,
+        pubdate=pubdate,
+        abstract=abstract,
+        jp=jp,
+        summary_jp=summary_jp,
+        folder_name=folder_name,
+        clinical_score=clinical_score,
+        clinical_reason=clinical_reason,
+        user_id=current_user["id"],
+    )
 
-    existing_saved = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
-    current_saved_count = count_user_saved_papers(current_user_id)
-    save_limit = limits["save_limit"]
-
-    is_new_manual_save = not existing_saved or not (existing_saved.get("folder_name") or "").strip()
-
-    if is_new_manual_save and save_limit is not None and current_saved_count >= save_limit:
-        return RedirectResponse(
-            url=f"/paper?id={pubmed_id}&save_error=limit_reached",
-            status_code=303
-        )
+    return JSONResponse(
+        {"ok": True, "message": "保存しました"}
+    )
 
     save_paper(
         pubmed_id=pubmed_id,
@@ -1031,15 +1272,14 @@ def favorite(request: Request, pubmed_id: str):
 
 
 @app.post("/like/{pubmed_id}")
-def like(pubmed_id: str):
-    saved_paper = get_saved_paper_by_id(pubmed_id)
+def like(request: Request, pubmed_id: str):
+    current_user = get_current_user(request)
+    current_user_id = current_user["id"] if current_user else None
+
+    saved_paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
 
     if not saved_paper:
-        handle = Entrez.efetch(
-            db="pubmed",
-            id=pubmed_id,
-            retmode="xml"
-        )
+        handle = Entrez.efetch(db="pubmed", id=pubmed_id, retmode="xml")
         records = Entrez.read(handle)
         handle.close()
 
@@ -1059,7 +1299,6 @@ def like(pubmed_id: str):
 
         journal = ""
         pubdate = ""
-
         if "Journal" in data:
             journal = data["Journal"].get("Title", "")
             issue = data["Journal"].get("JournalIssue", {})
@@ -1089,22 +1328,15 @@ def like(pubmed_id: str):
             folder_name="未分類",
             clinical_score="",
             clinical_reason="",
+            user_id=current_user_id,
         )
 
-    add_like(pubmed_id)
+    add_like(pubmed_id, user_id=current_user_id)
 
-    paper = get_saved_paper_by_id(pubmed_id)
-    likes = 0
+    paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
+    likes = int(paper["likes"] or 0) if paper else 0
 
-    if paper:
-        likes = int(paper.get("likes") or 0)
-
-    return JSONResponse(
-        {
-            "ok": True,
-            "likes": likes
-        }
-    )
+    return JSONResponse({"ok": True, "likes": likes})
 
 @app.get("/ranking")
 def ranking_list(request: Request, sort: str = "likes"):
@@ -1136,7 +1368,7 @@ def ranking_list(request: Request, sort: str = "likes"):
             reverse=True
         )
 
-    papers = papers[:limits["popular_ranking_limit"]]
+    papers = papers[:limits["ranking_limit"]]
 
     return templates.TemplateResponse(
         "public_list.html",
