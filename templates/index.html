@@ -2,22 +2,15 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>理学療法士向け論文翻訳・要約ツール</title>
-
-    <div class="plan-box">
-      現在のプラン：
-      <b>
-        {% if not current_user %} 未登録 {% else %} {{ current_plan }} {% endif
-        %}
-      </b>
-    </div>
 
     <style>
       body {
         font-family: sans-serif;
         background: #f5f7fb;
         margin: 0;
-        padding: 60px 16px;
+        padding: 72px 16px 40px;
         color: #222;
       }
 
@@ -26,12 +19,102 @@
         margin: 0 auto;
       }
 
+      .top-bar {
+        max-width: 920px;
+        margin: 0 auto 14px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
       .plan-box {
-        margin: 10px 0;
-        padding: 10px 14px;
+        padding: 8px 12px;
         background: #eef2ff;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 13px;
+        color: #374151;
+      }
+
+      .top-auth {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .top-auth-text {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 600;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .top-auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #111827;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .top-auth-link:hover {
+        opacity: 0.92;
+      }
+
+      .auth-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .auth-text {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #111827;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .auth-link:hover {
+        opacity: 0.92;
+      }
+
+      .auth-row-fixed {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 1000;
+        background: #ffffff;
+        padding: 8px 12px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
 
       .main-card {
@@ -46,6 +129,7 @@
         margin-top: 0;
         font-size: 28px;
         line-height: 1.4;
+        text-align: center;
       }
 
       h2 {
@@ -56,36 +140,6 @@
       p {
         color: #555;
         line-height: 1.7;
-      }
-
-      .auth-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-      }
-
-      .auth-link {
-        display: inline-block;
-        padding: 10px 14px;
-        border-radius: 10px;
-        background: #111827;
-        color: white;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
-      }
-
-      .auth-link:hover {
-        opacity: 0.92;
-      }
-
-      .auth-text {
-        font-size: 14px;
-        color: #374151;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
       }
 
       .search-row {
@@ -168,9 +222,11 @@
       }
 
       .sub-text {
-        margin-top: 18px;
-        font-size: 14px;
-        color: #6b7280;
+        margin-top: 14px;
+        font-size: 15px;
+        line-height: 1.85;
+        color: #4b5563;
+        text-align: center;
       }
 
       .ranking-card {
@@ -309,24 +365,192 @@
       .plans-link:hover {
         opacity: 0.92;
       }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 16px 12px 28px;
+        }
+
+        .container {
+          max-width: 100%;
+        }
+
+        .top-bar {
+          margin-bottom: 12px;
+        }
+
+        .plan-box {
+          font-size: 13px;
+        }
+
+        .top-auth {
+          position: fixed;
+          top: 10px;
+          right: 12px;
+          width: 132px;
+          display: flex;
+          flex-direction: column-reverse;
+          align-items: stretch;
+          gap: 4px;
+          z-index: 1000;
+        }
+
+        .top-auth-link {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          background: #111827;
+          color: #fff;
+          text-decoration: none;
+          font-weight: 700;
+          line-height: 1;
+        }
+
+        .top-auth-text {
+          font-size: 10px;
+          line-height: 1.4;
+          color: #6b7280;
+          text-align: center;
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .main-card,
+        .ranking-card {
+          padding: 16px 12px;
+          border-radius: 16px;
+          margin-bottom: 12px;
+        }
+
+        h1 {
+          font-size: 22px;
+          line-height: 1.4;
+          letter-spacing: -0.01em;
+          margin-bottom: 10px;
+        }
+
+        h2 {
+          font-size: 18px;
+          line-height: 1.4;
+          margin-bottom: 10px;
+        }
+
+        .search-row {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .search-input {
+          min-height: 48px;
+          font-size: 16px;
+          padding: 14px;
+          border-radius: 14px;
+        }
+
+        .search-btn {
+          width: 100%;
+          min-height: 48px;
+          font-size: 16px;
+          border-radius: 14px;
+        }
+
+        .button-row {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .main-link,
+        .toggle-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 15px;
+          border-radius: 12px;
+        }
+
+        .sub-text {
+          font-size: 15px;
+          line-height: 1.85;
+        }
+
+        .card-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+
+        .open-ranking-btn {
+          width: 100%;
+          text-align: center;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+        }
+
+        .ranking-item {
+          padding: 14px 0;
+        }
+
+        .ranking-rank {
+          font-size: 14px;
+          min-width: 28px;
+        }
+
+        .ranking-title,
+        .ranking-title-ja {
+          font-size: 17px;
+          line-height: 1.5;
+        }
+
+        .ranking-title-en,
+        .ranking-meta,
+        .summary {
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .likes,
+        .score {
+          font-size: 15px;
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="top-bar">
+      <div class="plan-box">
+        現在のプラン：
+        <b>
+          {% if not current_user %} 未登録 {% else %} {{ current_plan }} {%
+          endif %}
+        </b>
+      </div>
+    </div>
+
+    <div class="top-auth">
+      {% if current_user %}
+      <span class="top-auth-text">{{ current_user.email }}</span>
+      <a href="/logout" class="top-auth-link">ログアウト</a>
+      {% else %}
+      <a href="/register" class="top-auth-link">新規登録</a>
+      <a href="/login" class="top-auth-link">ログイン</a>
+      {% endif %}
+    </div>
+
     <div class="container">
       <div class="main-card">
-        <div class="auth-row">
-          {% if current_user %}
-          <div class="auth-text">{{ current_user.email }} でログイン中</div>
-          <a href="/logout" class="auth-link">ログアウト</a>
-          {% else %}
-          <a href="/register" class="auth-link">新規登録</a>
-          <a href="/login" class="auth-link">ログイン</a>
-          {% endif %}
-        </div>
-
-        <h1>理学療法士向け論文翻訳・要約ツール</h1>
-        <p>
-          PubMedの英語論文を検索し、日本語訳と要点要約を見やすく整理するための試作版です。
+        <h1>リハエビデンスナビ</h1>
+        <p class="sub-text">
+          PubMed論文を日本語で素早く理解し、<br />
+          臨床判断にそのまま使える形で整理。<br />
+          忙しいリハ職のための時短インプット環境。
         </p>
 
         <form action="/search" method="get" onsubmit="showSearchLoading(this)">

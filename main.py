@@ -789,7 +789,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     saved_ids = [pmid for pmid in page_id_list if str(pmid) in saved_map]
     unsaved_ids = [pmid for pmid in page_id_list if str(pmid) not in saved_map]
 
-    # まずDB保存済み論文をそのまま使う
+        # まずDB保存済み論文をそのまま使う
     for pmid in saved_ids:
         try:
             saved = saved_map.get(str(pmid))
@@ -803,6 +803,18 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             pubdate = saved.get("pubdate", "") or ""
             abstract = saved.get("abstract", "") or ""
 
+            raw_saved_score = saved.get("clinical_score", "") or ""
+            display_clinical_score = ""
+
+            if raw_saved_score:
+                try:
+                    base_saved_score = float(raw_saved_score)
+                    adjusted_saved_score = base_saved_score + stable_score_offset(str(pmid))
+                    adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
+                    display_clinical_score = f"{adjusted_saved_score:.2f}"
+                except Exception:
+                    display_clinical_score = raw_saved_score
+
             papers.append({
                 "id": str(pmid),
                 "pubmed_id": str(pmid),
@@ -814,7 +826,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "abstract": abstract or "",
                 "tags": generate_tags(title, abstract or ""),
                 "summary_jp": saved.get("summary_jp", "") or "",
-                "clinical_score": saved.get("clinical_score", "") or "",
+                "clinical_score": display_clinical_score,
                 "clinical_reason": saved.get("clinical_reason", "") or "",
                 "likes": saved.get("likes", 0) if saved.get("likes") is not None else 0,
                 "is_saved": True,
@@ -888,6 +900,18 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 pubdate = saved.get("pubdate", raw_pubdate) if saved else raw_pubdate
                 abstract = saved.get("abstract", raw_abstract) if saved else raw_abstract
 
+                raw_saved_score = saved.get("clinical_score", "") if saved else ""
+                display_clinical_score = ""
+
+                if raw_saved_score:
+                    try:
+                        base_saved_score = float(raw_saved_score)
+                        adjusted_saved_score = base_saved_score + stable_score_offset(pmid)
+                        adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
+                        display_clinical_score = f"{adjusted_saved_score:.2f}"
+                    except Exception:
+                        display_clinical_score = raw_saved_score
+
                 papers.append({
                     "id": pmid,
                     "pubmed_id": pmid,
@@ -899,7 +923,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                     "abstract": abstract or "",
                     "tags": generate_tags(title, abstract or ""),
                     "summary_jp": saved["summary_jp"] if saved else "",
-                    "clinical_score": saved["clinical_score"] if saved else "",
+                    "clinical_score": display_clinical_score,
                     "clinical_reason": saved["clinical_reason"] if saved else "",
                     "likes": saved["likes"] if saved and saved.get("likes") is not None else 0,
                     "is_saved": bool(saved),
@@ -997,8 +1021,20 @@ def paper(
         jp_title = saved_paper.get("jp_title") or ""
         jp = saved_paper.get("jp") or ""
         summary_jp = saved_paper.get("summary_jp") or ""
-        clinical_score = saved_paper.get("clinical_score") or ""
         clinical_reason = saved_paper.get("clinical_reason") or ""
+
+        raw_saved_score = saved_paper.get("clinical_score") or ""
+
+        if raw_saved_score:
+            try:
+                base_saved_score = float(raw_saved_score)
+                adjusted_saved_score = base_saved_score + stable_score_offset(id)
+                adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
+                clinical_score = f"{adjusted_saved_score:.2f}"
+            except Exception:
+                clinical_score = raw_saved_score
+        else:
+            clinical_score = ""
 
     if not jp_title:
         jp_title = translate_title_to_japanese(title)
@@ -1009,8 +1045,16 @@ def paper(
     if summarize == 1 and not summary_jp:
         summary_result = summarize_abstract_in_japanese(abstract)
         summary_jp = summary_result["summary"]
-        clinical_score = summary_result["score"]
         clinical_reason = summary_result["reason"]
+
+        try:
+            base_score = float(summary_result["score"] or 0)
+        except Exception:
+            base_score = 0.0
+
+        adjusted_score = base_score + stable_score_offset(id)
+        adjusted_score = max(0.0, min(5.0, adjusted_score))
+        clinical_score = f"{adjusted_score:.2f}"
 
     # サイト内キャッシュとして自動保存
     if jp_title or jp or summary_jp:
