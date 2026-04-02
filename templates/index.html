@@ -266,19 +266,65 @@
       }
 
       .ranking-item {
-        padding: 18px 0;
-        border-bottom: 1px solid #e5e7eb;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 18px 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
       }
 
       .ranking-item:last-child {
-        border-bottom: none;
+        border-bottom: 1px solid #e5e7eb;
       }
 
       .ranking-rank {
-        display: inline-block;
-        min-width: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
         font-weight: 800;
         color: #2563eb;
+        font-size: 18px;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .ranking-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+
+      .ranking-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+      }
+
+      .ranking-link-row {
+        margin-top: 14px;
+      }
+
+      .ranking-detail-link {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 700;
+        color: #2563eb;
+        text-decoration: none;
+      }
+
+      .ranking-detail-link:hover {
+        text-decoration: underline;
       }
 
       .ranking-title {
@@ -520,6 +566,27 @@
         .score {
           font-size: 15px;
         }
+
+        .ranking-item {
+          padding: 16px 14px;
+          border-radius: 14px;
+        }
+
+        .ranking-item-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .ranking-rank {
+          font-size: 17px;
+          min-width: 40px;
+        }
+
+        .ranking-badge {
+          font-size: 12px;
+          padding: 6px 9px;
+        }
       }
     </style>
   </head>
@@ -597,7 +664,15 @@
 
         {% if popular_papers %} {% for paper in popular_papers %}
         <div class="ranking-item">
-          <div class="ranking-rank">#{{ loop.index }}</div>
+          <div class="ranking-item-header">
+            <div class="ranking-rank">
+              {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %} 🥈2位 {%
+              elif loop.index == 3 %} 🥉3位 {% else %} {{ loop.index }}位 {%
+              endif %}
+            </div>
+
+            <div class="ranking-badge">👍 {{ paper.likes or 0 }} いいね</div>
+          </div>
 
           <div class="ranking-title-ja">
             <a href="/paper?id={{ paper.pubmed_id }}">
@@ -605,18 +680,24 @@
             </a>
           </div>
 
-          {% if paper.summary_jp %}
-          <div class="summary">{{ paper.summary_jp }}</div>
-          {% endif %} {% if paper.jp_title %}
+          {% if paper.jp_title %}
           <div class="ranking-title-en">{{ paper.title }}</div>
+          {% endif %} {% if paper.summary_jp %}
+          <div class="summary">{{ paper.summary_jp }}</div>
           {% endif %}
-
-          <div class="likes">👍 {{ paper.likes or 0 }}</div>
 
           <div class="ranking-meta">
             <div>PubMed ID: {{ paper.pubmed_id }}</div>
             <div>雑誌: {{ paper.journal }}</div>
             <div>公開日: {{ paper.pubdate }}</div>
+          </div>
+
+          <div class="ranking-link-row">
+            <a
+              href="/paper?id={{ paper.pubmed_id }}"
+              class="ranking-detail-link"
+              >詳細を見る</a
+            >
           </div>
         </div>
         {% endfor %} {% else %}
@@ -631,7 +712,17 @@
 
         {% if top_rated_papers %} {% for paper in top_rated_papers %}
         <div class="ranking-item">
-          <div class="ranking-rank">#{{ loop.index }}</div>
+          <div class="ranking-item-header">
+            <div class="ranking-rank">
+              {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %} 🥈2位 {%
+              elif loop.index == 3 %} 🥉3位 {% else %} {{ loop.index }}位 {%
+              endif %}
+            </div>
+
+            <div class="ranking-badge">
+              ⭐ {{ paper.clinical_score or "0.00" }} / 5.0
+            </div>
+          </div>
 
           <div class="ranking-title-ja">
             <a href="/paper?id={{ paper.pubmed_id }}">
@@ -639,20 +730,24 @@
             </a>
           </div>
 
-          {% if paper.summary_jp %}
-          <div class="summary">{{ paper.summary_jp }}</div>
-          {% endif %} {% if paper.jp_title %}
+          {% if paper.jp_title %}
           <div class="ranking-title-en">{{ paper.title }}</div>
+          {% endif %} {% if paper.summary_jp %}
+          <div class="summary">{{ paper.summary_jp }}</div>
           {% endif %}
-
-          <div class="score">
-            臨床参考度: {{ paper.clinical_score or "0.0" }} / 5.0
-          </div>
 
           <div class="ranking-meta">
             <div>PubMed ID: {{ paper.pubmed_id }}</div>
             <div>雑誌: {{ paper.journal }}</div>
             <div>公開日: {{ paper.pubdate }}</div>
+          </div>
+
+          <div class="ranking-link-row">
+            <a
+              href="/paper?id={{ paper.pubmed_id }}"
+              class="ranking-detail-link"
+              >詳細を見る</a
+            >
           </div>
         </div>
         {% endfor %} {% else %}
@@ -663,13 +758,28 @@
 
     <script>
       function toggleSection(sectionId) {
-        const target = document.getElementById(sectionId);
+        const popular = document.getElementById("popular-ranking");
+        const score = document.getElementById("score-ranking");
 
+        if (!popular || !score) {
+          return;
+        }
+
+        const target = document.getElementById(sectionId);
         if (!target) {
           return;
         }
 
-        target.classList.toggle("hidden");
+        const isHidden = target.classList.contains("hidden");
+
+        // いったん両方閉じる
+        popular.classList.add("hidden");
+        score.classList.add("hidden");
+
+        // 押したものが閉じていた時だけ開く
+        if (isHidden) {
+          target.classList.remove("hidden");
+        }
       }
 
       function showSearchLoading(form) {

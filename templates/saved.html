@@ -1,76 +1,130 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>保存フォルダ</title>
 
-<meta charset="UTF-8">
-<title>保存フォルダ</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #f7f8fb;
+        margin: 0;
+        padding: 40px 16px;
+        color: #222;
+      }
 
-{% if is_guest %}
-<div class="alert-box">
-ログインすると論文を保存できます。
-</div>
-{% endif %}
+      .container {
+        max-width: 800px;
+        margin: auto;
+      }
 
-<style>
+      h1 {
+        margin-top: 0;
+        margin-bottom: 18px;
+        font-size: 30px;
+        line-height: 1.4;
+      }
 
-body{
-font-family:sans-serif;
-background:#f7f8fb;
-padding:40px;
-}
+      .top-link {
+        display: inline-block;
+        margin-bottom: 18px;
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 700;
+      }
 
-.container{
-max-width:800px;
-margin:auto;
-}
+      .top-link:hover {
+        text-decoration: underline;
+      }
 
-.folder{
-background:white;
-padding:20px;
-margin-bottom:12px;
-border-radius:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
+      .folder {
+        background: white;
+        padding: 20px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
 
-.folder a{
-font-size:20px;
-text-decoration:none;
-color:#2563eb;
-font-weight:bold;
-}
+      .folder a {
+        display: block;
+        font-size: 20px;
+        line-height: 1.5;
+        text-decoration: none;
+        color: #2563eb;
+        font-weight: bold;
+        word-break: break-word;
+      }
 
-.alert-box {
-    margin: 16px 0;
-    padding: 12px;
-    background: #fef3c7;
-    border-radius: 8px;
-}
+      .alert-box {
+        margin: 0 0 16px;
+        padding: 12px 14px;
+        background: #fef3c7;
+        border-radius: 8px;
+        line-height: 1.7;
+      }
 
-</style>
+      @media (max-width: 640px) {
+        body {
+          padding: 16px 12px 28px;
+        }
 
-</head>
-<body>
+        .container {
+          max-width: 100%;
+        }
 
-<div class="container">
+        h1 {
+          margin-bottom: 14px;
+          font-size: 24px;
+          line-height: 1.4;
+        }
 
-<h1>保存フォルダ</h1>
+        .top-link {
+          display: inline-flex;
+          align-items: center;
+          min-height: 40px;
+          margin-bottom: 14px;
+          font-size: 15px;
+        }
 
-<a href="/">トップへ</a>
+        .alert-box {
+          margin-bottom: 14px;
+          padding: 12px;
+          font-size: 14px;
+          line-height: 1.7;
+          border-radius: 10px;
+        }
 
-{% for folder_name, papers in folders.items() %}
+        .folder {
+          padding: 16px 14px;
+          margin-bottom: 10px;
+          border-radius: 14px;
+        }
 
-<div class="folder">
+        .folder a {
+          font-size: 17px;
+          line-height: 1.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      {% if is_guest %}
+      <div class="alert-box">ログインすると論文を保存できます。</div>
+      {% endif %}
 
-<a href="/saved/{{ folder_name }}">
-📁 {{ folder_name }} ({{ papers|length }})
+      <h1>保存フォルダ</h1>
 
-</a>
+      <a href="/" class="top-link">← トップへ</a>
 
-</div>
-
-{% endfor %}
-
-</div>
-
-</body>
+      {% for folder_name, papers in folders.items() %}
+      <div class="folder">
+        <a href="/saved/{{ folder_name }}">
+          📁 {{ folder_name }} ({{ papers|length }})
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </body>
 </html>

@@ -5,141 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>論文詳細</title>
     <style>
+      :root {
+        --bg: #f7f8fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --blue-soft: #eff6ff;
+        --blue-soft-hover: #dbeafe;
+        --blue-deep: #1d4ed8;
+        --green: #16a34a;
+        --green-soft: #ecfdf5;
+        --green-border: #bbf7d0;
+        --green-text: #166534;
+        --amber: #d97706;
+        --amber-soft: #fff8e8;
+        --orange-soft: #fff7ed;
+        --orange-text: #c2410c;
+        --orange-active-bg: #fef3c7;
+        --orange-active-text: #92400e;
+        --danger-soft: #fef2f2;
+        --danger-border: #fecaca;
+        --danger-text: #b91c1c;
+        --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        --shadow-soft: 0 4px 14px rgba(15, 23, 42, 0.04);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: sans-serif;
-        background: #f7f8fb;
-        color: #222;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
         margin: 0;
-        padding: 40px 16px;
+        padding: 20px 14px 40px;
       }
 
       .container {
-        max-width: 900px;
+        max-width: 860px;
         margin: 0 auto;
       }
 
-      .card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      }
-
-      h1 {
-        margin-top: 0;
-        line-height: 1.5;
-        font-size: 30px;
-      }
-
-      h2 {
-        margin-top: 0;
-        margin-bottom: 14px;
-        font-size: 22px;
-      }
-
-      .meta {
-        color: #666;
-        font-size: 14px;
-        margin-top: 8px;
-        line-height: 1.7;
-      }
-
-      .abstract {
-        white-space: pre-wrap;
-        line-height: 1.8;
-      }
-
-      .button-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-
-      .btn {
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      .btn:hover {
-        opacity: 0.9;
-      }
-
-      .summary-btn {
-        background: #2563eb;
-      }
-
-      .done-btn {
-        background: #0f766e;
-        cursor: default;
-      }
-
-      .save-btn {
-        background: #16a34a;
-      }
-
-      .like-button {
-        border: none;
-        background: #eff6ff;
-        color: #1d4ed8;
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      .like-button:hover {
-        opacity: 0.92;
-      }
-
-      .like-button.disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      .favorite-button {
-        border: none;
-        background: #fff7ed;
-        color: #c2410c;
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      .favorite-button:hover {
-        opacity: 0.92;
-      }
-
-      .favorite-button.active {
-        background: #fef3c7;
-        color: #92400e;
-      }
-
       .back-link {
-        display: inline-block;
-        margin-bottom: 20px;
-        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+        color: var(--blue);
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 14px;
       }
 
       .back-link:hover {
         text-decoration: underline;
       }
 
-      .save-form {
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(229, 231, 235, 0.9);
+        border-radius: var(--radius);
+        padding: 18px;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        padding-bottom: 16px;
+      }
+
+      .paper-title {
+        margin: 0 0 14px;
+        line-height: 1.42;
+        font-size: 29px;
+        letter-spacing: -0.03em;
+        font-weight: 800;
+      }
+
+      .score-box {
+        background: linear-gradient(180deg, #fff9ed 0%, #fff6e3 100%);
+        border: 1px solid #fde7b0;
+        border-left: 4px solid #f59e0b;
+        border-radius: 16px;
+        padding: 15px 15px 14px;
+      }
+
+      .score-label {
+        font-size: 13px;
+        font-weight: 800;
+        color: #b45309;
+        margin-bottom: 8px;
+        letter-spacing: 0.01em;
+      }
+
+      .score-stars {
+        font-size: 24px;
+        letter-spacing: 1px;
+        color: #f59e0b;
+        font-weight: 700;
+      }
+
+      .score-number {
+        margin-top: 8px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #92400e;
+      }
+
+      .score-note {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #7c6a53;
+        line-height: 1.6;
+      }
+
+      .score-reason-wrap {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(245, 158, 11, 0.18);
+      }
+
+      .score-reason-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #b45309;
+        margin-bottom: 6px;
+      }
+
+      .score-reason {
+        font-size: 14px;
+        line-height: 1.8;
+        color: #444;
+        white-space: pre-wrap;
+      }
+
+      .mini-action-row {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
         align-items: center;
+        margin-top: 14px;
+      }
+
+      .mini-action {
+        border: none;
+        background: transparent;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease,
+          opacity 0.15s ease;
+      }
+
+      .mini-action:hover {
+        transform: translateY(-1px);
+      }
+
+      .favorite-button {
+        background: var(--orange-soft);
+        color: var(--orange-text);
+      }
+
+      .favorite-button.active {
+        background: var(--orange-active-bg);
+        color: var(--orange-active-text);
+      }
+
+      .like-button {
+        background: var(--blue-soft);
+        color: var(--blue-deep);
+      }
+
+      .like-button.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .like-button.liked {
+        background: var(--blue-soft-hover);
+        color: var(--blue-deep);
+      }
+
+      .save-card-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #111827;
+        letter-spacing: -0.01em;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #ecfdf5;
+        color: #0f766e;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 14px;
+        padding: 11px 16px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        transition:
+          transform 0.15s ease,
+          opacity 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .summary-btn {
+        background: var(--blue);
+        color: white;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+      }
+
+      .save-btn {
+        background: var(--green);
+        color: white;
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.18);
+      }
+
+      .save-btn.saved {
+        background: #0f766e;
+        cursor: default;
+        opacity: 0.95;
+        box-shadow: none;
+      }
+
+      .save-form {
         width: 100%;
       }
 
@@ -156,112 +273,39 @@
         width: 100%;
         padding: 12px 14px;
         border: 1px solid #d1d5db;
-        border-radius: 10px;
+        border-radius: 14px;
         font-size: 14px;
         min-width: 0;
         flex: 1;
+        background: #fbfbfc;
+        color: var(--text);
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .folder-input:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        background: #fff;
       }
 
       .helper-text {
         margin-top: 10px;
-        font-size: 13px;
-        color: #6b7280;
-        line-height: 1.7;
-      }
-
-      .score-box {
-        margin-top: 18px;
-        background: #fff8e8;
-        border-radius: 14px;
-        padding: 16px 18px;
-        border-left: 5px solid #f59e0b;
-      }
-
-      .score-label {
-        font-size: 14px;
-        font-weight: 700;
-        color: #b45309;
-        margin-bottom: 8px;
-      }
-
-      .score-stars {
-        font-size: 24px;
-        letter-spacing: 2px;
-        color: #f59e0b;
-        font-weight: bold;
-      }
-
-      .score-number {
-        margin-top: 8px;
-        font-size: 16px;
-        font-weight: 700;
-      }
-
-      .score-reason-title {
-        margin-top: 14px;
-        font-size: 14px;
-        font-weight: 700;
-        color: #b45309;
-      }
-
-      .score-reason {
-        margin-top: 8px;
-        font-size: 14px;
-        line-height: 1.8;
-        color: #444;
-        white-space: pre-wrap;
-      }
-
-      .score-note {
-        margin-top: 8px;
         font-size: 12px;
-        color: #666;
-      }
-
-      .summary-box {
-        margin-top: 18px;
-        background: #f8fafc;
-        border-left: 5px solid #2563eb;
-        border-radius: 12px;
-        padding: 16px 18px;
-      }
-
-      .summary-label {
-        font-size: 14px;
-        font-weight: 700;
-        color: #2563eb;
-        margin-bottom: 8px;
-      }
-
-      .original-title-box {
-        margin-top: 18px;
-        background: #fcfcfd;
-        border-radius: 12px;
-        padding: 16px 18px;
-      }
-
-      .original-title-label {
-        font-size: 14px;
-        font-weight: 700;
-        color: #374151;
-        margin-bottom: 8px;
-      }
-
-      .original-title-text {
-        line-height: 1.8;
-        color: #222;
-      }
-
-      .section-card-title {
-        margin-bottom: 14px;
+        color: var(--subtext);
+        line-height: 1.75;
       }
 
       .alert-box {
-        margin-top: 18px;
-        background: #fef2f2;
-        color: #b91c1c;
-        border-radius: 12px;
-        padding: 14px 16px;
+        margin-top: 14px;
+        background: var(--danger-soft);
+        color: var(--danger-text);
+        border: 1px solid var(--danger-border);
+        border-radius: 14px;
+        padding: 13px 14px;
         line-height: 1.7;
         font-size: 14px;
       }
@@ -269,38 +313,136 @@
       .save-message {
         width: 100%;
         margin-top: 12px;
-        padding: 10px 14px;
-        border-radius: 10px;
+        padding: 11px 13px;
+        border-radius: 14px;
         font-size: 14px;
         font-weight: 700;
-        line-height: 1.6;
+        line-height: 1.65;
       }
 
       .save-message.success {
-        background: #ecfdf5;
-        color: #166534;
-        border: 1px solid #bbf7d0;
+        background: var(--green-soft);
+        color: var(--green-text);
+        border: 1px solid var(--green-border);
       }
 
       .save-message.error {
-        background: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
+        background: var(--danger-soft);
+        color: var(--danger-text);
+        border: 1px solid var(--danger-border);
       }
 
-      .save-btn.saved {
-        background: #0f766e;
-        cursor: default;
-        opacity: 0.95;
+      .section-title {
+        margin: 0 0 12px;
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
       }
 
-      .like-button.liked {
-        background: #dbeafe;
-        color: #1d4ed8;
+      .summary-box {
+        background: linear-gradient(180deg, #f9fbff 0%, #f7faff 100%);
+        border: 1px solid #dbeafe;
+        border-left: 4px solid var(--blue);
+        border-radius: 16px;
+        padding: 16px 16px;
       }
 
-      .like-button.animate-pop,
-      .save-btn.animate-pop {
+      .summary-label {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--blue);
+        margin-bottom: 8px;
+      }
+
+      .abstract {
+        white-space: pre-wrap;
+        line-height: 1.88;
+        font-size: 15px;
+        color: #374151;
+      }
+
+      .meta-list {
+        display: grid;
+        gap: 7px;
+        color: var(--subtext);
+        font-size: 14px;
+        line-height: 1.75;
+      }
+
+      .meta-item {
+        display: block;
+        word-break: break-word;
+      }
+
+      .meta-item strong {
+        color: #374151;
+        font-weight: 700;
+      }
+
+      .meta-item a {
+        color: var(--blue);
+        text-decoration: none;
+        word-break: break-word;
+      }
+
+      .meta-item a:hover {
+        text-decoration: underline;
+      }
+
+      .details-block {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fcfcfd;
+        overflow: hidden;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .details-block summary {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 16px;
+        font-size: 15px;
+        font-weight: 800;
+        color: #111827;
+        transition: background 0.15s ease;
+      }
+
+      .details-block summary:hover {
+        background: #f8fafc;
+      }
+
+      .details-block summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .details-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .details-arrow {
+        color: var(--subtext);
+        font-size: 13px;
+        transition: transform 0.15s ease;
+      }
+
+      .details-block[open] .details-arrow {
+        transform: rotate(180deg);
+      }
+
+      .details-content {
+        padding: 0 16px 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      .animate-pop {
         transform: scale(1.06);
         transition: transform 0.2s ease;
       }
@@ -314,51 +456,59 @@
           max-width: 100%;
         }
 
+        .back-link {
+          font-size: 15px;
+          margin-bottom: 14px;
+        }
+
         .card {
-          padding: 18px 14px;
+          padding: 16px 14px;
           border-radius: 18px;
           margin-bottom: 12px;
         }
 
-        h1 {
+        .paper-title {
           font-size: 24px;
-          line-height: 1.4;
-          letter-spacing: -0.01em;
-          margin-bottom: 14px;
-        }
-
-        h2 {
-          font-size: 19px;
-          line-height: 1.4;
+          line-height: 1.38;
           margin-bottom: 12px;
         }
 
-        .back-link {
-          font-size: 15px;
-          margin-bottom: 16px;
+        .score-box,
+        .summary-box {
+          padding: 14px 14px;
+          border-radius: 14px;
         }
 
-        .button-row {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 10px;
+        .score-label,
+        .summary-label,
+        .score-reason-title {
+          font-size: 13px;
         }
 
-        .button-row form {
-          width: 100%;
+        .score-stars {
+          font-size: 24px;
+          letter-spacing: 1px;
         }
 
-        .btn,
-        .like-button,
-        .favorite-button,
-        .auth-link {
-          width: 100%;
-          min-height: 46px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 15px;
-          border-radius: 12px;
+        .score-number {
+          font-size: 19px;
+          line-height: 1.3;
+        }
+
+        .score-note {
+          font-size: 12px;
+          line-height: 1.7;
+        }
+
+        .mini-action-row {
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .mini-action {
+          min-height: 34px;
+          padding: 6px 10px;
+          font-size: 13px;
         }
 
         .folder-input-wrap {
@@ -374,186 +524,45 @@
           min-height: 46px;
         }
 
-        .save-btn {
-          width: 100%;
-        }
-
-        .helper-text {
-          font-size: 14px;
-          line-height: 1.8;
-        }
-
-        .meta {
-          font-size: 15px;
-          line-height: 1.8;
-        }
-
-        .abstract,
-        .original-title-text,
-        .score-reason {
-          font-size: 15px;
-          line-height: 1.9;
-        }
-
-        .score-box,
-        .summary-box,
-        .original-title-box {
-          padding: 16px 14px;
-          border-radius: 14px;
-        }
-
-        .score-label,
-        .summary-label,
-        .original-title-label,
-        .score-reason-title {
-          font-size: 14px;
-        }
-
-        .score-stars {
-          font-size: 28px;
-          letter-spacing: 1px;
-        }
-
-        .score-number {
-          font-size: 22px;
-          line-height: 1.3;
-        }
-
-        .score-note {
-          font-size: 13px;
-          line-height: 1.7;
-        }
-
-        .save-message {
-          font-size: 15px;
-        }
-      }
-
-      @media (max-width: 640px) {
-        body {
-          padding: 16px 12px 28px;
-        }
-
-        .container {
-          max-width: 100%;
-        }
-
-        .card {
-          padding: 18px 14px;
-          border-radius: 18px;
-          margin-bottom: 12px;
-        }
-
-        h1 {
-          font-size: 24px;
-          line-height: 1.4;
-          letter-spacing: -0.01em;
-          margin-bottom: 14px;
-        }
-
-        h2 {
-          font-size: 19px;
-          line-height: 1.4;
-          margin-bottom: 12px;
-        }
-
-        .back-link {
-          font-size: 15px;
-          margin-bottom: 16px;
-        }
-
-        .button-row {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 10px;
-        }
-
-        .button-row form {
-          width: 100%;
-        }
-
-        .btn,
-        .like-button,
-        .favorite-button {
+        .btn {
           width: 100%;
           min-height: 46px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 15px;
-          border-radius: 12px;
         }
 
-        .folder-input-wrap {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 10px;
-          padding: 10px 0px;
-        }
-
-        .folder-input {
-          width: 100%;
-          min-width: 100%;
+        .section-title {
           font-size: 16px;
-          min-height: 46px;
-        }
-
-        .save-btn {
-          width: 100%;
-        }
-
-        .helper-text {
-          font-size: 14px;
-          line-height: 1.8;
-        }
-
-        .meta {
-          font-size: 15px;
-          line-height: 1.8;
         }
 
         .abstract,
-        .original-title-text,
         .score-reason {
           font-size: 15px;
           line-height: 1.9;
         }
 
-        .score-box,
-        .summary-box,
-        .original-title-box {
-          padding: 16px 14px;
+        .meta-list {
+          font-size: 14px;
+          line-height: 1.8;
+        }
+
+        .details-block {
           border-radius: 14px;
         }
 
-        .score-label,
-        .summary-label,
-        .original-title-label,
-        .score-reason-title {
-          font-size: 14px;
-        }
-
-        .score-stars {
-          font-size: 28px;
-          letter-spacing: 1px;
-        }
-
-        .score-number {
-          font-size: 22px;
-          line-height: 1.3;
-        }
-
-        .score-note {
-          font-size: 13px;
-          line-height: 1.7;
-        }
-
-        .save-message {
+        .details-block summary {
+          padding: 15px 14px;
           font-size: 15px;
         }
 
-        .meta.paper-link-row a {
-          word-break: break-word;
+        .details-content {
+          padding: 0 14px 14px;
+        }
+
+        .save-message {
+          font-size: 14px;
         }
       }
     </style>
@@ -562,8 +571,8 @@
     <div class="container">
       <a href="#" class="back-link" onclick="goBack(event)">← 戻る</a>
 
-      <div class="card">
-        <h1>{{ paper.jp_title or paper.title }}</h1>
+      <div class="card hero-card">
+        <h1 class="paper-title">{{ paper.jp_title or paper.title }}</h1>
 
         {% if paper.clinical_score %}
         <div class="score-box">
@@ -579,16 +588,48 @@
           <div class="score-note">※ abstractベースの参考指標です</div>
 
           {% if paper.clinical_reason %}
-          <div class="score-reason-title">【参考度の理由】</div>
-          <div class="score-reason">{{ paper.clinical_reason }}</div>
+          <div class="score-reason-wrap">
+            <div class="score-reason-title">参考度の理由</div>
+            <div class="score-reason">{{ paper.clinical_reason }}</div>
+          </div>
           {% endif %}
         </div>
         {% endif %}
 
-        <div class="button-row">
-          {% if paper.summary_jp %}
-          <button type="button" class="btn done-btn">要約済み</button>
-          {% else %}
+        <div class="mini-action-row">
+          <button
+            type="button"
+            class="mini-action favorite-button {% if paper.is_favorite %}active{% endif %}"
+            onclick="toggleFavorite('{{ paper.id }}', this)"
+            aria-label="お気に入り"
+          >
+            <span>{% if paper.is_favorite %}★{% else %}☆{% endif %}</span>
+            <span>お気に入り</span>
+          </button>
+
+          <button
+            type="button"
+            class="mini-action like-button"
+            data-pubmed-id="{{ paper.id }}"
+            onclick="addLike('{{ paper.id }}', this)"
+            aria-label="いいね"
+          >
+            <span>👍</span>
+            <span class="like-count"
+              >{% if paper.likes is defined %}{{ paper.likes }}{% else %}0{%
+              endif %}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="save-card-title">あとで見返すために保存</h2>
+
+        {% if paper.summary_jp %}
+        <div class="status-chip">✓ 要約済み</div>
+        {% else %}
+        <div style="margin-bottom: 12px">
           <form
             action="/paper"
             method="get"
@@ -603,127 +644,138 @@
             <input type="hidden" name="summarize" value="1" />
             <button class="btn summary-btn" type="submit">要約する</button>
           </form>
-          {% endif %}
-
-          <button
-            type="button"
-            class="favorite-button {% if paper.is_favorite %}active{% endif %}"
-            onclick="toggleFavorite('{{ paper.id }}', this)"
-          >
-            {% if paper.is_favorite %} ★ お気に入り済み {% else %} ☆
-            お気に入りに追加 {% endif %}
-          </button>
-
-          <button
-            type="button"
-            class="like-button"
-            data-pubmed-id="{{ paper.id }}"
-            onclick="addLike('{{ paper.id }}', this)"
-          >
-            👍 いいね
-            <span class="like-count"
-              >{% if paper.likes is defined %}{{ paper.likes }}{% else %}0{%
-              endif %}</span
-            >
-          </button>
         </div>
-
-        {% if save_error_message %}
+        {% endif %} {% if save_error_message %}
         <div class="alert-box">{{ save_error_message }}</div>
         {% endif %}
 
-        <div class="button-row">
-          <form action="/save" method="post" class="save-form" id="save-form">
-            <input type="hidden" name="pubmed_id" value="{{ paper.id }}" />
-            <input type="hidden" name="title" value="{{ paper.title }}" />
-            <input type="hidden" name="jp_title" value="{{ paper.jp_title }}" />
-            <input type="hidden" name="authors" value="{{ paper.authors }}" />
-            <input type="hidden" name="journal" value="{{ paper.journal }}" />
-            <input type="hidden" name="pubdate" value="{{ paper.pubdate }}" />
+        <form action="/save" method="post" class="save-form" id="save-form">
+          <input type="hidden" name="pubmed_id" value="{{ paper.id }}" />
+          <input type="hidden" name="title" value="{{ paper.title }}" />
+          <input type="hidden" name="jp_title" value="{{ paper.jp_title }}" />
+          <input type="hidden" name="authors" value="{{ paper.authors }}" />
+          <input type="hidden" name="journal" value="{{ paper.journal }}" />
+          <input type="hidden" name="pubdate" value="{{ paper.pubdate }}" />
 
-            <textarea name="abstract" hidden>{{ paper.abstract }}</textarea>
-            <textarea name="jp" hidden>{{ paper.jp }}</textarea>
-            <textarea name="summary_jp" hidden>{{ paper.summary_jp }}</textarea>
-            <input
-              type="hidden"
-              name="clinical_score"
-              value="{{ paper.clinical_score }}"
-            />
-            <textarea name="clinical_reason" hidden>
+          <textarea name="abstract" hidden>{{ paper.abstract }}</textarea>
+          <textarea name="jp" hidden>{{ paper.jp }}</textarea>
+          <textarea name="summary_jp" hidden>{{ paper.summary_jp }}</textarea>
+          <input
+            type="hidden"
+            name="clinical_score"
+            value="{{ paper.clinical_score }}"
+          />
+          <textarea name="clinical_reason" hidden>
 {{ paper.clinical_reason }}</textarea
-            >
+          >
 
-            <div class="folder-input-wrap">
-              <input
-                type="text"
-                name="folder_name"
-                class="folder-input"
-                list="folder-name-suggestions"
-                placeholder="保存名を入力"
-                required
-              />
+          <div class="folder-input-wrap">
+            <input
+              type="text"
+              name="folder_name"
+              class="folder-input"
+              list="folder-name-suggestions"
+              placeholder="フォルダ名を入力"
+              required
+            />
 
-              <datalist id="folder-name-suggestions">
-                {% for name in folder_suggestions %}
-                <option value="{{ name }}"></option>
-                {% endfor %}
-              </datalist>
+            <datalist id="folder-name-suggestions">
+              {% for name in folder_suggestions %}
+              <option value="{{ name }}"></option>
+              {% endfor %}
+            </datalist>
 
-              <button class="btn save-btn" type="submit" id="save-button">
-                保存する
-              </button>
-            </div>
+            <button class="btn save-btn" type="submit" id="save-button">
+              保存する
+            </button>
+          </div>
 
-            <div
-              id="save-message"
-              class="save-message"
-              style="display: none"
-            ></div>
-          </form>
-        </div>
+          <div
+            id="save-message"
+            class="save-message"
+            style="display: none"
+          ></div>
+        </form>
 
         <div class="helper-text">
           初回は自由に入力できます。次回以降は、以前使った保存名が候補に表示されます。
         </div>
-
-        {% if paper.summary_jp %}
-        <div class="summary-box">
-          <div class="summary-label">★ 要約</div>
-          <div class="abstract">{{ paper.summary_jp }}</div>
-        </div>
-        {% endif %}
-
-        <div class="original-title-box">
-          <div class="original-title-label">英語タイトル</div>
-          <div class="original-title-text">{{ paper.title }}</div>
-        </div>
-
-        <div class="meta">PubMed ID: {{ paper.id }}</div>
-        <div class="meta">著者: {{ paper.authors }}</div>
-        <div class="meta">雑誌: {{ paper.journal }}</div>
-        <div class="meta">公開日: {{ paper.pubdate }}</div>
-        <div class="meta paper-link-row">
-          論文URL:
-          <a
-            href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.id }}/"
-            target="_blank"
-            rel="noopener"
-          >
-            PubMedで見る
-          </a>
-        </div>
       </div>
 
-      {% if paper.jp %}
+      {% if paper.summary_jp %}
       <div class="card">
-        <h2 class="section-card-title">★ 日本語訳</h2>
-        <div class="abstract">{{ paper.jp }}</div>
+        <h2 class="section-title">要点要約</h2>
+        <div class="summary-box">
+          <div class="summary-label">この論文の要点</div>
+          <div class="abstract">{{ paper.summary_jp }}</div>
+        </div>
       </div>
       {% endif %}
 
       <div class="card">
-        <h2 class="section-card-title">★ Abstract</h2>
-        <div class="abstract">{{ paper.abstract }}</div>
+        <h2 class="section-title">論文情報</h2>
+        <div class="meta-list">
+          <span class="meta-item"
+            ><strong>PubMed ID:</strong> {{ paper.id }}</span
+          >
+          <span class="meta-item"
+            ><strong>著者:</strong> {{ paper.authors }}</span
+          >
+          <span class="meta-item"
+            ><strong>雑誌:</strong> {{ paper.journal }}</span
+          >
+          <span class="meta-item"
+            ><strong>公開日:</strong> {{ paper.pubdate }}</span
+          >
+          <span class="meta-item">
+            <strong>論文URL:</strong>
+            <a
+              href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.id }}/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              PubMedで見る
+            </a>
+          </span>
+        </div>
+      </div>
+
+      <div class="card">
+        <details class="details-block">
+          <summary>
+            <span class="details-label">英語タイトル</span>
+            <span class="details-arrow">▼</span>
+          </summary>
+          <div class="details-content">
+            <div class="abstract">{{ paper.title }}</div>
+          </div>
+        </details>
+      </div>
+
+      {% if paper.jp %}
+      <div class="card">
+        <details class="details-block">
+          <summary>
+            <span class="details-label">日本語訳</span>
+            <span class="details-arrow">▼</span>
+          </summary>
+          <div class="details-content">
+            <div class="abstract">{{ paper.jp }}</div>
+          </div>
+        </details>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <details class="details-block">
+          <summary>
+            <span class="details-label">Abstract</span>
+            <span class="details-arrow">▼</span>
+          </summary>
+          <div class="details-content">
+            <div class="abstract">{{ paper.abstract }}</div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -748,8 +800,12 @@
           const likeCount = countSpan ? countSpan.textContent.trim() : "0";
 
           if (hasLiked(pubmedId)) {
-            button.textContent = "👍 いいね " + likeCount + " ✓";
+            button.innerHTML =
+              '<span>👍</span><span class="like-count">' +
+              likeCount +
+              "</span>";
             button.classList.add("liked");
+            button.classList.add("disabled");
             button.disabled = true;
           }
         });
@@ -758,6 +814,7 @@
       async function addLike(pubmedId, button) {
         if (hasLiked(pubmedId)) {
           button.classList.add("liked");
+          button.classList.add("disabled");
           button.disabled = true;
           return;
         }
@@ -770,21 +827,21 @@
           const data = await response.json();
 
           if (data.ok) {
-            // テキスト変更（これだけでOK）
-            button.textContent = "👍 いいね " + data.likes + " ✓";
+            button.innerHTML =
+              '<span>👍</span><span class="like-count">' +
+              data.likes +
+              "</span>";
 
-            // 状態変更
             setLiked(pubmedId);
             button.classList.add("liked");
+            button.classList.add("disabled");
             button.classList.add("animate-pop");
             button.disabled = true;
 
-            // モバイル振動
             if (navigator.vibrate) {
               navigator.vibrate(20);
             }
 
-            // アニメーション戻す
             setTimeout(() => {
               button.classList.remove("animate-pop");
             }, 250);
@@ -804,12 +861,17 @@
 
           if (data.ok) {
             if (data.is_favorite) {
-              button.textContent = "★ お気に入り済み";
+              button.innerHTML = "<span>★</span><span>お気に入り</span>";
               button.classList.add("active");
             } else {
-              button.textContent = "☆ お気に入りに追加";
+              button.innerHTML = "<span>☆</span><span>お気に入り</span>";
               button.classList.remove("active");
             }
+
+            button.classList.add("animate-pop");
+            setTimeout(() => {
+              button.classList.remove("animate-pop");
+            }, 250);
           }
         } catch (error) {
           alert("お気に入りの更新に失敗しました");
@@ -880,7 +942,8 @@
           const data = await response.json();
 
           if (response.ok && data.ok) {
-            saveMessage.textContent = "保存しました";
+            saveMessage.textContent =
+              "保存しました。あとで保存一覧から見返せます。";
             saveMessage.classList.remove("error");
             saveMessage.classList.add("success");
             saveMessage.style.display = "block";

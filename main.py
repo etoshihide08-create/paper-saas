@@ -900,6 +900,34 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 pubdate = saved.get("pubdate", raw_pubdate) if saved else raw_pubdate
                 abstract = saved.get("abstract", raw_abstract) if saved else raw_abstract
 
+                # 日本語タイトルを優先。なければ初回だけ翻訳して保存する
+                jp_title = saved.get("jp_title", "") if saved else ""
+
+                if not jp_title and title:
+                    try:
+                        jp_title = translate_title_to_japanese(title)
+                    except Exception:
+                        jp_title = title
+
+                    try:
+                        save_paper(
+                            pubmed_id=pmid,
+                            title=title,
+                            jp_title=jp_title,
+                            authors=authors_text,
+                            journal=journal,
+                            pubdate=pubdate,
+                            abstract=abstract or "",
+                            jp=saved.get("jp", "") if saved else "",
+                            summary_jp=saved.get("summary_jp", "") if saved else "",
+                            folder_name=saved.get("folder_name", "") if saved else "",
+                            clinical_score=saved.get("clinical_score", "") if saved else "",
+                            clinical_reason=saved.get("clinical_reason", "") if saved else "",
+                            user_id=current_user["id"] if current_user else None,
+                        )
+                    except Exception:
+                        pass
+
                 raw_saved_score = saved.get("clinical_score", "") if saved else ""
                 display_clinical_score = ""
 
@@ -916,16 +944,16 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                     "id": pmid,
                     "pubmed_id": pmid,
                     "title": title,
-                    "jp_title": saved["jp_title"] if saved and saved.get("jp_title") else title,
+                    "jp_title": jp_title or title,
                     "authors": authors_text,
                     "journal": journal,
                     "pubdate": pubdate,
                     "abstract": abstract or "",
                     "tags": generate_tags(title, abstract or ""),
-                    "summary_jp": saved["summary_jp"] if saved else "",
+                    "summary_jp": saved.get("summary_jp", "") if saved else "",
                     "clinical_score": display_clinical_score,
-                    "clinical_reason": saved["clinical_reason"] if saved else "",
-                    "likes": saved["likes"] if saved and saved.get("likes") is not None else 0,
+                    "clinical_reason": saved.get("clinical_reason", "") if saved else "",
+                    "likes": saved.get("likes", 0) if saved and saved.get("likes") is not None else 0,
                     "is_saved": bool(saved),
                 })
             except Exception:
@@ -1221,7 +1249,13 @@ def saved(request: Request):
     folders = {}
 
     for paper in papers:
-        folder_name = paper.get("folder_name") or "未分類"
+        folder_name = (paper.get("folder_name") or "").strip()
+
+        if not folder_name:
+            continue
+
+        if folder_name == "未分類":
+            continue
 
         if folder_name not in folders:
             folders[folder_name] = []
