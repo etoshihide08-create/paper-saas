@@ -22,6 +22,10 @@
         --fav-text: #c2410c;
         --fav-active-bg: #fef3c7;
         --fav-active-text: #92400e;
+        --green-soft: #ecfdf5;
+        --green-text: #166534;
+        --danger-soft: #fef2f2;
+        --danger-text: #b91c1c;
         --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
         --radius: 18px;
       }
@@ -105,10 +109,6 @@
         color: var(--text);
       }
 
-      .paper-list {
-        margin-top: 0;
-      }
-
       .paper-card {
         background: var(--card);
         border: 1px solid var(--line);
@@ -116,14 +116,6 @@
         padding: 16px 16px 14px;
         margin-bottom: 12px;
         box-shadow: var(--shadow);
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease;
-      }
-
-      .paper-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
       }
 
       .paper-title {
@@ -239,6 +231,105 @@
         transform: translateY(-1px);
       }
 
+      .organize-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .organize-toggle {
+        border: none;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .organize-toggle:hover {
+        background: #e5e7eb;
+      }
+
+      .organize-panel {
+        display: none;
+        margin-top: 10px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fafbfc;
+      }
+
+      .organize-panel.open {
+        display: block;
+      }
+
+      .organize-title {
+        margin: 0 0 10px;
+        font-size: 13px;
+        font-weight: 800;
+        color: #374151;
+      }
+
+      .mini-form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .mini-input,
+      .mini-textarea {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 14px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .mini-input {
+        flex: 1;
+        min-width: 180px;
+      }
+
+      .mini-textarea {
+        min-height: 96px;
+        resize: vertical;
+        line-height: 1.7;
+      }
+
+      .mini-submit {
+        border: none;
+        background: var(--blue);
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .mini-submit:hover {
+        opacity: 0.92;
+      }
+
+      .paper-note {
+        margin-top: 10px;
+        padding: 12px 13px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.8;
+        color: #374151;
+        white-space: pre-wrap;
+      }
+
       .meta {
         margin-top: 2px;
         display: grid;
@@ -246,11 +337,6 @@
         color: var(--subtext);
         font-size: 13px;
         line-height: 1.7;
-      }
-
-      .meta-item {
-        display: block;
-        word-break: break-word;
       }
 
       .meta-item strong {
@@ -266,6 +352,28 @@
 
       .meta a:hover {
         text-decoration: underline;
+      }
+
+      .inline-message {
+        display: none;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      .inline-message.success {
+        display: block;
+        background: var(--green-soft);
+        color: var(--green-text);
+      }
+
+      .inline-message.error {
+        display: block;
+        background: var(--danger-soft);
+        color: var(--danger-text);
       }
 
       .empty-card {
@@ -287,88 +395,39 @@
         body {
           padding: 16px 12px 28px;
         }
-
-        .container {
-          max-width: 100%;
-        }
-
-        .top-link {
-          font-size: 15px;
-          margin-bottom: 16px;
-        }
-
         .page-title {
           font-size: 24px;
-          line-height: 1.35;
         }
-
-        .page-subtext {
-          font-size: 14px;
-          line-height: 1.8;
-        }
-
-        .sort-box {
-          padding: 12px;
-          border-radius: 16px;
-          margin-bottom: 16px;
-        }
-
         .sort-form {
           flex-direction: column;
           align-items: stretch;
           gap: 8px;
         }
-
         .sort-select {
           width: 100%;
           min-height: 44px;
           font-size: 16px;
         }
-
         .paper-card {
           padding: 14px 14px 13px;
           border-radius: 16px;
-          margin-bottom: 12px;
         }
-
         .paper-title {
           font-size: 18px;
           line-height: 1.45;
         }
-
-        .score-line {
-          font-size: 13px;
-          padding: 7px 10px;
-          margin-bottom: 10px;
-        }
-
-        .action-row {
+        .action-row,
+        .organize-row {
           gap: 8px;
-          margin-bottom: 12px;
         }
-
-        .mini-action {
-          min-height: 34px;
-          padding: 6px 10px;
-          font-size: 13px;
+        .mini-form {
+          flex-direction: column;
+          align-items: stretch;
         }
-
+        .mini-input,
+        .mini-submit,
         .detail-link {
-          min-height: 38px;
-          padding: 8px 12px;
-          font-size: 13px;
-        }
-
-        .meta {
-          font-size: 13px;
-          line-height: 1.8;
-        }
-
-        .empty-card {
-          border-radius: 16px;
-          padding: 18px 14px;
-          font-size: 15px;
-          line-height: 1.7;
+          width: 100%;
         }
       }
     </style>
@@ -379,9 +438,7 @@
 
       <div class="page-header">
         <h1 class="page-title">フォルダ: {{ folder_name }}</h1>
-        <p class="page-subtext">
-          保存済みの論文を見返しやすく整理した一覧です。
-        </p>
+        <p class="page-subtext">保存済みの論文を整理しながら見返せます。</p>
       </div>
 
       <div class="sort-box">
@@ -394,15 +451,9 @@
             class="sort-select"
             onchange="this.form.submit()"
           >
-            <option value="saved" {% if sort == "saved" %}selected{% endif %}>
-              保存順
-            </option>
-            <option value="score" {% if sort == "score" %}selected{% endif %}>
-              臨床参考度順
-            </option>
-            <option value="favorite" {% if sort == "favorite" %}selected{% endif %}>
-              お気に入り順
-            </option>
+            <option value="saved" {% if sort == "saved" %}selected{% endif %}>保存順</option>
+            <option value="score" {% if sort == "score" %}selected{% endif %}>臨床参考度順</option>
+            <option value="favorite" {% if sort == "favorite" %}selected{% endif %}>お気に入り順</option>
           </select>
         </form>
       </div>
@@ -410,10 +461,10 @@
       {% if papers %}
       <div class="paper-list">
         {% for paper in papers %}
-        <article class="paper-card">
-          <h2 class="paper-title">
+        <article class="paper-card" id="paper-card-{{ paper.pubmed_id }}">
+          <h2 class="paper-title" id="paper-title-{{ paper.pubmed_id }}">
             <a href="/paper?id={{ paper.pubmed_id }}">
-              {{ paper.jp_title or paper.title }}
+              {{ paper.display_title or paper.jp_title or paper.title }}
             </a>
           </h2>
 
@@ -450,11 +501,109 @@
             >
           </div>
 
+          <div class="organize-row">
+            <button
+              type="button"
+              class="organize-toggle"
+              onclick="toggleOrganizePanel('move-{{ paper.pubmed_id }}')"
+            >
+              移動
+            </button>
+            <button
+              type="button"
+              class="organize-toggle"
+              onclick="toggleOrganizePanel('rename-{{ paper.pubmed_id }}')"
+            >
+              名前変更
+            </button>
+            <button
+              type="button"
+              class="organize-toggle"
+              onclick="toggleOrganizePanel('note-{{ paper.pubmed_id }}')"
+            >
+              メモ
+            </button>
+          </div>
+
+          <div class="organize-panel" id="move-{{ paper.pubmed_id }}">
+            <div class="organize-title">移動先フォルダ</div>
+            <form
+              class="mini-form"
+              onsubmit="submitMove(event, '{{ paper.pubmed_id }}', '{{ folder_name }}')"
+            >
+              <input
+                type="text"
+                name="folder_name"
+                class="mini-input"
+                value="{{ paper.folder_name or '' }}"
+                placeholder="移動先フォルダ名を入力"
+                required
+              />
+              <button type="submit" class="mini-submit">移動する</button>
+            </form>
+            <div
+              class="inline-message"
+              id="move-message-{{ paper.pubmed_id }}"
+            ></div>
+          </div>
+
+          <div class="organize-panel" id="rename-{{ paper.pubmed_id }}">
+            <div class="organize-title">表示名を変更</div>
+            <form
+              class="mini-form"
+              onsubmit="submitRename(event, '{{ paper.pubmed_id }}')"
+            >
+              <input
+                type="text"
+                name="custom_title"
+                class="mini-input"
+                value="{{ paper.custom_title or '' }}"
+                placeholder="表示名を入力"
+              />
+              <button type="submit" class="mini-submit">更新する</button>
+            </form>
+            <div
+              class="inline-message"
+              id="rename-message-{{ paper.pubmed_id }}"
+            ></div>
+          </div>
+
+          <div class="organize-panel" id="note-{{ paper.pubmed_id }}">
+            <div class="organize-title">自分メモ</div>
+            <form onsubmit="submitNote(event, '{{ paper.pubmed_id }}')">
+              <textarea
+                name="user_note"
+                class="mini-textarea"
+                placeholder="あとで見返したいポイントや使いどころをメモできます"
+              >
+{{ paper.user_note or '' }}</textarea
+              >
+              <div style="margin-top: 8px">
+                <button type="submit" class="mini-submit">メモを保存</button>
+              </div>
+            </form>
+            <div
+              class="inline-message"
+              id="note-message-{{ paper.pubmed_id }}"
+            ></div>
+          </div>
+
+          {% if paper.user_note %}
+          <div class="paper-note" id="paper-note-{{ paper.pubmed_id }}">
+            {{ paper.user_note }}
+          </div>
+          {% else %}
+          <div
+            class="paper-note"
+            id="paper-note-{{ paper.pubmed_id }}"
+            style="display: none"
+          ></div>
+          {% endif %}
+
           <div class="meta">
             <span class="meta-item"
               ><strong>PubMed ID:</strong> {{ paper.pubmed_id }}</span
             >
-
             {% if paper.authors %}
             <span class="meta-item"
               ><strong>著者:</strong> {{ paper.authors }}</span
@@ -468,7 +617,6 @@
               ><strong>公開日:</strong> {{ paper.pubdate }}</span
             >
             {% endif %}
-
             <span class="meta-item">
               <strong>論文URL:</strong>
               <a
@@ -527,10 +675,7 @@
         }
 
         try {
-          const response = await fetch(`/like/${pubmedId}`, {
-            method: "POST",
-          });
-
+          const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
           const data = await response.json();
 
           if (data.ok) {
@@ -538,16 +683,11 @@
               '<span>👍</span><span class="like-count">' +
               data.likes +
               "</span>";
-
             setLiked(pubmedId);
-            button.classList.add("liked");
-            button.classList.add("disabled");
-            button.classList.add("animate-pop");
+            button.classList.add("liked", "disabled", "animate-pop");
             button.disabled = true;
 
-            if (navigator.vibrate) {
-              navigator.vibrate(20);
-            }
+            if (navigator.vibrate) navigator.vibrate(20);
 
             setTimeout(() => {
               button.classList.remove("animate-pop");
@@ -563,7 +703,6 @@
           const response = await fetch(`/favorite/${pubmedId}`, {
             method: "POST",
           });
-
           const data = await response.json();
 
           if (data.ok) {
@@ -582,6 +721,147 @@
           }
         } catch (error) {
           alert("お気に入りの更新に失敗しました");
+        }
+      }
+
+      function toggleOrganizePanel(panelId) {
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        panel.classList.toggle("open");
+      }
+
+      function setInlineMessage(id, text, type) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.className = "inline-message " + type;
+      }
+
+      async function submitMove(event, pubmedId, currentFolderName) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/move`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            setInlineMessage(
+              `move-message-${pubmedId}`,
+              "フォルダを変更しました。移動先で確認できます。",
+              "success",
+            );
+
+            if (data.folder_name !== currentFolderName) {
+              const card = document.getElementById(`paper-card-${pubmedId}`);
+              if (card) {
+                card.style.opacity = "0.4";
+                setTimeout(() => {
+                  card.remove();
+                }, 180);
+              }
+            }
+          } else {
+            setInlineMessage(
+              `move-message-${pubmedId}`,
+              data.message || "フォルダ変更に失敗しました",
+              "error",
+            );
+          }
+        } catch (error) {
+          setInlineMessage(
+            `move-message-${pubmedId}`,
+            "フォルダ変更に失敗しました",
+            "error",
+          );
+        }
+      }
+
+      async function submitRename(event, pubmedId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/rename`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            const titleAnchor = document.querySelector(
+              `#paper-title-${pubmedId} a`,
+            );
+            if (titleAnchor) {
+              titleAnchor.textContent = data.display_title;
+            }
+            setInlineMessage(
+              `rename-message-${pubmedId}`,
+              "表示名を更新しました",
+              "success",
+            );
+          } else {
+            setInlineMessage(
+              `rename-message-${pubmedId}`,
+              data.message || "表示名の更新に失敗しました",
+              "error",
+            );
+          }
+        } catch (error) {
+          setInlineMessage(
+            `rename-message-${pubmedId}`,
+            "表示名の更新に失敗しました",
+            "error",
+          );
+        }
+      }
+
+      async function submitNote(event, pubmedId) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/note`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            const noteBox = document.getElementById(`paper-note-${pubmedId}`);
+            if (noteBox) {
+              if (data.user_note) {
+                noteBox.textContent = data.user_note;
+                noteBox.style.display = "block";
+              } else {
+                noteBox.textContent = "";
+                noteBox.style.display = "none";
+              }
+            }
+            setInlineMessage(
+              `note-message-${pubmedId}`,
+              "メモを保存しました",
+              "success",
+            );
+          } else {
+            setInlineMessage(
+              `note-message-${pubmedId}`,
+              data.message || "メモ保存に失敗しました",
+              "error",
+            );
+          }
+        } catch (error) {
+          setInlineMessage(
+            `note-message-${pubmedId}`,
+            "メモ保存に失敗しました",
+            "error",
+          );
         }
       }
 

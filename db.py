@@ -87,6 +87,8 @@ def init_db():
         "ALTER TABLE saved_papers ADD COLUMN is_favorite INTEGER DEFAULT 0",
         "ALTER TABLE saved_papers ADD COLUMN likes INTEGER DEFAULT 0",
         "ALTER TABLE saved_papers ADD COLUMN is_public INTEGER DEFAULT 0",
+        "ALTER TABLE saved_papers ADD COLUMN custom_title TEXT DEFAULT ''",
+        "ALTER TABLE saved_papers ADD COLUMN user_note TEXT DEFAULT ''",
     ]:
         try:
             cur.execute(sql)
@@ -788,6 +790,74 @@ def set_trial_extend_days(user_id, days):
         SET trial_extend_days = ?
         WHERE id = ?
     """, (days, user_id))
+
+    conn.commit()
+    conn.close()
+
+def update_saved_paper_folder(pubmed_id, folder_name, user_id=None):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    clean_folder_name = (folder_name or "").strip()
+
+    if user_id is None:
+        cur.execute("""
+            UPDATE saved_papers
+            SET folder_name = ?
+            WHERE user_id IS NULL AND pubmed_id = ?
+        """, (clean_folder_name, pubmed_id))
+    else:
+        cur.execute("""
+            UPDATE saved_papers
+            SET folder_name = ?
+            WHERE user_id = ? AND pubmed_id = ?
+        """, (clean_folder_name, user_id, pubmed_id))
+
+    conn.commit()
+    conn.close()
+
+
+def update_saved_paper_custom_title(pubmed_id, custom_title, user_id=None):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    clean_custom_title = (custom_title or "").strip()
+
+    if user_id is None:
+        cur.execute("""
+            UPDATE saved_papers
+            SET custom_title = ?
+            WHERE user_id IS NULL AND pubmed_id = ?
+        """, (clean_custom_title, pubmed_id))
+    else:
+        cur.execute("""
+            UPDATE saved_papers
+            SET custom_title = ?
+            WHERE user_id = ? AND pubmed_id = ?
+        """, (clean_custom_title, user_id, pubmed_id))
+
+    conn.commit()
+    conn.close()
+
+
+def update_saved_paper_user_note(pubmed_id, user_note, user_id=None):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    clean_user_note = (user_note or "").strip()
+
+    if user_id is None:
+        cur.execute("""
+            UPDATE saved_papers
+            SET user_note = ?
+            WHERE user_id IS NULL AND pubmed_id = ?
+        """, (clean_user_note, pubmed_id))
+    else:
+        cur.execute("""
+            UPDATE saved_papers
+            SET user_note = ?
+            WHERE user_id = ? AND pubmed_id = ?
+        """, (clean_user_note, user_id, pubmed_id))
 
     conn.commit()
     conn.close()

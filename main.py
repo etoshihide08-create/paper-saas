@@ -29,6 +29,9 @@ from db import (
     get_user_by_ref_code,
     apply_referral_bonus,
     set_trial_extend_days,
+    update_saved_paper_folder,
+    update_saved_paper_custom_title,
+    update_saved_paper_user_note,
 )
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -1123,6 +1126,9 @@ def paper(
         "clinical_reason": clinical_reason,
         "likes": int(refreshed_saved.get("likes") or 0) if refreshed_saved else 0,
         "is_favorite": int(refreshed_saved.get("is_favorite") or 0) if refreshed_saved else 0,
+        "folder_name": refreshed_saved.get("folder_name") or "" if refreshed_saved else "",
+        "custom_title": refreshed_saved.get("custom_title") or "" if refreshed_saved else "",
+        "user_note": refreshed_saved.get("user_note") or "" if refreshed_saved else "",
     }
 
     save_error_message = ""
@@ -1299,6 +1305,11 @@ def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
 
     papers = get_saved_papers_by_folder(folder_name, user_id=current_user_id)
 
+    for paper in papers:
+        custom_title = (paper.get("custom_title") or "").strip()
+        default_title = (paper.get("jp_title") or paper.get("title") or "").strip()
+        paper["display_title"] = custom_title or default_title
+
     if sort == "score":
         papers = sorted(
             papers,
@@ -1415,6 +1426,92 @@ def like(request: Request, pubmed_id: str):
     likes = int(paper["likes"] or 0) if paper else 0
 
     return JSONResponse({"ok": True, "likes": likes})
+
+@app.post("/saved/{pubmed_id}/move")
+def move_saved_paper(
+    request: Request,
+    pubmed_id: str,
+    folder_name: str = Form(...)
+):
+    current_user = get_current_user(request)
+
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    current_user_id = current_user["id"]
+    target_folder_name = (folder_name or "").strip()
+
+    if not target_folder_name:
+        return JSONResponse({"ok": False, "message": "移動先フォルダ名を入力してください"}, status_code=400)
+
+    saved_paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
+    if not saved_paper:
+        return JSONResponse({"ok": False, "message": "保存論文が見つかりません"}, status_code=404)
+
+    update_saved_paper_folder(pubmed_id, target_folder_name, user_id=current_user_id)
+
+    return JSONResponse({
+        "ok": True,
+        "folder_name": target_folder_name,
+        "message": "フォルダを変更しました",
+    })
+
+
+@app.post("/saved/{pubmed_id}/rename")
+def rename_saved_paper(
+    request: Request,
+    pubmed_id: str,
+    custom_title: str = Form("")
+):
+    current_user = get_current_user(request)
+
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    current_user_id = current_user["id"]
+
+    saved_paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
+    if not saved_paper:
+        return JSONResponse({"ok": False, "message": "保存論文が見つかりません"}, status_code=404)
+
+    clean_custom_title = (custom_title or "").strip()
+    update_saved_paper_custom_title(pubmed_id, clean_custom_title, user_id=current_user_id)
+
+    display_title = clean_custom_title or (saved_paper.get("jp_title") or saved_paper.get("title") or "")
+
+    return JSONResponse({
+        "ok": True,
+        "custom_title": clean_custom_title,
+        "display_title": display_title,
+        "message": "表示名を更新しました",
+    })
+
+
+@app.post("/saved/{pubmed_id}/note")
+def update_saved_paper_note_route(
+    request: Request,
+    pubmed_id: str,
+    user_note: str = Form("")
+):
+    current_user = get_current_user(request)
+
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    current_user_id = current_user["id"]
+
+    saved_paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
+    if not saved_paper:
+        return JSONResponse({"ok": False, "message": "保存論文が見つかりません"}, status_code=404)
+
+    clean_user_note = (user_note or "").strip()
+    update_saved_paper_user_note(pubmed_id, clean_user_note, user_id=current_user_id)
+
+    return JSONResponse({
+        "ok": True,
+        "user_note": clean_user_note,
+        "message": "メモを更新しました",
+    })
 
 @app.get("/ranking")
 def ranking_list(request: Request, sort: str = "likes"):

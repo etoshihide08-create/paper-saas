@@ -6,12 +6,46 @@
     <title>理学療法士向け論文翻訳・要約ツール</title>
 
     <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --blue-soft: #eff6ff;
+        --blue-soft-hover: #dbeafe;
+        --green: #16a34a;
+        --amber: #b45309;
+        --purple: #7c3aed;
+        --sidebar-bg: #ffffff;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --shadow-soft: 0 4px 14px rgba(15, 23, 42, 0.04);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: sans-serif;
-        background: #f5f7fb;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
         margin: 0;
+        color: var(--text);
+      }
+
+      .app-layout {
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main-area {
+        min-height: 100vh;
         padding: 72px 16px 40px;
-        color: #222;
       }
 
       .container {
@@ -32,9 +66,10 @@
       .plan-box {
         padding: 8px 12px;
         background: #eef2ff;
-        border-radius: 8px;
+        border-radius: 999px;
         font-size: 13px;
         color: #374151;
+        font-weight: 700;
       }
 
       .top-auth {
@@ -62,7 +97,7 @@
         align-items: center;
         justify-content: center;
         padding: 8px 12px;
-        border-radius: 8px;
+        border-radius: 999px;
         background: #111827;
         color: white;
         text-decoration: none;
@@ -75,71 +110,37 @@
         opacity: 0.92;
       }
 
-      .auth-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .auth-text {
-        font-size: 13px;
-        color: #6b7280;
-        font-weight: 600;
-      }
-
-      .auth-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 12px;
-        border-radius: 8px;
-        background: #111827;
-        color: white;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 13px;
-        line-height: 1;
-      }
-
-      .auth-link:hover {
-        opacity: 0.92;
-      }
-
-      .auth-row-fixed {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        z-index: 1000;
-        background: #ffffff;
-        padding: 8px 12px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-
       .main-card {
-        background: #fff;
-        border-radius: 20px;
+        background: var(--card);
+        border: 1px solid rgba(229, 231, 235, 0.9);
+        border-radius: var(--radius);
         padding: 36px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow);
         margin-bottom: 28px;
       }
 
       h1 {
         margin-top: 0;
-        font-size: 28px;
-        line-height: 1.4;
+        margin-bottom: 10px;
+        font-size: 30px;
+        line-height: 1.35;
         text-align: center;
+        letter-spacing: -0.02em;
       }
 
       h2 {
         margin-top: 0;
         font-size: 24px;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
       }
 
-      p {
-        color: #555;
-        line-height: 1.7;
+      .sub-text {
+        margin-top: 14px;
+        font-size: 15px;
+        line-height: 1.85;
+        color: #4b5563;
+        text-align: center;
       }
 
       .search-row {
@@ -155,85 +156,38 @@
         padding: 16px;
         font-size: 16px;
         border: 1px solid #cbd5e1;
-        border-radius: 14px;
+        border-radius: 16px;
+        background: #fff;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
       }
 
       .search-btn {
         padding: 16px 24px;
         font-size: 16px;
-        font-weight: bold;
+        font-weight: 800;
         border: none;
-        border-radius: 14px;
-        background: #2563eb;
+        border-radius: 16px;
+        background: var(--blue);
         color: white;
         cursor: pointer;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
       }
 
       .search-btn:hover {
-        opacity: 0.92;
-      }
-
-      .button-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-      }
-
-      .main-link {
-        display: inline-block;
-        padding: 12px 18px;
-        border-radius: 12px;
-        color: white;
-        text-decoration: none;
-        font-weight: bold;
-      }
-
-      .saved-link {
-        background: #16a34a;
-      }
-
-      .saved-link:hover {
-        opacity: 0.92;
-      }
-
-      .toggle-btn {
-        display: inline-block;
-        padding: 12px 18px;
-        border-radius: 12px;
-        color: white;
-        text-decoration: none;
-        font-weight: bold;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-      }
-
-      .likes-btn {
-        background: #2563eb;
-      }
-
-      .score-btn {
-        background: #b45309;
-      }
-
-      .toggle-btn:hover {
-        opacity: 0.92;
-      }
-
-      .sub-text {
-        margin-top: 14px;
-        font-size: 15px;
-        line-height: 1.85;
-        color: #4b5563;
-        text-align: center;
+        opacity: 0.94;
       }
 
       .ranking-card {
-        background: #fff;
-        border-radius: 20px;
+        background: var(--card);
+        border: 1px solid rgba(229, 231, 235, 0.9);
+        border-radius: var(--radius);
         padding: 28px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow);
         margin-bottom: 28px;
       }
 
@@ -250,44 +204,13 @@
         margin-bottom: 18px;
       }
 
-      .open-ranking-btn {
-        display: inline-block;
-        padding: 10px 16px;
-        border-radius: 10px;
-        background: #111827;
-        color: white;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
-      }
-
-      .open-ranking-btn:hover {
-        opacity: 0.92;
-      }
-
       .ranking-item {
         background: #f8fafc;
         border: 1px solid #e5e7eb;
-        border-radius: 16px;
+        border-radius: 18px;
         padding: 18px 16px;
         margin-bottom: 14px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-      }
-
-      .ranking-item:last-child {
-        border-bottom: 1px solid #e5e7eb;
-      }
-
-      .ranking-rank {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 42px;
-        font-weight: 800;
-        color: #2563eb;
-        font-size: 18px;
-        line-height: 1;
-        margin-bottom: 8px;
+        box-shadow: var(--shadow-soft);
       }
 
       .ranking-item-header {
@@ -297,6 +220,18 @@
         gap: 12px;
         margin-bottom: 10px;
         flex-wrap: wrap;
+      }
+
+      .ranking-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        font-weight: 800;
+        color: var(--blue);
+        font-size: 18px;
+        line-height: 1;
+        margin-bottom: 8px;
       }
 
       .ranking-badge {
@@ -309,74 +244,6 @@
         border-radius: 999px;
         background: #eef2ff;
         color: #3730a3;
-      }
-
-      .ranking-link-row {
-        margin-top: 14px;
-      }
-
-      .ranking-detail-link {
-        display: inline-block;
-        font-size: 14px;
-        font-weight: 700;
-        color: #2563eb;
-        text-decoration: none;
-      }
-
-      .ranking-detail-link:hover {
-        text-decoration: underline;
-      }
-
-      .ranking-title {
-        font-size: 18px;
-        font-weight: 700;
-        line-height: 1.6;
-        margin-top: 6px;
-      }
-
-      .ranking-title a {
-        color: #111827;
-        text-decoration: none;
-      }
-
-      .ranking-title a:hover {
-        color: #2563eb;
-        text-decoration: underline;
-      }
-
-      .ranking-meta {
-        margin-top: 10px;
-        color: #666;
-        font-size: 14px;
-        line-height: 1.7;
-      }
-
-      .likes {
-        margin-top: 8px;
-        font-weight: 700;
-        color: #1d4ed8;
-      }
-
-      .score {
-        margin-top: 8px;
-        font-weight: 700;
-        color: #b45309;
-      }
-
-      .summary {
-        margin-top: 12px;
-        background: #f8fafc;
-        border-left: 4px solid #2563eb;
-        border-radius: 10px;
-        padding: 12px 14px;
-        white-space: pre-wrap;
-        line-height: 1.7;
-        font-size: 14px;
-      }
-
-      .empty-box {
-        color: #666;
-        line-height: 1.8;
       }
 
       .ranking-title-ja {
@@ -392,7 +259,7 @@
       }
 
       .ranking-title-ja a:hover {
-        color: #2563eb;
+        color: var(--blue);
         text-decoration: underline;
       }
 
@@ -404,17 +271,225 @@
         font-weight: 600;
       }
 
-      .plans-link {
-        background: #7c3aed;
+      .summary {
+        margin-top: 12px;
+        background: #f8fafc;
+        border-left: 4px solid var(--blue);
+        border-radius: 12px;
+        padding: 12px 14px;
+        white-space: pre-wrap;
+        line-height: 1.7;
+        font-size: 14px;
       }
 
-      .plans-link:hover {
-        opacity: 0.92;
+      .ranking-meta {
+        margin-top: 10px;
+        color: #666;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .ranking-link-row {
+        margin-top: 14px;
+      }
+
+      .ranking-detail-link {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .ranking-detail-link:hover {
+        text-decoration: underline;
+      }
+
+      .empty-box {
+        color: #666;
+        line-height: 1.8;
+      }
+
+      .section-toggle-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0 0 18px;
+      }
+
+      .section-toggle-btn {
+        border: none;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .section-toggle-btn:hover {
+        background: #dbeafe;
+      }
+
+      .section-toggle-btn.is-active {
+        background: #111827;
+        color: #fff;
+      }
+
+      .mobile-footer {
+        display: none;
+      }
+
+      .mobile-note-toast {
+        display: none;
+      }
+
+      @media (min-width: 980px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 18px 16px;
+          background: var(--sidebar-bg);
+          border-right: 1px solid var(--line);
+        }
+
+        .sidebar-brand {
+          padding: 8px 10px 20px;
+        }
+
+        .sidebar-title {
+          font-size: 20px;
+          font-weight: 800;
+          line-height: 1.4;
+          letter-spacing: -0.02em;
+          color: #111827;
+        }
+
+        .sidebar-subtext {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--subtext);
+        }
+
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .sidebar-link,
+        .sidebar-button {
+          width: 100%;
+          border: none;
+          background: transparent;
+          text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 12px;
+          border-radius: 14px;
+          color: #374151;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-button:hover {
+          background: #f8fafc;
+          color: #111827;
+        }
+
+        .sidebar-link.is-active,
+        .sidebar-button.is-active {
+          background: #eef2ff;
+          color: #1e3a8a;
+        }
+
+        .sidebar-icon {
+          width: 20px;
+          text-align: center;
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 14px 10px 8px;
+          border-top: 1px solid var(--line);
+        }
+
+        .sidebar-plan {
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--subtext);
+          margin-bottom: 10px;
+        }
+
+        .sidebar-auth {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .sidebar-auth-text {
+          font-size: 12px;
+          color: #6b7280;
+          line-height: 1.5;
+          word-break: break-word;
+        }
+
+        .sidebar-auth-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: #111827;
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .sidebar-auth-link:hover {
+          opacity: 0.92;
+        }
+
+        .main-area {
+          padding: 28px 28px 40px;
+        }
+
+        .top-bar {
+          display: none;
+        }
+
+        .top-auth {
+          display: none;
+        }
+
+        .container {
+          max-width: 980px;
+          margin: 0;
+        }
       }
 
       @media (max-width: 640px) {
-        body {
-          padding: 16px 12px 28px;
+        .main-area {
+          padding: 16px 12px 92px;
         }
 
         .container {
@@ -426,7 +501,8 @@
         }
 
         .plan-box {
-          font-size: 13px;
+          font-size: 12px;
+          padding: 7px 10px;
         }
 
         .top-auth {
@@ -447,12 +523,7 @@
           justify-content: center;
           font-size: 12px;
           padding: 8px 10px;
-          border-radius: 8px;
-          background: #111827;
-          color: #fff;
-          text-decoration: none;
-          font-weight: 700;
-          line-height: 1;
+          border-radius: 999px;
         }
 
         .top-auth-text {
@@ -469,14 +540,13 @@
         .main-card,
         .ranking-card {
           padding: 16px 12px;
-          border-radius: 16px;
+          border-radius: 18px;
           margin-bottom: 12px;
         }
 
         h1 {
           font-size: 22px;
           line-height: 1.4;
-          letter-spacing: -0.01em;
           margin-bottom: 10px;
         }
 
@@ -496,6 +566,7 @@
           font-size: 16px;
           padding: 14px;
           border-radius: 14px;
+          min-width: 0;
         }
 
         .search-btn {
@@ -503,20 +574,6 @@
           min-height: 48px;
           font-size: 16px;
           border-radius: 14px;
-        }
-
-        .button-row {
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .main-link,
-        .toggle-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 15px;
-          border-radius: 12px;
         }
 
         .sub-text {
@@ -528,43 +585,6 @@
           flex-direction: column;
           align-items: stretch;
           gap: 8px;
-        }
-
-        .open-ranking-btn {
-          width: 100%;
-          text-align: center;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 12px;
-        }
-
-        .ranking-item {
-          padding: 14px 0;
-        }
-
-        .ranking-rank {
-          font-size: 14px;
-          min-width: 28px;
-        }
-
-        .ranking-title,
-        .ranking-title-ja {
-          font-size: 17px;
-          line-height: 1.5;
-        }
-
-        .ranking-title-en,
-        .ranking-meta,
-        .summary {
-          font-size: 14px;
-          line-height: 1.7;
-        }
-
-        .likes,
-        .score {
-          font-size: 15px;
         }
 
         .ranking-item {
@@ -587,199 +607,468 @@
           font-size: 12px;
           padding: 6px 9px;
         }
+
+        .ranking-title-ja {
+          font-size: 17px;
+          line-height: 1.5;
+        }
+
+        .ranking-title-en,
+        .ranking-meta,
+        .summary {
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .section-toggle-row {
+          gap: 8px;
+          margin-bottom: 14px;
+        }
+
+        .section-toggle-btn {
+          flex: 1;
+          min-height: 42px;
+          font-size: 13px;
+          padding: 10px 12px;
+        }
+
+        .mobile-footer {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          align-items: stretch;
+          background: rgba(255, 255, 255, 0.96);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-top: 1px solid rgba(229, 231, 235, 0.95);
+          padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+          z-index: 1100;
+        }
+
+        .mobile-footer-link,
+        .mobile-footer-button {
+          border: none;
+          background: transparent;
+          color: #6b7280;
+          text-decoration: none;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          min-height: 56px;
+          padding: 6px 2px;
+          font-size: 10px;
+          font-weight: 700;
+          border-radius: 14px;
+          cursor: pointer;
+        }
+
+        .mobile-footer-link:hover,
+        .mobile-footer-button:hover {
+          background: #f8fafc;
+        }
+
+        .mobile-footer-icon {
+          font-size: 18px;
+          line-height: 1;
+        }
+
+        .mobile-footer-link.is-active,
+        .mobile-footer-button.is-active {
+          color: #111827;
+          background: #f8fafc;
+        }
+
+        .mobile-note-toast {
+          position: fixed;
+          left: 12px;
+          right: 12px;
+          bottom: calc(78px + env(safe-area-inset-bottom));
+          display: none;
+          background: #111827;
+          color: #fff;
+          border-radius: 16px;
+          padding: 14px 14px;
+          font-size: 13px;
+          line-height: 1.7;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+          z-index: 1200;
+        }
+
+        .mobile-note-toast.show {
+          display: block;
+        }
+
+        .mobile-note-toast-title {
+          font-weight: 800;
+          margin-bottom: 4px;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="top-bar">
-      <div class="plan-box">
-        現在のプラン：
-        <b>
-          {% if not current_user %} 未登録 {% else %} {{ current_plan }} {%
-          endif %}
-        </b>
-      </div>
-    </div>
-
-    <div class="top-auth">
-      {% if current_user %}
-      <span class="top-auth-text">{{ current_user.email }}</span>
-      <a href="/logout" class="top-auth-link">ログアウト</a>
-      {% else %}
-      <a href="/register" class="top-auth-link">新規登録</a>
-      <a href="/login" class="top-auth-link">ログイン</a>
-      {% endif %}
-    </div>
-
-    <div class="container">
-      <div class="main-card">
-        <h1>リハエビデンスナビ</h1>
-        <p class="sub-text">
-          PubMed論文を日本語で素早く理解し、<br />
-          臨床判断にそのまま使える形で整理。<br />
-          忙しいリハ職のための時短インプット環境。
-        </p>
-
-        <form action="/search" method="get" onsubmit="showSearchLoading(this)">
-          <div class="search-row">
-            <input
-              type="text"
-              name="keyword"
-              class="search-input"
-              placeholder="例: 脳卒中 歩行 予後"
-              required
-            />
-            <button type="submit" class="search-btn">検索</button>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-title">リハエビデンスナビ</div>
+          <div class="sidebar-subtext">
+            PubMed論文を日本語で素早く理解し、臨床判断にそのまま使える形で整理。
           </div>
-        </form>
+        </div>
 
-        <div class="button-row">
-          <a href="/saved" class="main-link saved-link">保存した論文を見る</a>
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link is-active" id="sidebar-home-link">
+            <span class="sidebar-icon">🏠</span>
+            <span>検索</span>
+          </a>
+
           <button
             type="button"
-            class="toggle-btn likes-btn"
-            onclick="toggleSection('popular-ranking')"
+            class="sidebar-button"
+            id="sidebar-ranking-button"
+            onclick="toggleRankingHome()"
           >
-            人気論文ランキングを開く
+            <span class="sidebar-icon">⭐</span>
+            <span>ランキング</span>
           </button>
+
           <button
             type="button"
-            class="toggle-btn score-btn"
-            onclick="toggleSection('score-ranking')"
+            class="sidebar-button"
+            onclick="openDesktopNoteToast()"
           >
-            臨床参考度論文ランキングを開く
+            <span class="sidebar-icon">📝</span>
+            <span>メモ</span>
           </button>
-          <a href="/plans" class="main-link plans-link">料金プランを見る</a>
-        </div>
 
-        <p class="sub-text">
-          検索だけでなく、保存済み論文やランキングからも読み始められます。
-        </p>
-      </div>
+          <a href="/saved" class="sidebar-link">
+            <span class="sidebar-icon">📚</span>
+            <span>保存</span>
+          </a>
 
-      <div id="popular-ranking" class="ranking-card hidden">
-        <div class="card-header">
-          <h2>人気ランキング TOP {{ ranking_limit }}</h2>
-        </div>
+          <a href="/plans" class="sidebar-link">
+            <span class="sidebar-icon">👤</span>
+            <span>マイページ</span>
+          </a>
+        </nav>
 
-        {% if popular_papers %} {% for paper in popular_papers %}
-        <div class="ranking-item">
-          <div class="ranking-item-header">
-            <div class="ranking-rank">
-              {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %} 🥈2位 {%
-              elif loop.index == 3 %} 🥉3位 {% else %} {{ loop.index }}位 {%
-              endif %}
-            </div>
-
-            <div class="ranking-badge">👍 {{ paper.likes or 0 }} いいね</div>
-          </div>
-
-          <div class="ranking-title-ja">
-            <a href="/paper?id={{ paper.pubmed_id }}">
-              {{ paper.jp_title or paper.title }}
-            </a>
-          </div>
-
-          {% if paper.jp_title %}
-          <div class="ranking-title-en">{{ paper.title }}</div>
-          {% endif %} {% if paper.summary_jp %}
-          <div class="summary">{{ paper.summary_jp }}</div>
-          {% endif %}
-
-          <div class="ranking-meta">
-            <div>PubMed ID: {{ paper.pubmed_id }}</div>
-            <div>雑誌: {{ paper.journal }}</div>
-            <div>公開日: {{ paper.pubdate }}</div>
-          </div>
-
-          <div class="ranking-link-row">
-            <a
-              href="/paper?id={{ paper.pubmed_id }}"
-              class="ranking-detail-link"
-              >詳細を見る</a
+        <div class="sidebar-footer">
+          <div class="sidebar-plan">
+            現在のプラン：
+            <b
+              >{% if not current_user %}未登録{% else %}{{ current_plan }}{%
+              endif %}</b
             >
           </div>
-        </div>
-        {% endfor %} {% else %}
-        <div class="empty-box">まだ人気論文はありません。</div>
-        {% endif %}
-      </div>
 
-      <div id="score-ranking" class="ranking-card hidden">
-        <div class="card-header">
-          <h2>臨床参考度ランキング TOP {{ ranking_limit }}</h2>
+          <div class="sidebar-auth">
+            {% if current_user %}
+            <div class="sidebar-auth-text">{{ current_user.email }}</div>
+            <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+            {% else %}
+            <a href="/register" class="sidebar-auth-link">新規登録</a>
+            <a href="/login" class="sidebar-auth-link">ログイン</a>
+            {% endif %}
+          </div>
         </div>
+      </aside>
 
-        {% if top_rated_papers %} {% for paper in top_rated_papers %}
-        <div class="ranking-item">
-          <div class="ranking-item-header">
-            <div class="ranking-rank">
-              {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %} 🥈2位 {%
-              elif loop.index == 3 %} 🥉3位 {% else %} {{ loop.index }}位 {%
+      <main class="main-area">
+        <div class="top-bar">
+          <div class="plan-box">
+            現在のプラン：
+            <b>
+              {% if not current_user %} 未登録 {% else %} {{ current_plan }} {%
               endif %}
-            </div>
-
-            <div class="ranking-badge">
-              ⭐ {{ paper.clinical_score or "0.00" }} / 5.0
-            </div>
-          </div>
-
-          <div class="ranking-title-ja">
-            <a href="/paper?id={{ paper.pubmed_id }}">
-              {{ paper.jp_title or paper.title }}
-            </a>
-          </div>
-
-          {% if paper.jp_title %}
-          <div class="ranking-title-en">{{ paper.title }}</div>
-          {% endif %} {% if paper.summary_jp %}
-          <div class="summary">{{ paper.summary_jp }}</div>
-          {% endif %}
-
-          <div class="ranking-meta">
-            <div>PubMed ID: {{ paper.pubmed_id }}</div>
-            <div>雑誌: {{ paper.journal }}</div>
-            <div>公開日: {{ paper.pubdate }}</div>
-          </div>
-
-          <div class="ranking-link-row">
-            <a
-              href="/paper?id={{ paper.pubmed_id }}"
-              class="ranking-detail-link"
-              >詳細を見る</a
-            >
+            </b>
           </div>
         </div>
-        {% endfor %} {% else %}
-        <div class="empty-box">まだ高評価論文はありません。</div>
-        {% endif %}
+
+        <div class="top-auth">
+          {% if current_user %}
+          <span class="top-auth-text">{{ current_user.email }}</span>
+          <a href="/logout" class="top-auth-link">ログアウト</a>
+          {% else %}
+          <a href="/register" class="top-auth-link">新規登録</a>
+          <a href="/login" class="top-auth-link">ログイン</a>
+          {% endif %}
+        </div>
+
+        <div class="container">
+          <div class="main-card">
+            <h1>リハエビデンスナビ</h1>
+            <p class="sub-text">
+              PubMed論文を日本語で素早く理解し、<br />
+              臨床判断にそのまま使える形で整理。<br />
+              忙しいリハ職のための時短インプット環境。
+            </p>
+
+            <form
+              action="/search"
+              method="get"
+              onsubmit="showSearchLoading(this)"
+            >
+              <div class="search-row">
+                <input
+                  type="text"
+                  name="keyword"
+                  class="search-input"
+                  placeholder="例: 脳卒中 歩行 予後"
+                  required
+                />
+                <button type="submit" class="search-btn">検索</button>
+              </div>
+            </form>
+
+            <p class="sub-text">
+              検索からすぐ読み始められます。保存・ランキング・マイページはナビから移動できます。
+            </p>
+          </div>
+
+          <div class="section-toggle-row">
+            <button
+              type="button"
+              class="section-toggle-btn"
+              id="popular-toggle-btn"
+              onclick="showRankingSection('popular-ranking')"
+            >
+              人気ランキング
+            </button>
+            <button
+              type="button"
+              class="section-toggle-btn"
+              id="score-toggle-btn"
+              onclick="showRankingSection('score-ranking')"
+            >
+              臨床参考度ランキング
+            </button>
+          </div>
+
+          <div id="popular-ranking" class="ranking-card hidden">
+            <div class="card-header">
+              <h2>人気ランキング TOP {{ ranking_limit }}</h2>
+            </div>
+
+            {% if popular_papers %} {% for paper in popular_papers %}
+            <div class="ranking-item">
+              <div class="ranking-item-header">
+                <div class="ranking-rank">
+                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
+                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
+                  loop.index }}位 {% endif %}
+                </div>
+
+                <div class="ranking-badge">
+                  👍 {{ paper.likes or 0 }} いいね
+                </div>
+              </div>
+
+              <div class="ranking-title-ja">
+                <a href="/paper?id={{ paper.pubmed_id }}">
+                  {{ paper.jp_title or paper.title }}
+                </a>
+              </div>
+
+              {% if paper.jp_title %}
+              <div class="ranking-title-en">{{ paper.title }}</div>
+              {% endif %} {% if paper.summary_jp %}
+              <div class="summary">{{ paper.summary_jp }}</div>
+              {% endif %}
+
+              <div class="ranking-meta">
+                <div>PubMed ID: {{ paper.pubmed_id }}</div>
+                <div>雑誌: {{ paper.journal }}</div>
+                <div>公開日: {{ paper.pubdate }}</div>
+              </div>
+
+              <div class="ranking-link-row">
+                <a
+                  href="/paper?id={{ paper.pubmed_id }}"
+                  class="ranking-detail-link"
+                  >詳細を見る</a
+                >
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <div class="empty-box">まだ人気論文はありません。</div>
+            {% endif %}
+          </div>
+
+          <div id="score-ranking" class="ranking-card hidden">
+            <div class="card-header">
+              <h2>臨床参考度ランキング TOP {{ ranking_limit }}</h2>
+            </div>
+
+            {% if top_rated_papers %} {% for paper in top_rated_papers %}
+            <div class="ranking-item">
+              <div class="ranking-item-header">
+                <div class="ranking-rank">
+                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
+                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
+                  loop.index }}位 {% endif %}
+                </div>
+
+                <div class="ranking-badge">
+                  ⭐ {{ paper.clinical_score or "0.00" }} / 5.0
+                </div>
+              </div>
+
+              <div class="ranking-title-ja">
+                <a href="/paper?id={{ paper.pubmed_id }}">
+                  {{ paper.jp_title or paper.title }}
+                </a>
+              </div>
+
+              {% if paper.jp_title %}
+              <div class="ranking-title-en">{{ paper.title }}</div>
+              {% endif %} {% if paper.summary_jp %}
+              <div class="summary">{{ paper.summary_jp }}</div>
+              {% endif %}
+
+              <div class="ranking-meta">
+                <div>PubMed ID: {{ paper.pubmed_id }}</div>
+                <div>雑誌: {{ paper.journal }}</div>
+                <div>公開日: {{ paper.pubdate }}</div>
+              </div>
+
+              <div class="ranking-link-row">
+                <a
+                  href="/paper?id={{ paper.pubmed_id }}"
+                  class="ranking-detail-link"
+                  >詳細を見る</a
+                >
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <div class="empty-box">まだ高評価論文はありません。</div>
+            {% endif %}
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <nav class="mobile-footer" aria-label="モバイル固定フッター">
+      <a href="/" class="mobile-footer-link is-active">
+        <span class="mobile-footer-icon">🏠</span>
+        <span>検索</span>
+      </a>
+
+      <button
+        type="button"
+        class="mobile-footer-button"
+        id="mobile-ranking-button"
+        onclick="toggleRankingHome()"
+      >
+        <span class="mobile-footer-icon">⭐</span>
+        <span>ランキング</span>
+      </button>
+
+      <button
+        type="button"
+        class="mobile-footer-button"
+        onclick="openMobileNoteToast()"
+      >
+        <span class="mobile-footer-icon">📝</span>
+        <span>メモ</span>
+      </button>
+
+      <a href="/saved" class="mobile-footer-link">
+        <span class="mobile-footer-icon">📚</span>
+        <span>保存</span>
+      </a>
+
+      <a href="/plans" class="mobile-footer-link">
+        <span class="mobile-footer-icon">👤</span>
+        <span>マイページ</span>
+      </a>
+    </nav>
+
+    <div id="mobile-note-toast" class="mobile-note-toast">
+      <div class="mobile-note-toast-title">メモは準備中です</div>
+      <div>
+        まずは保存した論文の整理機能を優先しています。<br />
+        今後、学習メモを残せる形へつなげる予定です。
       </div>
     </div>
 
     <script>
-      function toggleSection(sectionId) {
+      function setRankingActiveState(isRankingOpen) {
+        const sidebarRankingButton = document.getElementById(
+          "sidebar-ranking-button",
+        );
+        const mobileRankingButton = document.getElementById(
+          "mobile-ranking-button",
+        );
+        const popularBtn = document.getElementById("popular-toggle-btn");
+        const scoreBtn = document.getElementById("score-toggle-btn");
+
+        if (sidebarRankingButton) {
+          sidebarRankingButton.classList.toggle("is-active", isRankingOpen);
+        }
+
+        if (mobileRankingButton) {
+          mobileRankingButton.classList.toggle("is-active", isRankingOpen);
+        }
+
+        if (!isRankingOpen) {
+          if (popularBtn) popularBtn.classList.remove("is-active");
+          if (scoreBtn) scoreBtn.classList.remove("is-active");
+        }
+      }
+
+      function showRankingSection(sectionId) {
         const popular = document.getElementById("popular-ranking");
         const score = document.getElementById("score-ranking");
+        const popularBtn = document.getElementById("popular-toggle-btn");
+        const scoreBtn = document.getElementById("score-toggle-btn");
 
-        if (!popular || !score) {
-          return;
-        }
+        if (!popular || !score) return;
 
-        const target = document.getElementById(sectionId);
-        if (!target) {
-          return;
-        }
-
-        const isHidden = target.classList.contains("hidden");
-
-        // いったん両方閉じる
         popular.classList.add("hidden");
         score.classList.add("hidden");
 
-        // 押したものが閉じていた時だけ開く
-        if (isHidden) {
-          target.classList.remove("hidden");
+        if (popularBtn) popularBtn.classList.remove("is-active");
+        if (scoreBtn) scoreBtn.classList.remove("is-active");
+
+        const target = document.getElementById(sectionId);
+        if (!target) return;
+
+        target.classList.remove("hidden");
+
+        if (sectionId === "popular-ranking" && popularBtn) {
+          popularBtn.classList.add("is-active");
         }
+
+        if (sectionId === "score-ranking" && scoreBtn) {
+          scoreBtn.classList.add("is-active");
+        }
+
+        setRankingActiveState(true);
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function toggleRankingHome() {
+        const popular = document.getElementById("popular-ranking");
+        const score = document.getElementById("score-ranking");
+
+        if (!popular || !score) return;
+
+        const isAnyVisible =
+          !popular.classList.contains("hidden") ||
+          !score.classList.contains("hidden");
+
+        if (isAnyVisible) {
+          popular.classList.add("hidden");
+          score.classList.add("hidden");
+          setRankingActiveState(false);
+          return;
+        }
+
+        showRankingSection("popular-ranking");
       }
 
       function showSearchLoading(form) {
@@ -795,6 +1084,24 @@
         }
 
         return true;
+      }
+
+      function openMobileNoteToast() {
+        const toast = document.getElementById("mobile-note-toast");
+        if (!toast) return;
+
+        toast.classList.add("show");
+
+        clearTimeout(window.mobileNoteToastTimer);
+        window.mobileNoteToastTimer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2600);
+      }
+
+      function openDesktopNoteToast() {
+        alert(
+          "メモは準備中です。まずは保存した論文の整理機能を優先しています。",
+        );
       }
     </script>
   </body>

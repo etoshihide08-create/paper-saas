@@ -700,6 +700,73 @@
         <div class="helper-text">
           初回は自由に入力できます。次回以降は、以前使った保存名が候補に表示されます。
         </div>
+
+        {% if paper.folder_name or paper.custom_title or paper.user_note %}
+        <div class="card">
+          <h2 class="section-title">整理する</h2>
+
+          <form
+            id="rename-form"
+            onsubmit="submitPaperRename(event, '{{ paper.id }}')"
+          >
+            <div style="margin-bottom: 10px">
+              <input
+                type="text"
+                name="custom_title"
+                class="folder-input"
+                value="{{ paper.custom_title or '' }}"
+                placeholder="表示名を入力"
+              />
+            </div>
+            <button type="submit" class="btn summary-btn">表示名を更新</button>
+          </form>
+
+          <div style="height: 10px"></div>
+
+          <form
+            id="move-form"
+            onsubmit="submitPaperMove(event, '{{ paper.id }}')"
+          >
+            <div style="margin-bottom: 10px">
+              <input
+                type="text"
+                name="folder_name"
+                class="folder-input"
+                value="{{ paper.folder_name or '' }}"
+                list="folder-name-suggestions"
+                placeholder="移動先フォルダ名を入力"
+                required
+              />
+            </div>
+            <button type="submit" class="btn save-btn">フォルダを変更</button>
+          </form>
+
+          <div style="height: 10px"></div>
+
+          <form
+            id="note-form"
+            onsubmit="submitPaperNote(event, '{{ paper.id }}')"
+          >
+            <div style="margin-bottom: 10px">
+              <textarea
+                name="user_note"
+                class="folder-input"
+                style="min-height: 120px; resize: vertical"
+                placeholder="この論文の使いどころや見返したいポイントをメモできます"
+              >
+{{ paper.user_note or '' }}</textarea
+              >
+            </div>
+            <button type="submit" class="btn summary-btn">メモを保存</button>
+          </form>
+
+          <div
+            id="organize-message"
+            class="save-message"
+            style="display: none"
+          ></div>
+        </div>
+        {% endif %}
       </div>
 
       {% if paper.summary_jp %}
@@ -994,6 +1061,113 @@
       const saveForm = document.getElementById("save-form");
       if (saveForm) {
         saveForm.addEventListener("submit", handleSaveFormSubmit);
+      }
+
+      async function submitPaperRename(event, pubmedId) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const message = document.getElementById("organize-message");
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/rename`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            const titleEl = document.querySelector(".paper-title");
+            if (titleEl) {
+              titleEl.textContent = data.display_title;
+            }
+
+            message.textContent = "表示名を更新しました";
+            message.classList.remove("error");
+            message.classList.add("success");
+            message.style.display = "block";
+          } else {
+            message.textContent = data.message || "表示名の更新に失敗しました";
+            message.classList.remove("success");
+            message.classList.add("error");
+            message.style.display = "block";
+          }
+        } catch (error) {
+          message.textContent = "表示名の更新に失敗しました";
+          message.classList.remove("success");
+          message.classList.add("error");
+          message.style.display = "block";
+        }
+      }
+
+      async function submitPaperMove(event, pubmedId) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const message = document.getElementById("organize-message");
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/move`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            message.textContent = "フォルダを変更しました";
+            message.classList.remove("error");
+            message.classList.add("success");
+            message.style.display = "block";
+          } else {
+            message.textContent = data.message || "フォルダ変更に失敗しました";
+            message.classList.remove("success");
+            message.classList.add("error");
+            message.style.display = "block";
+          }
+        } catch (error) {
+          message.textContent = "フォルダ変更に失敗しました";
+          message.classList.remove("success");
+          message.classList.add("error");
+          message.style.display = "block";
+        }
+      }
+
+      async function submitPaperNote(event, pubmedId) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const message = document.getElementById("organize-message");
+
+        try {
+          const response = await fetch(`/saved/${pubmedId}/note`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.ok) {
+            message.textContent = "メモを保存しました";
+            message.classList.remove("error");
+            message.classList.add("success");
+            message.style.display = "block";
+          } else {
+            message.textContent = data.message || "メモ保存に失敗しました";
+            message.classList.remove("success");
+            message.classList.add("error");
+            message.style.display = "block";
+          }
+        } catch (error) {
+          message.textContent = "メモ保存に失敗しました";
+          message.classList.remove("success");
+          message.classList.add("error");
+          message.style.display = "block";
+        }
       }
     </script>
   </body>
