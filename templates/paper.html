@@ -447,6 +447,45 @@
         transition: transform 0.2s ease;
       }
 
+      .organize-card {
+        margin-top: 16px;
+      }
+
+      .organize-field {
+        margin-bottom: 12px;
+      }
+
+      .organize-textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        font-size: 14px;
+        min-width: 0;
+        line-height: 1.8;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .organize-textarea:focus,
+      .folder-input:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      }
+
+      .organize-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .organize-actions .btn {
+        min-width: 140px;
+      }
+
       @media (max-width: 640px) {
         body {
           padding: 16px 12px 28px;
@@ -563,6 +602,15 @@
 
         .save-message {
           font-size: 14px;
+        }
+
+        .organize-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .organize-actions .btn {
+          width: 100%;
         }
       }
     </style>
@@ -846,7 +894,7 @@
       </div>
     </div>
 
-    <script>
+    <script src="/static/js/paper_organize.js">
       const SEARCH_URL_KEY = "search_scroll_url";
 
       function hasLiked(pubmedId) {

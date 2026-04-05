@@ -304,17 +304,6 @@ def apply_referral(request: Request, ref_code: str = Form(...)):
 
     return RedirectResponse("/plans?ref_success=1", status_code=303)
 
-def get_user_plan(user):
-    if not user:
-        return "guest"
-
-    plan = (user.get("plan") or "free").strip().lower()
-
-    if plan not in ["free", "pro", "expert"]:
-        return "free"
-
-    return plan
-
 
 def can_user_save(user):
     plan = get_user_plan(user)
@@ -1130,13 +1119,6 @@ def paper(
         "custom_title": refreshed_saved.get("custom_title") or "" if refreshed_saved else "",
         "user_note": refreshed_saved.get("user_note") or "" if refreshed_saved else "",
     }
-
-    save_error_message = ""
-
-    if save_error == "login_required":
-        save_error_message = "保存するにはログインが必要です。"
-    elif save_error == "limit_reached":
-        save_error_message = "現在のプランの保存上限に達しています。プラン変更をご検討ください。"
 
     save_error_message = ""
 
