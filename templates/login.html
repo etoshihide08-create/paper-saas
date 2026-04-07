@@ -112,16 +112,68 @@
         .btn:hover { background: #1d4ed8; }
         .btn:active { transform: scale(0.98); }
 
-        .context-notice {
+        .context-card {
             background: #eff6ff;
-            color: #1e40af;
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.6;
             border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
         }
+
+        .context-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e40af;
+            margin: 0 0 4px;
+        }
+
+        .context-card-desc {
+            font-size: 13px;
+            color: #3b82f6;
+            margin: 0 0 14px;
+            line-height: 1.5;
+        }
+
+        .context-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .context-btn-primary {
+            flex: 1;
+            padding: 9px 0;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .context-btn-primary:hover { background: #1d4ed8; }
+
+        .context-btn-secondary {
+            flex: 1;
+            padding: 9px 0;
+            background: #fff;
+            color: #2563eb;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .context-btn-secondary:hover { background: #f0f7ff; }
 
         .error {
             background: #fef2f2;
@@ -169,14 +221,22 @@
         <h1>ログイン</h1>
 
         {% if from_page == "memo" %}
-        <div class="context-notice">
-            📝 メモ機能を使うにはログインが必要です。<br>
-            アカウントをお持ちの方はログイン、初めての方は新規登録してください。
+        <div class="context-card">
+            <p class="context-card-title">📝 メモ機能はログイン後に使えます</p>
+            <p class="context-card-desc">気づきの保存や、<br>あとで見返す整理に使えます。</p>
+            <div class="context-card-actions">
+                <a href="#email" class="context-btn-primary" onclick="document.getElementById('email').focus();return false;">ログインする</a>
+                <a href="/register" class="context-btn-secondary">新規登録する</a>
+            </div>
         </div>
         {% elif from_page == "saved" %}
-        <div class="context-notice">
-            📚 保存機能を使うにはログインが必要です。<br>
-            アカウントをお持ちの方はログイン、初めての方は新規登録してください。
+        <div class="context-card">
+            <p class="context-card-title">📚 保存機能はログイン後に使えます</p>
+            <p class="context-card-desc">気になった論文をあとからすぐ見返せます。</p>
+            <div class="context-card-actions">
+                <a href="#email" class="context-btn-primary" onclick="document.getElementById('email').focus();return false;">ログインする</a>
+                <a href="/register" class="context-btn-secondary">新規登録する</a>
+            </div>
         </div>
         {% endif %}
 
