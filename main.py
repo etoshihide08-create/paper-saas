@@ -2118,7 +2118,7 @@ def register(request: Request, email: str = Form(...), password: str = Form(...)
 
 
 @app.get("/login")
-def login_page(request: Request):
+def login_page(request: Request, from_page: str = Query(default="", alias="from")):
     current_user = get_current_user(request)
 
     if current_user:
@@ -2129,6 +2129,7 @@ def login_page(request: Request):
         {
             "request": request,
             "error": "",
+            "from_page": from_page,
         }
     )
 
@@ -2188,7 +2189,7 @@ def public_toggle(request: Request, pubmed_id: str):
 def memo_list(request: Request, tab: str = "quick"):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     user_id = current_user["id"]
     plan = get_user_plan(current_user)
@@ -2238,7 +2239,7 @@ def memo_create(request: Request, title: str = Form(""), body: str = Form("")):
 def memo_detail(request: Request, memo_id: int):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     memo = get_memo_by_id(memo_id, current_user["id"])
     if not memo:
@@ -2277,7 +2278,7 @@ def memo_update(
 def memo_delete(request: Request, memo_id: int):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     delete_memo(memo_id, current_user["id"])
     return RedirectResponse("/memo?tab=quick", status_code=303)
@@ -2298,7 +2299,7 @@ def memo_delete_if_empty(request: Request, memo_id: int):
 def paper_memo_new_page(request: Request):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     user_id = current_user["id"]
     plan = get_user_plan(current_user)
@@ -2340,7 +2341,7 @@ def paper_memo_create(
 ):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     user_id = current_user["id"]
     plan = get_user_plan(current_user)
@@ -2360,7 +2361,7 @@ def paper_memo_create(
 def paper_memo_detail(request: Request, memo_id: int):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     memo = get_paper_memo_by_id(memo_id, current_user["id"])
     if not memo:
@@ -2398,7 +2399,7 @@ def paper_memo_update(
 def paper_memo_delete(request: Request, memo_id: int):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login", status_code=303)
+        return RedirectResponse("/login?from=memo", status_code=303)
 
     delete_paper_memo(memo_id, current_user["id"])
     return RedirectResponse("/memo?tab=paper", status_code=303)

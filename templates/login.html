@@ -112,6 +112,17 @@
         .btn:hover { background: #1d4ed8; }
         .btn:active { transform: scale(0.98); }
 
+        .context-notice {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid #bfdbfe;
+        }
+
         .error {
             background: #fef2f2;
             color: #b91c1c;
@@ -156,6 +167,18 @@
 
     <div class="card">
         <h1>ログイン</h1>
+
+        {% if from_page == "memo" %}
+        <div class="context-notice">
+            📝 メモ機能を使うにはログインが必要です。<br>
+            アカウントをお持ちの方はログイン、初めての方は新規登録してください。
+        </div>
+        {% elif from_page == "saved" %}
+        <div class="context-notice">
+            📚 保存機能を使うにはログインが必要です。<br>
+            アカウントをお持ちの方はログイン、初めての方は新規登録してください。
+        </div>
+        {% endif %}
 
         {% if error %}
         <div class="error">{{ error }}</div>
