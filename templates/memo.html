@@ -112,6 +112,56 @@
         text-decoration: underline;
       }
 
+      /* ── ログインプロンプトカード ── */
+      .login-prompt-card {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 16px;
+        padding: 20px 20px 18px;
+        margin-top: 8px;
+        text-align: center;
+      }
+      .login-prompt-card-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+        line-height: 1;
+      }
+      .login-prompt-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 6px;
+      }
+      .login-prompt-card-desc {
+        font-size: 13px;
+        color: #3b82f6;
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+      .login-prompt-card-btns {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      .login-prompt-card-btns a {
+        padding: 9px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: opacity 0.15s;
+      }
+      .login-prompt-card-btns a:active { opacity: 0.75; }
+      .btn-login-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .btn-login-secondary {
+        background: #fff;
+        color: #2563eb;
+        border: 1.5px solid #bfdbfe;
+      }
+
       /* ── メモカード ── */
       .memo-list {
         display: flex;
@@ -460,12 +510,21 @@
             </div>
           </div>
 
-          <!-- 制限バナー -->
-          {% if memo_limit == 0 %}
-          <div class="limit-banner">
-            メモ機能はログインユーザー限定です。<a href="/register">無料登録</a>すると15件まで使えます。
+          {% if not current_user %}
+          <!-- 未ログイン時のプロンプトカード -->
+          <div class="login-prompt-card">
+            <div class="login-prompt-card-icon">📝</div>
+            <div class="login-prompt-card-title">メモ機能はログイン後に使えます</div>
+            <div class="login-prompt-card-desc">気づきの保存や、<br>あとで見返す整理に使えます。</div>
+            <div class="login-prompt-card-btns">
+              <a href="/login?from=memo" class="btn-login-primary">ログイン</a>
+              <a href="/register" class="btn-login-secondary">新規登録</a>
+            </div>
           </div>
-          {% elif memo_limit is not none and total_count >= memo_limit %}
+          {% else %}
+
+          <!-- 制限バナー -->
+          {% if memo_limit is not none and total_count >= memo_limit %}
           <div class="limit-banner">
             メモが上限（{{ memo_limit }}件）に達しました。
             <a href="/plans">プランをアップグレード</a>すると無制限で使えます。
@@ -541,6 +600,8 @@
             <a href="/memo/paper/new" class="fab">+</a>
             {% endif %}
           {% endif %}
+
+          {% endif %}{# /if current_user #}
 
         </div>
       </main>

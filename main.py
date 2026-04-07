@@ -2412,7 +2412,16 @@ def public_toggle(request: Request, pubmed_id: str):
 def memo_list(request: Request, tab: str = "quick"):
     current_user = get_current_user(request)
     if not current_user:
-        return RedirectResponse("/login?from=memo", status_code=303)
+        return templates.TemplateResponse("memo.html", {
+            "request": request,
+            "current_user": None,
+            "current_plan": "guest",
+            "tab": tab,
+            "quick_memos": [],
+            "paper_memos": [],
+            "total_count": 0,
+            "memo_limit": 0,
+        })
 
     user_id = current_user["id"]
     plan = get_user_plan(current_user)
