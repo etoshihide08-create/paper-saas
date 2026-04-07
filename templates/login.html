@@ -2,27 +2,56 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ログイン</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン — リハエビデンスナビ</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
-            font-family: sans-serif;
-            background: #f5f7fb;
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: #f0f4f8;
             margin: 0;
-            padding: 60px 16px;
-            color: #222;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            color: #1e293b;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .logo-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2563eb;
+            letter-spacing: 0.02em;
         }
 
         .card {
-            max-width: 520px;
-            margin: 0 auto;
-            background: white;
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
             border-radius: 20px;
-            padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 32px 28px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
         }
 
         h1 {
-            margin-top: 0;
+            margin: 0 0 24px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
         }
 
         .field {
@@ -31,20 +60,32 @@
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
             font-weight: 700;
+            color: #475569;
         }
 
         input {
             width: 100%;
-            box-sizing: border-box;
-            padding: 14px;
-            border: 1px solid #cbd5e1;
+            padding: 13px 14px;
+            border: 1.5px solid #e2e8f0;
             border-radius: 12px;
             font-size: 16px;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+            -webkit-appearance: none;
         }
 
-        button {
+        input:focus {
+            border-color: #2563eb;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn {
             width: 100%;
             padding: 14px;
             border: none;
@@ -54,34 +95,54 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.15s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        button:hover {
-            opacity: 0.92;
-        }
+        .btn:hover { background: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
 
         .error {
             background: #fef2f2;
             color: #b91c1c;
-            padding: 12px;
+            padding: 12px 14px;
             border-radius: 10px;
             margin-bottom: 16px;
+            font-size: 14px;
+            border: 1px solid #fecaca;
         }
 
-        .link {
-            display: inline-block;
-            margin-top: 16px;
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .footer-link a {
             color: #2563eb;
             text-decoration: none;
             font-weight: 700;
         }
 
-        .link:hover {
-            text-decoration: underline;
+        .footer-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 28px 20px;
+                border-radius: 16px;
+            }
+            h1 { font-size: 20px; }
         }
     </style>
 </head>
 <body>
+    <div class="logo">
+        <div class="logo-icon">🩺</div>
+        <div class="logo-name">リハエビデンスナビ</div>
+    </div>
+
     <div class="card">
         <h1>ログイン</h1>
 
@@ -92,18 +153,20 @@
         <form action="/login" method="post">
             <div class="field">
                 <label for="email">メールアドレス</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" autocomplete="email" required>
             </div>
 
             <div class="field">
                 <label for="password">パスワード</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
             </div>
 
-            <button type="submit">ログインする</button>
+            <button type="submit" class="btn">ログインする</button>
         </form>
 
-        <a href="/register" class="link">新規登録はこちら</a>
+        <div class="footer-link">
+            アカウントをお持ちでない方は <a href="/register">新規登録</a>
+        </div>
     </div>
 </body>
 </html>
