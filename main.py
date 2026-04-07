@@ -608,73 +608,158 @@ def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
         return converted
     
 def generate_tags(title: str, abstract: str):
-    tags = []
     text = f"{title} {abstract}".lower()
+    scored: list[tuple[str, int]] = []
 
-    # ===== Sランク =====
-    if "stroke" in text:
-        tags.append("脳卒中")
+    # ===== Tier 1 — 疾患・領域 (score 3) =====
+    if any(k in text for k in ["stroke", "cerebral infarction", "cerebral hemorrhage",
+                                "hemiplegia", "spinal cord injury", "brain injury",
+                                "traumatic brain", " tbi ", "myelopathy"]):
+        scored.append(("中枢", 3))
 
-    if "gait" in text or "walking" in text:
-        tags.append("歩行")
+    if any(k in text for k in ["parkinson", "alzheimer", "multiple sclerosis",
+                                "amyotrophic", "guillain", "peripheral neuropath",
+                                "cranial nerve", "neurodegenerative"]):
+        scored.append(("脳神経", 3))
 
-    if "rehabilitation" in text:
-        tags.append("リハビリ")
+    if any(k in text for k in ["orthopedic", "musculoskeletal", "lumbar", "cervical spine",
+                                "arthroplasty", "scoliosis", "spine surgery", "knee osteoarthritis",
+                                "knee oa", "total knee", "total hip"]):
+        scored.append(("整形", 3))
 
-    if "balance" in text:
-        tags.append("バランス")
+    if any(k in text for k in ["fracture", "osteoporosis", "bone mineral density",
+                                "hip fracture", "vertebral fracture", "bone density"]):
+        scored.append(("骨折", 3))
 
-    if "adl" in text or "activities of daily living" in text:
-        tags.append("ADL")
+    if any(k in text for k in ["respiratory", "copd", "pulmonary", " lung ", "ventilator",
+                                "mechanical ventilation", "tracheostomy", "oxygen therapy",
+                                "respiratory failure"]):
+        scored.append(("呼吸器", 3))
 
-    if "fall" in text or "falls" in text:
-        tags.append("転倒")
+    if any(k in text for k in ["cardiac", "heart failure", "coronary", "myocardial",
+                                "atrial fibrillation", "cardiovascular", "hypertension",
+                                "cardiac rehabilitation"]):
+        scored.append(("循環器", 3))
 
-    if "strength" in text or "muscle strength" in text:
-        tags.append("筋力")
+    if any(k in text for k in ["diabetes", "diabetic", "glycemic", "hba1c", "insulin"]):
+        scored.append(("糖尿病", 3))
 
-    if "cognitive" in text or "cognition" in text:
-        tags.append("認知機能")
+    if any(k in text for k in ["renal", "kidney", "hemodialysis", "dialysis",
+                                "chronic kidney disease", "ckd"]):
+        scored.append(("腎臓リハ", 3))
 
-    # ===== Aランク =====
-    if "spinal cord" in text:
-        tags.append("脊髄損傷")
+    if any(k in text for k in ["elderly", "older adult", "older people", "frailty",
+                                "frail", "sarcopenia", "aging", "geriatric", "older patient"]):
+        scored.append(("高齢者・フレイル", 3))
 
-    if "parkinson" in text:
-        tags.append("パーキンソン病")
+    if any(k in text for k in ["pediatric", "children", "child", "infant",
+                                "cerebral palsy", "developmental delay"]):
+        scored.append(("小児リハ", 3))
 
-    if "elderly" in text or "older adult" in text:
-        tags.append("高齢者")
+    if any(k in text for k in ["athlete", " sport", "athletic", "acl",
+                                "anterior cruciate", "sports injury"]):
+        scored.append(("スポーツ", 3))
 
-    if "exercise therapy" in text or "exercise" in text:
-        tags.append("運動療法")
+    # ===== Tier 2 — 症状・機能 (score 2) =====
+    if any(k in text for k in ["gait", "walking", "balance", "postural stability",
+                                "timed up and go", " tug ", "6-minute walk", "fall risk"]):
+        scored.append(("歩行・バランス", 2))
 
-    if "neuroplasticity" in text:
-        tags.append("神経可塑性")
+    if any(k in text for k in ["upper extremity", "upper limb", " arm ", "hand function",
+                                "wrist", "elbow", "shoulder function", "grip strength"]):
+        scored.append(("上肢", 2))
 
-    if "gait analysis" in text:
-        tags.append("歩行分析")
+    if any(k in text for k in ["adl", "activities of daily living", "functional independence",
+                                " fim ", "barthel", "instrumental adl", "iadl"]):
+        scored.append(("ADL・生活機能", 2))
 
-    if "posture" in text or "postural control" in text:
-        tags.append("姿勢制御")
+    if any(k in text for k in ["swallowing", "dysphagia", "aspiration", "oral feeding",
+                                "deglutition", "videofluoroscopy", "fiberoptic endoscopic"]):
+        scored.append(("嚥下障害", 2))
 
-    if "emg" in text or "electromyography" in text:
-        tags.append("筋電図")
+    if any(k in text for k in ["pain", "chronic pain", "neuropathic pain", "low back pain",
+                                " vas ", "numeric rating scale", "pain management"]):
+        scored.append(("疼痛", 2))
 
-    # ===== Bランク =====
-    if "respiratory" in text:
-        tags.append("呼吸リハ")
+    if any(k in text for k in ["fall ", "falls ", "falling", "fall prevention",
+                                "fall incidence", "fall rate"]):
+        scored.append(("転倒", 2))
 
-    if "knee osteoarthritis" in text or "knee oa" in text:
-        tags.append("膝OA")
+    if any(k in text for k in ["deconditioning", "disuse", "immobilization", "bed rest",
+                                "physical inactivity", "hospital-acquired deconditioning"]):
+        scored.append(("廃用症候群", 2))
 
-    if "pain" in text:
-        tags.append("疼痛")
+    if any(k in text for k in ["malnutrition", "undernutrition", "nutritional status",
+                                " albumin", "weight loss", "muscle wasting", "cachexia"]):
+        scored.append(("低栄養", 2))
 
-    if "range of motion" in text or "rom" in text:
-        tags.append("可動域")
+    if any(k in text for k in ["nutritional intervention", "dietary supplement", "enteral",
+                                "parenteral", "tube feeding", "nutritional support"]):
+        scored.append(("栄養管理", 2))
 
-    return tags[:5]
+    if any(k in text for k in ["contracture", "joint contracture", "stretching",
+                                "positioning", "splinting", "passive range of motion"]):
+        scored.append(("拘縮予防", 2))
+
+    if any(k in text for k in ["early mobilization", "early ambulation", "bed mobility",
+                                "sitting out of bed", "patient mobilization"]):
+        scored.append(("離床", 2))
+
+    if any(k in text for k in ["orthosis", "brace", "prosthesis", "ankle foot orthosis",
+                                " afo ", "wheelchair", "assistive device"]):
+        scored.append(("装具", 2))
+
+    # ===== Tier 3 — 文脈・手法 (score 1) =====
+    if any(k in text for k in ["randomized controlled", " rct ", "systematic review",
+                                "meta-analysis", "cohort study", "observational study"]):
+        scored.append(("評価・研究デザイン", 1))
+
+    if any(k in text for k in ["risk management", "adverse event", "patient safety",
+                                "complication", "monitoring"]):
+        scored.append(("リスク管理", 1))
+
+    if any(k in text for k in ["multidisciplinary", "interdisciplinary", "team approach",
+                                "collaboration", "care team", "interprofessional"]):
+        scored.append(("多職種連携", 1))
+
+    if any(k in text for k in ["home visit", "home care", "outpatient", "discharge planning",
+                                "community-dwelling", "community rehabilitation"]):
+        scored.append(("訪問・地域", 1))
+
+    if any(k in text for k in ["polypharmacy", "multiple medications",
+                                "drug interaction", "deprescribing"]):
+        scored.append(("ポリファーマシー", 1))
+
+    if any(k in text for k in ["constipation", "bowel management", "defecation", "laxative"]):
+        scored.append(("便秘", 1))
+
+    if any(k in text for k in ["readmission", "rehospitalization",
+                                "hospital readmission", "30-day readmission"]):
+        scored.append(("再入院予防", 1))
+
+    if any(k in text for k in ["blood test", "laboratory value", " serum ", " crp ",
+                                "hemoglobin", "blood count", "biomarker"]):
+        scored.append(("血液検査", 1))
+
+    if any(k in text for k in [" mri ", " ct ", "imaging", "radiograph",
+                                "ultrasound", "echocardiography"]):
+        scored.append(("画像所見", 1))
+
+    if any(k in text for k in ["cognitive", "cognition", "speech therapy", "aphasia",
+                                "communication disorder", "memory", "dementia"]):
+        scored.append(("嚥下・言語・認知", 1))
+
+    # スコア降順でユニーク上位5件を返す
+    seen: set[str] = set()
+    result: list[str] = []
+    for tag, _score in sorted(scored, key=lambda x: -x[1]):
+        if tag not in seen:
+            seen.add(tag)
+            result.append(tag)
+        if len(result) >= 5:
+            break
+
+    return result
     
 def translate_title_to_japanese(title: str) -> str:
     if not title:

@@ -200,7 +200,7 @@
     <!-- Tag filter -->
     <div class="tag-filter-bar">
       <a href="/learn?tab=board" class="filter-chip {% if not active_tag %}active{% endif %}">すべて</a>
-      {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
+      {% for tag in ["整形","骨折","中枢","脳神経","呼吸器","循環器","糖尿病","高齢者・フレイル","歩行・バランス","上肢","ADL・生活機能","嚥下・言語・認知","疼痛","装具","離床","リスク管理","多職種連携","訪問・地域","目標設定・教育","評価・研究デザイン"] %}
       <a href="/learn?tab=board&tag={{ tag }}" class="filter-chip {% if active_tag == tag %}active{% endif %}">{{ tag }}</a>
       {% endfor %}
     </div>
@@ -236,7 +236,7 @@
               </div>
               <div class="tag-section-label">カテゴリ</div>
               <div class="tag-dropdown-grid">
-                {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
+                {% for tag in ["整形","骨折","中枢","脳神経","呼吸器","循環器","糖尿病","高齢者・フレイル","歩行・バランス","上肢","ADL・生活機能","嚥下・言語・認知","疼痛","装具","離床","リスク管理","多職種連携","訪問・地域","目標設定・教育","評価・研究デザイン"] %}
                 <button type="button" class="tag-toggle" data-tag="{{ tag }}" onclick="togglePostTag('{{ tag }}', this)">{{ tag }}</button>
                 {% endfor %}
               </div>
