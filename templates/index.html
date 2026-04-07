@@ -244,6 +244,33 @@
         border-color: var(--blue);
         color: #fff;
       }
+      .tag-sub-category {
+        background: #e0e7ff;
+        border-color: #a5b4fc;
+        color: #3730a3;
+        font-weight: 700;
+      }
+      .tag-sub-category::after { content: " ›"; opacity: 0.6; }
+      .tag-sub-category:hover { background: #c7d2fe; }
+      .tag-sub-back {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1.5px solid #93c5fd;
+        background: transparent;
+        color: #2563eb;
+        cursor: pointer;
+        white-space: nowrap;
+        margin-right: 4px;
+      }
+      .tag-sub-back:hover { background: #dbeafe; }
+      .tag-sub-divider {
+        width: 100%;
+        height: 0;
+        border-top: 1px solid #bfdbfe;
+        margin: 4px 0;
+      }
 
       .ranking-card {
         background: var(--card);
@@ -1168,7 +1195,13 @@
 
       // ── Search Tag Picker ──
       const SEARCH_TAGS = {
-        "整形":           ["変形性膝関節症", "人工膝関節術後", "前十字靱帯損傷", "半月板損傷", "変形性股関節症", "人工股関節術後", "肩関節周囲炎", "腱板損傷", "肩峰下インピンジメント症候群", "反復性肩関節脱臼", "腰痛症", "腰部脊柱管狭窄症", "腰椎椎間板ヘルニア", "骨粗鬆症", "肩こり"],
+        "整形":           {
+          "上肢":     ["肩関節周囲炎（五十肩）", "腱板損傷", "肩峰下インピンジメント症候群", "反復性肩関節脱臼", "肘関節拘縮", "手根管症候群", "手指屈筋腱損傷", "CRPS", "スプリント療法"],
+          "下肢":     ["変形性膝関節症", "人工膝関節術後", "変形性股関節症", "人工股関節術後", "足関節不安定性", "アキレス腱断裂", "膝蓋大腿関節症"],
+          "脊椎・体幹": ["腰痛症", "腰部脊柱管狭窄症", "腰椎椎間板ヘルニア", "頸椎症", "頸椎椎間板ヘルニア", "側弯症", "術後脊椎"],
+          "骨折":     ["大腿骨近位部骨折", "橈骨遠位端骨折", "上腕骨近位端骨折", "脊椎圧迫骨折", "骨盤骨折", "骨粗鬆症性骨折", "疲労骨折"],
+          "スポーツ": ["ACL損傷", "半月板損傷", "足関節捻挫", "ジャンパー膝", "シンスプリント", "肉離れ", "疲労骨折", "return to sport"],
+        },
         "骨折":           ["大腿骨近位部骨折", "橈骨遠位端骨折", "上腕骨近位端骨折", "骨盤骨折", "脊椎圧迫骨折", "疲労骨折", "骨粗鬆症性骨折"],
         "中枢":           ["脳梗塞", "脳出血", "くも膜下出血", "片麻痺", "四肢麻痺", "脳性麻痺", "脊髄損傷", "プッシャー症候群", "高次脳機能障害", "半側空間無視"],
         "脳神経":         ["パーキンソン病", "神経難病", "多系統萎縮症", "進行性核上性麻痺", "筋萎縮性側索硬化症", "多発性硬化症", "ギラン・バレー症候群", "末梢神経障害"],
@@ -1244,18 +1277,59 @@
 
         // Build sub-chips
         subSection.innerHTML = "";
-        SEARCH_TAGS[cat].forEach(sub => {
-          const sc = document.createElement("button");
-          sc.type = "button";
-          sc.className = "tag-sub-chip";
-          sc.textContent = sub;
-          sc.onclick = () => selectSubTag(sub, sc);
-          subSection.appendChild(sc);
-        });
+        const data = SEARCH_TAGS[cat];
+        if (Array.isArray(data)) {
+          data.forEach(sub => {
+            const sc = document.createElement("button");
+            sc.type = "button";
+            sc.className = "tag-sub-chip";
+            sc.textContent = sub;
+            sc.onclick = () => selectSubTag(sub, sc);
+            subSection.appendChild(sc);
+          });
+        } else {
+          renderSubCategories(cat, data, subSection);
+        }
         subSection.classList.add("open");
 
         // Scroll sub section into view smoothly
         subSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function renderSubCategories(cat, data, subSection) {
+        subSection.innerHTML = "";
+        Object.keys(data).forEach(subCat => {
+          const sc = document.createElement("button");
+          sc.type = "button";
+          sc.className = "tag-sub-chip tag-sub-category";
+          sc.textContent = subCat;
+          sc.onclick = () => renderLeafTags(cat, subCat, data[subCat], subSection);
+          subSection.appendChild(sc);
+        });
+      }
+
+      function renderLeafTags(cat, subCat, items, subSection) {
+        subSection.innerHTML = "";
+        // 戻るボタン
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "tag-sub-back";
+        back.textContent = "← " + cat;
+        back.onclick = () => renderSubCategories(cat, SEARCH_TAGS[cat], subSection);
+        subSection.appendChild(back);
+        // 区切り
+        const div = document.createElement("div");
+        div.className = "tag-sub-divider";
+        subSection.appendChild(div);
+        // 葉タグ
+        items.forEach(item => {
+          const sc = document.createElement("button");
+          sc.type = "button";
+          sc.className = "tag-sub-chip";
+          sc.textContent = item;
+          sc.onclick = () => selectSubTag(item, sc);
+          subSection.appendChild(sc);
+        });
       }
 
       function selectSubTag(term, chip) {
