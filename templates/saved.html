@@ -41,6 +41,30 @@
       }
 
       .alert-box {
+        display: none; /* replaced by login-prompt-card */
+      }
+
+      .login-prompt-card {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 16px;
+        padding: 20px 20px 18px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .login-prompt-card-icon { font-size: 28px; margin-bottom: 8px; line-height: 1; }
+      .login-prompt-card-title { font-size: 15px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+      .login-prompt-card-desc { font-size: 13px; color: #3b82f6; line-height: 1.6; margin-bottom: 16px; }
+      .login-prompt-card-btns { display: flex; gap: 10px; justify-content: center; }
+      .login-prompt-card-btns a {
+        padding: 9px 24px; border-radius: 10px; font-size: 14px; font-weight: 700;
+        text-decoration: none; transition: opacity 0.15s;
+      }
+      .login-prompt-card-btns a:active { opacity: 0.75; }
+      .btn-login-primary { background: #2563eb; color: #fff; }
+      .btn-login-secondary { background: #fff; color: #2563eb; border: 1.5px solid #bfdbfe; }
+
+      .alert-box-old {
         margin: 0 0 16px;
         padding: 12px 14px;
         background: #fef3c7;
@@ -172,7 +196,15 @@
   <body>
     <div class="container">
       {% if is_guest %}
-      <div class="alert-box">ログインすると論文を保存できます。</div>
+      <div class="login-prompt-card">
+        <div class="login-prompt-card-icon">📚</div>
+        <div class="login-prompt-card-title">保存機能はログイン後に使えます</div>
+        <div class="login-prompt-card-desc">気になった論文をフォルダに整理して、<br>あとからすぐ見返せます。</div>
+        <div class="login-prompt-card-btns">
+          <a href="/login?from=saved" class="btn-login-primary">ログイン</a>
+          <a href="/register" class="btn-login-secondary">新規登録</a>
+        </div>
+      </div>
       {% endif %}
 
       <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
