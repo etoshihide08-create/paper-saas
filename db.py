@@ -113,12 +113,34 @@ def init_db():
         "ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''",
+        # promo code columns
+        "ALTER TABLE users ADD COLUMN promo_plan TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN promo_ends_at TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN promo_code_used TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN promo_code_used_at TEXT DEFAULT ''",
     ]:
         try:
             cur.execute(sql)
             conn.commit()
         except sqlite3.OperationalError:
             pass
+
+    # friend promo codes
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS friend_promo_codes (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            code          TEXT UNIQUE NOT NULL,
+            plan_to_grant TEXT DEFAULT 'pro',
+            free_days     INTEGER DEFAULT 90,
+            max_uses      INTEGER DEFAULT 1,
+            used_count    INTEGER DEFAULT 0,
+            expires_at    TEXT DEFAULT '',
+            target_email  TEXT DEFAULT '',
+            is_active     INTEGER DEFAULT 1,
+            created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
 
     # paper likes (per-user)
     cur.execute("""
@@ -1478,3 +1500,50 @@ def get_paper_jp_title_global(pubmed_id: str) -> str:
     row = cur.fetchone()
     conn.close()
     return row[0] if row else ""
+
+
+# ─── 友人用プロモコード ────────────────────────────────────────────────
+
+def get_friend_promo_code(code: str) -> dict | None:
+    """コード文字列で friend_promo_codes を検索して返す。見つからなければ None。"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM friend_promo_codes WHERE code = ?",
+        (code.strip().upper(),)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def use_friend_promo_code(code_id: int) -> None:
+    """used_count を 1 増やす。"""
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE friend_promo_codes SET used_count = used_count + 1 WHERE id = ?",
+        (code_id,)
+    )
+    conn.commit()
+    conn.close()
+
+
+def apply_promo_to_user(user_id: int, plan: str, ends_at: str, code: str) -> None:
+    """ユーザーの promo フィールドを更新する。"""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE users
+        SET promo_plan        = ?,
+            promo_ends_at     = ?,
+            promo_code_used   = ?,
+            promo_code_used_at = ?
+        WHERE id = ?
+        """,
+        (plan, ends_at, code.strip().upper(), now, user_id)
+    )
+    conn.commit()
+    conn.close()

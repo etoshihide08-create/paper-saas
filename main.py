@@ -66,6 +66,9 @@ from db import (
     delete_user_tag,
     record_interest,
     get_recommended_papers,
+    get_friend_promo_code,
+    use_friend_promo_code,
+    apply_promo_to_user,
 )
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -178,12 +181,22 @@ def get_user_plan(user):
     if not user:
         return "guest"
 
+    today = datetime.now().date()
+
+    # ① promo が有効なら最優先（users.plan は free のまま）
+    promo_ends_at = (user.get("promo_ends_at") or "").strip()
+    promo_plan = (user.get("promo_plan") or "").strip().lower()
+    if promo_ends_at and promo_plan in ("pro", "expert"):
+        try:
+            end = datetime.strptime(promo_ends_at, "%Y-%m-%d").date()
+            if today <= end:
+                return promo_plan
+        except ValueError:
+            pass
+
+    # ② 通常 plan（trial 中も含む）
     plan = (user.get("plan") or "free").strip().lower()
-
-    if plan not in ["free", "pro", "expert"]:
-        return "free"
-
-    return plan
+    return plan if plan in ("free", "pro", "expert") else "free"
 
 def get_plan_limits(plan):
 
@@ -344,6 +357,80 @@ def apply_referral(request: Request, ref_code: str = Form(...)):
     )
 
     return RedirectResponse("/plans?ref_success=1", status_code=303)
+
+
+# promo_error の値一覧:
+#   login_required  - 未ログイン
+#   empty           - コードが空
+#   already_used    - このユーザーは既にプロモを利用済み
+#   already_pro     - 実効プランが pro/expert（trial中・promo中を含む）
+#   not_found       - コードが存在しない
+#   inactive        - コードが無効化されている
+#   expired         - コード自体の有効期限切れ
+#   limit_reached   - max_uses を超過
+#   email_mismatch  - target_email と一致しない
+
+@app.post("/apply-promo")
+def apply_promo(request: Request, promo_code: str = Form(...)):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login?from=plans", status_code=303)
+
+    promo_code = (promo_code or "").strip().upper()
+    if not promo_code:
+        return RedirectResponse("/plans?promo_error=empty", status_code=303)
+
+    user = get_user_by_id(current_user["id"])
+
+    # 既にプロモを利用済み
+    if (user.get("promo_code_used") or "").strip():
+        return RedirectResponse("/plans?promo_error=already_used", status_code=303)
+
+    # 実効プランが pro/expert（trial中・promo中を含む）は対象外
+    effective_plan = get_user_plan(user)
+    if effective_plan in ("pro", "expert"):
+        return RedirectResponse("/plans?promo_error=already_pro", status_code=303)
+
+    code_row = get_friend_promo_code(promo_code)
+    if not code_row:
+        return RedirectResponse("/plans?promo_error=not_found", status_code=303)
+
+    if not code_row["is_active"]:
+        return RedirectResponse("/plans?promo_error=inactive", status_code=303)
+
+    # コード自体の有効期限チェック
+    expires_at = (code_row.get("expires_at") or "").strip()
+    if expires_at:
+        today = datetime.now().date()
+        try:
+            exp = datetime.strptime(expires_at, "%Y-%m-%d").date()
+            if today > exp:
+                return RedirectResponse("/plans?promo_error=expired", status_code=303)
+        except ValueError:
+            pass
+
+    if code_row["used_count"] >= code_row["max_uses"]:
+        return RedirectResponse("/plans?promo_error=limit_reached", status_code=303)
+
+    # target_email が設定されている場合は一致確認
+    target_email = (code_row.get("target_email") or "").strip().lower()
+    if target_email and target_email != (user.get("email") or "").strip().lower():
+        return RedirectResponse("/plans?promo_error=email_mismatch", status_code=303)
+
+    # 適用
+    today = datetime.now()
+    ends_at = (today + timedelta(days=int(code_row["free_days"]))).strftime("%Y-%m-%d")
+    plan_to_grant = code_row.get("plan_to_grant") or "pro"
+
+    apply_promo_to_user(
+        user_id=current_user["id"],
+        plan=plan_to_grant,
+        ends_at=ends_at,
+        code=promo_code,
+    )
+    use_friend_promo_code(code_row["id"])
+
+    return RedirectResponse("/plans?promo_success=1", status_code=303)
 
 
 def can_user_save(user):
@@ -814,13 +901,18 @@ def plans(request: Request):
                 "request": request,
                 "current_user": None,
                 "current_plan": "guest",
+                "promo_days_left": None,
+                "promo_message": "",
+                "promo_is_success": False,
+                "referral_message": "",
+                "referral_success": False,
             }
         )
 
     user = get_user_by_id(current_user["id"])
     user = check_trial_expired(user)
 
-    current_plan = user.get("plan") or "free"
+    current_plan = get_user_plan(user)
 
     trial_ends_at = user.get("trial_ends_at")
     plan_renews_at = user.get("plan_renews_at")
@@ -838,6 +930,47 @@ def plans(request: Request):
         if diff > 0:
             trial_days_left = diff
 
+    # promo の残り日数
+    promo_days_left = None
+    promo_ends_at = (user.get("promo_ends_at") or "").strip()
+    if promo_ends_at:
+        today = datetime.now().date()
+        try:
+            end = datetime.strptime(promo_ends_at, "%Y-%m-%d").date()
+            diff = (end - today).days
+            if diff >= 0:
+                promo_days_left = diff
+        except ValueError:
+            pass
+
+    # referral フィードバック
+    ref_error = request.query_params.get("ref_error", "")
+    ref_success = request.query_params.get("ref_success", "")
+    ref_error_messages = {
+        "empty":        "紹介コードを入力してください。",
+        "not_found":    "紹介コードが見つかりません。",
+        "already_used": "既に紹介コードを使用済みです。",
+        "self_referral":"自分の紹介コードは使えません。",
+    }
+    referral_message = ref_error_messages.get(ref_error, "") if ref_error else ("紹介コードを適用しました！" if ref_success else "")
+    referral_success = bool(ref_success)
+
+    # promo フィードバック
+    promo_error = request.query_params.get("promo_error", "")
+    promo_success_param = request.query_params.get("promo_success", "")
+    promo_error_messages = {
+        "empty":         "招待コードを入力してください。",
+        "already_used":  "招待コードは既に使用済みです。",
+        "already_pro":   "現在 Pro / Expert プランのため適用できません。",
+        "not_found":     "招待コードが見つかりません。",
+        "inactive":      "このコードは現在無効です。",
+        "expired":       "このコードの有効期限が切れています。",
+        "limit_reached": "このコードの利用上限に達しています。",
+        "email_mismatch":"このコードはあなたのアカウントでは使用できません。",
+    }
+    promo_message = promo_error_messages.get(promo_error, "") if promo_error else ("招待コードを適用しました！ Pro プランをお楽しみください。" if promo_success_param else "")
+    promo_is_success = bool(promo_success_param)
+
     return templates.TemplateResponse(
         "plans.html",
         {
@@ -847,6 +980,11 @@ def plans(request: Request):
             "trial_days_left": trial_days_left,
             "plan_renews_at": plan_renews_at,
             "ref_code": ref_code,
+            "promo_days_left": promo_days_left,
+            "referral_message": referral_message,
+            "referral_success": referral_success,
+            "promo_message": promo_message,
+            "promo_is_success": promo_is_success,
         }
     )
 
@@ -859,7 +997,7 @@ def mypage(request: Request):
     user = get_user_by_id(current_user["id"])
     user = check_trial_expired(user)
 
-    current_plan = user.get("plan") or "free"
+    current_plan = get_user_plan(user)
     limits = get_plan_limits(current_plan)
     trial_ends_at = user.get("trial_ends_at")
     plan_renews_at = user.get("plan_renews_at")

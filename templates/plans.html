@@ -163,6 +163,39 @@
         .feat-highlight { font-weight: 700; color: var(--pro-from); }
         .feat-expert-highlight { font-weight: 700; color: var(--expert-from); }
 
+        /* ── Promo ────────────────────────────── */
+        .promo-section {
+            background: #fff; border-radius: var(--radius);
+            padding: 20px 24px; box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+        .promo-header {
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer;
+        }
+        .promo-header h3 { font-size: 16px; font-weight: 700; }
+        .promo-body { display: none; margin-top: 16px; }
+        .promo-body.open { display: block; }
+        .promo-desc { font-size: 13px; color: #555; margin: 0 0 12px; }
+        .promo-form { display: flex; gap: 8px; }
+        .promo-input {
+            flex: 1; padding: 11px 14px; border: 1.5px solid #e5e7eb;
+            border-radius: 10px; font-size: 14px; outline: none;
+        }
+        .promo-input:focus { border-color: #2563eb; }
+        .promo-button {
+            border: none; background: #2563eb; color: #fff;
+            padding: 11px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px;
+        }
+        .promo-button:hover { background: #1d4ed8; }
+        .promo-success { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #dcfce7; color: #166534; font-size: 13px; }
+        .promo-error   { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
+        .promo-active-banner {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius);
+            padding: 16px 20px; font-size: 14px; color: #1e40af;
+            margin-bottom: 16px;
+        }
+
         /* ── Referral ─────────────────────────── */
         .referral-section {
             background: #fff; border-radius: var(--radius);
@@ -460,6 +493,31 @@
         </div>
         {% endif %}
 
+        {% if current_user and current_plan == "free" and not promo_days_left %}
+        <div class="promo-section">
+            <div class="promo-header" onclick="togglePromo()">
+                <h3>🎟️ 招待コードをお持ちの方</h3>
+                <span id="promo-arrow" style="color:#aaa; font-size:20px;">▾</span>
+            </div>
+            <div class="promo-body" id="promo-body">
+                <p class="promo-desc">招待コードを入力すると、Pro プランを一定期間無料でご利用いただけます。</p>
+                <form action="/apply-promo" method="post" class="promo-form">
+                    <input type="text" name="promo_code" class="promo-input" placeholder="招待コードを入力…" autocomplete="off" spellcheck="false">
+                    <button type="submit" class="promo-button">適用</button>
+                </form>
+                {% if promo_message %}
+                <div class="{% if promo_is_success %}promo-success{% else %}promo-error{% endif %}">{{ promo_message }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if promo_days_left is not none and promo_days_left >= 0 %}
+        <div class="promo-active-banner">
+            🎉 招待コードが適用中です。Pro プランをあと <strong>{{ promo_days_left }}</strong> 日間ご利用いただけます。
+        </div>
+        {% endif %}
+
         <!-- Compare -->
         <div class="compare-section">
             <h2>プラン比較</h2>
@@ -595,6 +653,25 @@
             const open = body.classList.toggle("open");
             if (arrow) arrow.textContent = open ? "▴" : "▾";
         }
+
+        function togglePromo() {
+            const body = document.getElementById("promo-body");
+            const arrow = document.getElementById("promo-arrow");
+            if (!body) return;
+            const open = body.classList.toggle("open");
+            if (arrow) arrow.textContent = open ? "▴" : "▾";
+        }
+
+        // promo エラー・成功時は自動展開
+        (function() {
+            const url = new URL(window.location.href);
+            if (url.searchParams.get("promo_error") || url.searchParams.get("promo_success")) {
+                const body = document.getElementById("promo-body");
+                const arrow = document.getElementById("promo-arrow");
+                if (body) { body.classList.add("open"); }
+                if (arrow) { arrow.textContent = "▴"; }
+            }
+        })();
 
         function copyRefCode() {
             const input = document.getElementById("refCode");
