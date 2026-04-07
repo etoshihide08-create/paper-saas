@@ -25,10 +25,17 @@
             margin-bottom: 16px;
         }
 
+        .logo a {
+            text-decoration: none;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
         .logo-icon {
             font-size: 36px;
             line-height: 1;
-            margin-bottom: 8px;
         }
 
         .logo-name {
@@ -37,6 +44,8 @@
             color: #2563eb;
             letter-spacing: 0.02em;
         }
+
+        .logo a:hover .logo-name { text-decoration: underline; }
 
         .card {
             width: 100%;
@@ -139,8 +148,10 @@
 </head>
 <body>
     <div class="logo">
-        <div class="logo-icon">🩺</div>
-        <div class="logo-name">リハエビデンスナビ</div>
+        <a href="/">
+            <div class="logo-icon">🩺</div>
+            <div class="logo-name">リハエビデンスナビ</div>
+        </a>
     </div>
 
     <div class="card">
