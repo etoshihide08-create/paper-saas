@@ -26,7 +26,7 @@
         --green-text: #166534;
         --danger-soft: #fef2f2;
         --danger-text: #b91c1c;
-        --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        --shadow: 0 4px 24px rgba(15,23,42,0.08);
         --radius: 18px;
       }
 
@@ -45,6 +45,7 @@
       .container {
         max-width: 920px;
         margin: 0 auto;
+        padding-bottom: 80px;
       }
 
       .top-link {
@@ -251,6 +252,8 @@
 
       .organize-toggle:hover {
         background: #e5e7eb;
+        border: 1px solid #2563eb;
+        color: #2563eb;
       }
 
       .organize-panel {
@@ -430,6 +433,10 @@
           width: 100%;
         }
       }
+      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
+      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+      .mobile-footer-link.is-active { color: #2563eb; }
+      .mobile-footer-icon { font-size: 20px; line-height: 1; }
     </style>
   </head>
   <body>
@@ -867,5 +874,12 @@
 
       disableLikedButtons();
     </script>
+    <nav class="mobile-footer">
+      <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+      <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+      <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+      <a href="/saved" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+      <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+    </nav>
   </body>
 </html>

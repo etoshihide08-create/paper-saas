@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイページ</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f7fb;
+    margin: 0;
+    padding: 0;
+    color: #111827;
+}
+
+.page-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 16px 100px;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.back-link {
+    text-decoration: none;
+    color: #374151;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px;
+}
+
+.page-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    flex: 1;
+}
+
+/* Section cards */
+.section {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f7f8fa;
+    gap: 14px;
+    min-height: 56px;
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+.row-icon {
+    font-size: 20px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.row-label {
+    font-size: 14px;
+    color: #6b7280;
+    flex-shrink: 0;
+    min-width: 90px;
+}
+
+.row-value {
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+    word-break: break-all;
+}
+
+.row-action {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Avatar */
+.avatar-row {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: -1px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.15s;
+}
+
+.avatar-circle:hover { opacity: 0.85; }
+
+.avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.avatar-edit-hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 10px;
+    text-align: center;
+    padding: 3px 0;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+/* Avatar picker */
+.avatar-picker {
+    display: none;
+    padding: 16px 20px;
+    border-top: 1px solid #f0f2f5;
+}
+
+.avatar-picker.open { display: block; }
+
+.avatar-picker-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 12px;
+    letter-spacing: .04em;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.avatar-option {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    background: #f3f4f6;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+}
+
+.avatar-option:hover { transform: scale(1.12); }
+.avatar-option.selected { border-color: #2563eb; background: #eff6ff; }
+
+.avatar-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1.5px dashed #d1d5db;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+    transition: border-color 0.15s;
+}
+
+.avatar-upload-label:hover { border-color: #2563eb; color: #2563eb; }
+
+.avatar-info {
+    flex: 1;
+}
+
+.avatar-name {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 2px;
+}
+
+.avatar-bio {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.edit-profile-btn {
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.edit-profile-btn:hover { background: #f9fafb; }
+
+/* Profile edit form */
+.profile-form {
+    padding: 16px 20px 20px;
+    display: none;
+}
+
+.profile-form.open { display: block; }
+
+.form-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #f9fafb;
+    margin-bottom: 12px;
+    color: #111827;
+    resize: vertical;
+}
+
+.form-input:focus, .form-textarea:focus {
+    border-color: #2563eb;
+    background: #fff;
+}
+
+.form-save-btn {
+    border: none;
+    background: #111827;
+    color: #fff;
+    padding: 11px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-save-btn:hover { opacity: 0.9; }
+
+/* Tags / badges */
+.plan-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.plan-free { background: #f1f5f9; color: #475569; }
+.plan-pro  { background: #eff6ff; color: #1d4ed8; }
+.plan-expert { background: #f0fdf4; color: #16a34a; }
+
+/* Stats grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #f0f2f5;
+}
+
+.stat-cell {
+    background: #fff;
+    padding: 16px 12px;
+    text-align: center;
+}
+
+.stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* Navigation rows */
+.nav-row {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f7f8fa;
+    text-decoration: none;
+    color: #111827;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.nav-row:last-child { border-bottom: none; }
+.nav-row:hover { background: #f5f3ff; }
+
+.nav-row-icon { font-size: 18px; width: 26px; text-align: center; }
+.nav-row-arrow { margin-left: auto; color: #d1d5db; font-size: 16px; }
+
+/* Referral */
+.ref-code-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 14px;
+    flex: 1;
+}
+
+.ref-code-text {
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #2563eb;
+    flex: 1;
+}
+
+.copy-btn {
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.copy-btn:hover { opacity: 0.9; }
+
+/* Logout */
+.logout-row {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #ef4444;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.logout-row:hover { background: #fff5f5; }
+
+/* Success toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111827;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.toast.show { opacity: 1; }
+
+/* Paper mini cards */
+.paper-mini {
+    padding: 13px 20px;
+    border-bottom: 1px solid #f7f8fa;
+    text-decoration: none;
+    display: block;
+    color: #111827;
+}
+
+.paper-mini:last-child { border-bottom: none; }
+.paper-mini:hover { background: #f9fafb; }
+
+.paper-mini-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.paper-mini-meta {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 3px;
+}
+
+@media (max-width: 640px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .row-label { min-width: 72px; }
+}
+.mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
+.mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+.mobile-footer-link.is-active { color: #2563eb; }
+.mobile-footer-icon { font-size: 20px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+    <div class="top-bar">
+        <a href="/" class="back-link">←</a>
+        <h1 class="page-title">マイページ</h1>
+    </div>
+
+    {% if saved == '1' %}
+    <div id="save-toast" class="toast show">プロフィールを保存しました</div>
+    {% endif %}
+
+    <!-- ① アカウント -->
+    <div class="section">
+        <div class="section-header">アカウント</div>
+
+        <div class="avatar-row">
+            <div class="avatar-circle" id="avatar-display" onclick="toggleAvatarPicker()" title="アバターを変更">
+                {% if current_user.avatar and current_user.avatar.startswith('http') %}
+                    <img src="{{ current_user.avatar }}" alt="avatar">
+                {% elif current_user.avatar and current_user.avatar|length <= 4 %}
+                    {{ current_user.avatar }}
+                {% else %}
+                    {{ (current_user.display_name or current_user.email)[0] | upper }}
+                {% endif %}
+                <div class="avatar-edit-hint">変更</div>
+            </div>
+            <div class="avatar-info">
+                <div class="avatar-name">{{ current_user.display_name or "名前未設定" }}</div>
+                <div class="avatar-bio">{{ current_user.bio or "自己紹介を追加しましょう" }}</div>
+            </div>
+            <button type="button" class="edit-profile-btn" onclick="toggleProfileForm()">編集</button>
+        </div>
+
+        <!-- アバター選択パネル -->
+        <div class="avatar-picker" id="avatar-picker">
+            <div class="avatar-picker-title">アイコンを選ぶ</div>
+            <div class="avatar-grid" id="avatar-grid">
+                {% set presets = ['🐱','🐶','🦊','🐸','🐼','🦁','🐯','🐨','🐷','🐙','👨‍⚕️','👩‍⚕️','🧑‍⚕️','👨‍🔬','👩‍🔬','🌟','🏃','💪'] %}
+                {% for emoji in presets %}
+                <div class="avatar-option {% if current_user.avatar == emoji %}selected{% endif %}"
+                     onclick="selectAvatar('{{ emoji }}')">{{ emoji }}</div>
+                {% endfor %}
+            </div>
+            <label class="avatar-upload-label">
+                📷 自分の画像をアップロード
+                <input type="file" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+            </label>
+        </div>
+
+        <form id="profile-form" class="profile-form" action="/mypage/profile" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="avatar" id="avatar-input" value="{{ current_user.avatar or '' }}">
+
+            <label class="form-label">名前（40字以内）</label>
+            <input type="text" name="display_name" class="form-input" maxlength="40"
+                   value="{{ current_user.display_name or '' }}" placeholder="例：山田 太郎">
+
+            <label class="form-label">自己紹介（160字以内）</label>
+            <textarea name="bio" class="form-textarea" maxlength="160" rows="3"
+                      placeholder="例：理学療法士。歩行分析と神経リハを中心に研究中。">{{ current_user.bio or '' }}</textarea>
+
+            <button type="submit" class="form-save-btn">保存する</button>
+        </form>
+    </div>
+
+    <!-- ② ユーザー情報 -->
+    <div class="section">
+        <div class="section-header">ユーザー情報</div>
+
+        <div class="row">
+            <span class="row-icon">✉️</span>
+            <span class="row-label">メール</span>
+            <span class="row-value">{{ current_user.email }}</span>
+        </div>
+
+        <div class="row">
+            <span class="row-icon">🪪</span>
+            <span class="row-label">会員種別</span>
+            <span class="row-value">
+                <span class="plan-badge plan-{{ current_plan }}">{{ current_plan | upper }}</span>
+            </span>
+        </div>
+
+        <a href="/logout" class="logout-row">
+            <span class="row-icon">🚪</span>
+            ログアウト
+        </a>
+    </div>
+
+    <!-- ③ 利用状況 -->
+    <div class="section">
+        <div class="section-header">利用状況</div>
+
+        <div class="stats-grid">
+            <div class="stat-cell">
+                <div class="stat-num">{{ daily_usage }}</div>
+                <div class="stat-label">今日の要約</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-num">{{ saved_count }}</div>
+                <div class="stat-label">保存論文</div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-num">{{ memo_count }}</div>
+                <div class="stat-label">メモ数</div>
+            </div>
+        </div>
+
+        {% if trial_days_left %}
+        <div class="row">
+            <span class="row-icon">⏳</span>
+            <span class="row-label">無料体験</span>
+            <span class="row-value">残り {{ trial_days_left }} 日</span>
+        </div>
+        {% endif %}
+
+        {% if plan_renews_at %}
+        <div class="row">
+            <span class="row-icon">🔄</span>
+            <span class="row-label">次回更新</span>
+            <span class="row-value">{{ plan_renews_at }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ④ 特典・紹介 -->
+    <div class="section">
+        <div class="section-header">特典・紹介</div>
+
+        <div class="row" style="flex-wrap:wrap; gap:10px;">
+            <span class="row-icon">🎁</span>
+            <span class="row-label">紹介コード</span>
+            <div class="ref-code-box">
+                <span class="ref-code-text" id="refCodeText">{{ ref_code or "—" }}</span>
+                {% if ref_code %}
+                <button type="button" class="copy-btn" onclick="copyRefCode()">コピー</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <span class="row-icon">🎉</span>
+            <span class="row-label">紹介特典</span>
+            <span class="row-value" style="font-size:13px; font-weight:500;">紹介した人・された人それぞれに Pro 体験 +7日（最大60日）</span>
+        </div>
+
+        {% if trial_extend_days > 0 %}
+        <div class="row">
+            <span class="row-icon">📅</span>
+            <span class="row-label">延長日数</span>
+            <span class="row-value">+{{ trial_extend_days }} 日獲得済み</span>
+        </div>
+        {% endif %}
+
+        <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                <span class="row-icon">🔖</span>
+                <span style="font-size:14px; font-weight:600;">紹介コードを使う</span>
+            </div>
+            <form action="/apply-referral" method="post" style="display:flex; gap:8px; width:100%;">
+                <input type="text" name="ref_code" placeholder="コードを入力" style="flex:1; padding:9px 12px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; background:#f9fafb; outline:none;">
+                <button type="submit" style="border:none; background:#111827; color:#fff; padding:9px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">適用</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ⑤ プラン -->
+    <div class="section">
+        <div class="section-header">プラン</div>
+
+        <div class="row">
+            <span class="row-icon">📊</span>
+            <span class="row-label">現在</span>
+            <span class="row-value">
+                <span class="plan-badge plan-{{ current_plan }}">{{ current_plan | upper }}</span>
+            </span>
+        </div>
+
+        <div class="row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+            <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                <span class="row-icon">✅</span>
+                <span style="font-size:14px; font-weight:600;">今のプランでできること</span>
+            </div>
+            <ul style="margin:4px 0 0 38px; padding:0; font-size:13px; color:#374151; line-height:2;">
+                {% if current_plan == 'free' %}
+                <li>詳細・要約 5回 / 日</li>
+                <li>ランキング TOP20</li>
+                <li>保存 10件まで</li>
+                {% elif current_plan == 'pro' %}
+                <li>詳細・要約 50回 / 日</li>
+                <li>ランキング TOP100</li>
+                <li>保存 150件まで</li>
+                <li>メモ 無制限</li>
+                {% else %}
+                <li>詳細・要約 無制限</li>
+                <li>ランキング TOP300</li>
+                <li>保存 無制限</li>
+                <li>メモ 無制限</li>
+                <li>ダウンロード・引用整理</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <a href="/plans" class="nav-row">
+            <span class="nav-row-icon">💳</span>
+            プラン一覧を見る
+            <span class="nav-row-arrow">›</span>
+        </a>
+
+        {% if current_plan == 'free' %}
+        <a href="/plans" class="nav-row" style="color:#2563eb;">
+            <span class="nav-row-icon">⚡</span>
+            Proにアップグレード
+            <span class="nav-row-arrow" style="color:#2563eb;">›</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- ⑥ 保存した内容へ -->
+    <div class="section">
+        <div class="section-header">保存した内容</div>
+
+        <a href="/saved" class="nav-row">
+            <span class="nav-row-icon">📁</span>
+            保存フォルダを見る
+            <span class="nav-row-arrow">›</span>
+        </a>
+
+        <a href="/saved?filter=favorite" class="nav-row">
+            <span class="nav-row-icon">⭐</span>
+            お気に入りを見る
+            <span class="nav-row-arrow">›</span>
+        </a>
+
+        {% if recent_papers %}
+        <div class="section-header" style="border-top:1px solid #f0f2f5;">最近保存した論文</div>
+        {% for paper in recent_papers %}
+        <a href="/p/{{ paper.pubmed_id }}" class="paper-mini">
+            <div class="paper-mini-title">{{ paper.jp_title or paper.title }}</div>
+            <div class="paper-mini-meta">{{ paper.folder_name }} · {{ paper.pubdate }}</div>
+        </a>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- ⑦ 使う -->
+    <div class="section">
+        <div class="section-header">使う</div>
+
+        <a href="/" class="nav-row">
+            <span class="nav-row-icon">🔍</span>
+            論文を検索する
+            <span class="nav-row-arrow">›</span>
+        </a>
+
+        <a href="/ranking?sort=likes" class="nav-row">
+            <span class="nav-row-icon">👍</span>
+            人気ランキングを見る
+            <span class="nav-row-arrow">›</span>
+        </a>
+
+        <a href="/ranking?sort=score" class="nav-row">
+            <span class="nav-row-icon">🏅</span>
+            臨床参考度ランキングを見る
+            <span class="nav-row-arrow">›</span>
+        </a>
+    </div>
+
+</div>
+
+<!-- Toast (triggered by JS too) -->
+<div id="toast" class="toast"></div>
+
+<script>
+function toggleProfileForm() {
+    const form = document.getElementById("profile-form");
+    form.classList.toggle("open");
+}
+
+function toggleAvatarPicker() {
+    const picker = document.getElementById("avatar-picker");
+    picker.classList.toggle("open");
+}
+
+function selectAvatar(emoji) {
+    // Update hidden input
+    document.getElementById("avatar-input").value = emoji;
+    // Update display
+    const display = document.getElementById("avatar-display");
+    // Remove img if present, set text
+    display.innerHTML = emoji + '<div class="avatar-edit-hint">変更</div>';
+    // Highlight selected
+    document.querySelectorAll(".avatar-option").forEach(el => {
+        el.classList.toggle("selected", el.textContent.trim() === emoji);
+    });
+    // Open profile form to save
+    document.getElementById("profile-form").classList.add("open");
+    // Close picker
+    document.getElementById("avatar-picker").classList.remove("open");
+    showToast("保存ボタンで確定されます");
+}
+
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        // Store as data URL (base64) — max ~100KB recommended
+        if (dataUrl.length > 150000) {
+            showToast("画像が大きすぎます。小さい画像を選んでください。");
+            return;
+        }
+        document.getElementById("avatar-input").value = dataUrl;
+        const display = document.getElementById("avatar-display");
+        display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
+        document.getElementById("profile-form").classList.add("open");
+        document.getElementById("avatar-picker").classList.remove("open");
+        showToast("保存ボタンで確定されます");
+    };
+    reader.readAsDataURL(file);
+}
+
+function copyRefCode() {
+    const text = document.getElementById("refCodeText");
+    if (!text) return;
+    navigator.clipboard.writeText(text.textContent.trim()).then(() => {
+        showToast("紹介コードをコピーしました");
+    }).catch(() => {
+        // fallback
+        const el = document.createElement("textarea");
+        el.value = text.textContent.trim();
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        showToast("紹介コードをコピーしました");
+    });
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// Auto-hide save success toast
+window.addEventListener("load", function() {
+    const st = document.getElementById("save-toast");
+    if (st) setTimeout(() => st.classList.remove("show"), 2500);
+});
+</script>
+<nav class="mobile-footer">
+  <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+  <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+  <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+  <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+  <a href="/mypage" class="mobile-footer-link is-active"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+</nav>
+</body>
+</html>

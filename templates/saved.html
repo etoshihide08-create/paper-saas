@@ -6,24 +6,20 @@
     <title>保存フォルダ</title>
 
     <style>
+      * { box-sizing: border-box; }
+
       body {
-        font-family: sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         background: #f7f8fb;
         margin: 0;
-        padding: 40px 16px;
-        color: #222;
+        padding: 24px 16px 60px;
+        color: #111827;
       }
 
       .container {
-        max-width: 800px;
+        max-width: 640px;
         margin: auto;
-      }
-
-      h1 {
-        margin-top: 0;
-        margin-bottom: 18px;
-        font-size: 30px;
-        line-height: 1.4;
+        padding-bottom: 80px;
       }
 
       .top-link {
@@ -32,80 +28,145 @@
         color: #2563eb;
         text-decoration: none;
         font-weight: 700;
+        font-size: 14px;
       }
 
-      .top-link:hover {
-        text-decoration: underline;
-      }
+      .top-link:hover { text-decoration: underline; }
 
-      .folder {
-        background: white;
-        padding: 20px;
-        margin-bottom: 12px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-
-      .folder a {
-        display: block;
-        font-size: 20px;
-        line-height: 1.5;
-        text-decoration: none;
-        color: #2563eb;
-        font-weight: bold;
-        word-break: break-word;
+      h1 {
+        margin: 0 0 18px;
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
       }
 
       .alert-box {
         margin: 0 0 16px;
         padding: 12px 14px;
         background: #fef3c7;
-        border-radius: 8px;
+        border-radius: 10px;
+        font-size: 14px;
         line-height: 1.7;
       }
 
-      @media (max-width: 640px) {
-        body {
-          padding: 16px 12px 28px;
-        }
-
-        .container {
-          max-width: 100%;
-        }
-
-        h1 {
-          margin-bottom: 14px;
-          font-size: 24px;
-          line-height: 1.4;
-        }
-
-        .top-link {
-          display: inline-flex;
-          align-items: center;
-          min-height: 40px;
-          margin-bottom: 14px;
-          font-size: 15px;
-        }
-
-        .alert-box {
-          margin-bottom: 14px;
-          padding: 12px;
-          font-size: 14px;
-          line-height: 1.7;
-          border-radius: 10px;
-        }
-
-        .folder {
-          padding: 16px 14px;
-          margin-bottom: 10px;
-          border-radius: 14px;
-        }
-
-        .folder a {
-          font-size: 17px;
-          line-height: 1.5;
-        }
+      .folder-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(15,23,42,0.08);
+        margin-bottom: 10px;
+        overflow: hidden;
       }
+
+      .folder-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 16px 16px 18px;
+      }
+
+      .folder-link {
+        flex: 1;
+        font-size: 17px;
+        font-weight: 700;
+        text-decoration: none;
+        color: #111827;
+        word-break: break-word;
+        line-height: 1.4;
+      }
+
+      .folder-link:hover { color: #2563eb; }
+      .folder-card:hover { border-left: 3px solid #2563eb; }
+
+      .folder-count {
+        font-size: 13px;
+        color: #9ca3af;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      .rename-btn {
+        border: 1.5px solid #e5e7eb;
+        background: #fff;
+        color: #374151;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .rename-btn:hover { background: #f3f4f6; border-color: #2563eb; }
+
+      .rename-panel {
+        display: none;
+        padding: 0 16px 14px 18px;
+        border-top: 1px solid #f3f4f6;
+      }
+
+      .rename-panel.open { display: block; }
+
+      .rename-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      .rename-input {
+        flex: 1;
+        padding: 9px 12px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 14px;
+        background: #f9fafb;
+        color: #111827;
+        outline: none;
+      }
+
+      .rename-input:focus {
+        border-color: #2563eb;
+        background: #fff;
+      }
+
+      .rename-submit {
+        border: none;
+        background: #111827;
+        color: #fff;
+        padding: 9px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .rename-submit:hover { opacity: 0.9; }
+
+      .rename-msg {
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        display: none;
+        padding: 7px 10px;
+        border-radius: 8px;
+      }
+
+      .rename-msg.success { display: block; background: #dcfce7; color: #166534; }
+      .rename-msg.error   { display: block; background: #fef2f2; color: #b91c1c; }
+
+      @media (max-width: 640px) {
+        body { padding: 16px 12px 60px; }
+        h1 { font-size: 22px; }
+        .folder-link { font-size: 16px; }
+        .rename-form { flex-direction: column; align-items: stretch; }
+        .rename-submit { width: 100%; }
+      }
+      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
+      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+      .mobile-footer-link.is-active { color: #2563eb; }
+      .mobile-footer-icon { font-size: 20px; line-height: 1; }
     </style>
   </head>
   <body>
@@ -114,17 +175,99 @@
       <div class="alert-box">ログインすると論文を保存できます。</div>
       {% endif %}
 
-      <h1>保存フォルダ</h1>
+      <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        保存フォルダ
+        {% if not is_guest %}
+        <a href="/saved/export" style="font-size:12px;color:#6b7280;text-decoration:none;font-weight:600;padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">📥 エクスポート</a>
+        {% endif %}
+      </h1>
 
       <a href="/" class="top-link">← トップへ</a>
 
       {% for folder_name, papers in folders.items() %}
-      <div class="folder">
-        <a href="/saved/{{ folder_name }}">
-          📁 {{ folder_name }} ({{ papers|length }})
-        </a>
+      <div class="folder-card" id="folder-card-{{ loop.index }}">
+        <div class="folder-main">
+          <span style="font-size:20px; flex-shrink:0;">📁</span>
+          <a href="/saved/{{ folder_name }}" class="folder-link" id="folder-link-{{ loop.index }}">
+            {{ folder_name }}
+          </a>
+          <span class="folder-count">{{ papers|length }}件</span>
+          {% if not is_guest %}
+          <button type="button" class="rename-btn"
+                  onclick="toggleRename({{ loop.index }})">変更</button>
+          {% endif %}
+        </div>
+
+        {% if not is_guest %}
+        <div class="rename-panel" id="rename-panel-{{ loop.index }}">
+          <form class="rename-form"
+                onsubmit="submitRename(event, {{ loop.index }}, '{{ folder_name }}')">
+            <input type="text" class="rename-input" value="{{ folder_name }}"
+                   placeholder="新しいフォルダ名" required
+                   id="rename-input-{{ loop.index }}" />
+            <button type="submit" class="rename-submit">変更する</button>
+          </form>
+          <div class="rename-msg" id="rename-msg-{{ loop.index }}"></div>
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
+
+    <script>
+      function toggleRename(idx) {
+        const panel = document.getElementById("rename-panel-" + idx);
+        if (!panel) return;
+        const isOpen = panel.classList.contains("open");
+        // Close all panels first
+        document.querySelectorAll(".rename-panel").forEach(p => p.classList.remove("open"));
+        if (!isOpen) panel.classList.add("open");
+      }
+
+      async function submitRename(event, idx, oldName) {
+        event.preventDefault();
+        const input = document.getElementById("rename-input-" + idx);
+        const msg   = document.getElementById("rename-msg-"   + idx);
+        const newName = input.value.trim();
+        if (!newName) return;
+
+        const fd = new FormData();
+        fd.append("old_name", oldName);
+        fd.append("new_name", newName);
+
+        try {
+          const res  = await fetch("/saved/folder/rename", { method: "POST", body: fd });
+          const data = await res.json();
+
+          if (data.ok) {
+            // Update the visible link text and href
+            const link = document.getElementById("folder-link-" + idx);
+            if (link) {
+              link.textContent = data.new_name;
+              link.href = "/saved/" + encodeURIComponent(data.new_name);
+            }
+            msg.textContent = "フォルダ名を変更しました";
+            msg.className = "rename-msg success";
+            setTimeout(() => {
+              document.getElementById("rename-panel-" + idx).classList.remove("open");
+              msg.className = "rename-msg";
+            }, 1800);
+          } else {
+            msg.textContent = data.message || "変更に失敗しました";
+            msg.className = "rename-msg error";
+          }
+        } catch (e) {
+          msg.textContent = "変更に失敗しました";
+          msg.className = "rename-msg error";
+        }
+      }
+    </script>
+    <nav class="mobile-footer">
+      <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+      <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+      <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+      <a href="/saved" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+      <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+    </nav>
   </body>
 </html>

@@ -48,6 +48,7 @@
       .container {
         max-width: 860px;
         margin: 0 auto;
+        padding-bottom: 80px;
       }
 
       .back-link {
@@ -183,19 +184,15 @@
       }
 
       .like-button {
-        background: var(--blue-soft);
-        color: var(--blue-deep);
-      }
-
-      .like-button.disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-        transform: none;
+        background: #fff1f2;
+        color: #f43f5e;
+        border: 1.5px solid #fecdd3;
       }
 
       .like-button.liked {
-        background: var(--blue-soft-hover);
-        color: var(--blue-deep);
+        background: #f43f5e;
+        color: #fff;
+        border-color: #f43f5e;
       }
 
       .save-card-title {
@@ -240,7 +237,7 @@
       .summary-btn {
         background: var(--blue);
         color: white;
-        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 8px 18px rgba(99, 102, 241, 0.2);
       }
 
       .save-btn {
@@ -288,7 +285,7 @@
       .folder-input:focus {
         outline: none;
         border-color: #93c5fd;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         background: #fff;
       }
 
@@ -361,6 +358,30 @@
         font-size: 15px;
         color: #374151;
       }
+
+      /* ── Highlights ── */
+      .highlightable { user-select: text; cursor: text; }
+      mark.hl { background: #fef08a; border-radius: 3px; padding: 0 1px; cursor: pointer; transition: background 0.15s; }
+      mark.hl:hover { background: #fde047; }
+      .highlight-popup {
+        position: fixed;
+        display: none;
+        z-index: 9999;
+        background: #111827;
+        color: #fff;
+        border-radius: 12px;
+        padding: 6px 4px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+        gap: 4px;
+        flex-direction: column;
+        min-width: 120px;
+      }
+      .highlight-popup.show { display: flex; }
+      .hl-color-row { display: flex; gap: 6px; padding: 4px 8px; }
+      .hl-color-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; }
+      .hl-color-btn:hover { border-color: #fff; }
+      .hl-remove-btn { padding: 5px 12px; font-size: 12px; color: #f87171; background: none; border: none; cursor: pointer; text-align: left; }
+      .hl-remove-btn:hover { color: #fca5a5; }
 
       .meta-list {
         display: grid;
@@ -472,7 +493,7 @@
       .folder-input:focus {
         outline: none;
         border-color: #93c5fd;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
       }
 
       .organize-actions {
@@ -613,6 +634,10 @@
           width: 100%;
         }
       }
+      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
+      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+      .mobile-footer-link.is-active { color: #2563eb; }
+      .mobile-footer-icon { font-size: 20px; line-height: 1; }
     </style>
   </head>
   <body>
@@ -657,12 +682,12 @@
 
           <button
             type="button"
-            class="mini-action like-button"
+            class="mini-action like-button {% if paper.liked %}liked{% endif %}"
             data-pubmed-id="{{ paper.id }}"
             onclick="addLike('{{ paper.id }}', this)"
             aria-label="いいね"
           >
-            <span>👍</span>
+            <span>❤️</span>
             <span class="like-count"
               >{% if paper.likes is defined %}{{ paper.likes }}{% else %}0{%
               endif %}</span
@@ -749,47 +774,9 @@
           初回は自由に入力できます。次回以降は、以前使った保存名が候補に表示されます。
         </div>
 
-        {% if paper.folder_name or paper.custom_title or paper.user_note %}
+        {% if paper.folder_name %}
         <div class="card">
-          <h2 class="section-title">整理する</h2>
-
-          <form
-            id="rename-form"
-            onsubmit="submitPaperRename(event, '{{ paper.id }}')"
-          >
-            <div style="margin-bottom: 10px">
-              <input
-                type="text"
-                name="custom_title"
-                class="folder-input"
-                value="{{ paper.custom_title or '' }}"
-                placeholder="表示名を入力"
-              />
-            </div>
-            <button type="submit" class="btn summary-btn">表示名を更新</button>
-          </form>
-
-          <div style="height: 10px"></div>
-
-          <form
-            id="move-form"
-            onsubmit="submitPaperMove(event, '{{ paper.id }}')"
-          >
-            <div style="margin-bottom: 10px">
-              <input
-                type="text"
-                name="folder_name"
-                class="folder-input"
-                value="{{ paper.folder_name or '' }}"
-                list="folder-name-suggestions"
-                placeholder="移動先フォルダ名を入力"
-                required
-              />
-            </div>
-            <button type="submit" class="btn save-btn">フォルダを変更</button>
-          </form>
-
-          <div style="height: 10px"></div>
+          <h2 class="section-title">メモ</h2>
 
           <form
             id="note-form"
@@ -817,12 +804,29 @@
         {% endif %}
       </div>
 
+      <div class="card" style="padding: 18px 20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:15px; font-weight:700; margin-bottom:4px;">📝 この論文のメモを書く</div>
+            <div style="font-size:13px; color:#6b7280; line-height:1.6;">気づき・臨床での使い方・覚えておきたいポイントをメモできます</div>
+          </div>
+          <form method="POST" action="/memo/paper/create" style="flex-shrink:0;">
+            <input type="hidden" name="pubmed_id" value="{{ paper.id }}" />
+            <input type="hidden" name="paper_title" value="{{ paper.jp_title or paper.title }}" />
+            <input type="hidden" name="body" value="" />
+            <button type="submit" style="padding:10px 20px; background:#111827; color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer;">
+              論文メモを作成
+            </button>
+          </form>
+        </div>
+      </div>
+
       {% if paper.summary_jp %}
       <div class="card">
         <h2 class="section-title">要点要約</h2>
         <div class="summary-box">
-          <div class="summary-label">この論文の要点</div>
-          <div class="abstract">{{ paper.summary_jp }}</div>
+          <div class="summary-label">この論文の要点 <span style="font-size:11px;color:#9ca3af;font-weight:400;">（テキストを選択してハイライト）</span></div>
+          <div class="abstract highlightable" id="hl-summary">{{ paper.summary_jp }}</div>
         </div>
       </div>
       {% endif %}
@@ -875,7 +879,7 @@
             <span class="details-arrow">▼</span>
           </summary>
           <div class="details-content">
-            <div class="abstract">{{ paper.jp }}</div>
+            <div class="abstract highlightable" id="hl-jp">{{ paper.jp }}</div>
           </div>
         </details>
       </div>
@@ -894,75 +898,51 @@
       </div>
     </div>
 
-    <script src="/static/js/paper_organize.js">
+    <!-- Highlight popup -->
+    <div class="highlight-popup" id="hl-popup">
+      <div class="hl-color-row">
+        <button class="hl-color-btn" style="background:#fef08a;" onclick="applyHighlight('#fef08a')" title="黄"></button>
+        <button class="hl-color-btn" style="background:#bbf7d0;" onclick="applyHighlight('#bbf7d0')" title="緑"></button>
+        <button class="hl-color-btn" style="background:#fed7aa;" onclick="applyHighlight('#fed7aa')" title="オレンジ"></button>
+        <button class="hl-color-btn" style="background:#bfdbfe;" onclick="applyHighlight('#bfdbfe')" title="青"></button>
+        <button class="hl-color-btn" style="background:#fce7f3;" onclick="applyHighlight('#fce7f3')" title="ピンク"></button>
+      </div>
+      <button class="hl-remove-btn" onclick="removeHighlight()">ハイライトを削除</button>
+    </div>
+
+    <script src="/static/js/paper_organize.js"></script>
+    <script>
       const SEARCH_URL_KEY = "search_scroll_url";
 
-      function hasLiked(pubmedId) {
-        const liked = localStorage.getItem("liked_" + pubmedId);
-        return liked === "1";
-      }
-
-      function setLiked(pubmedId) {
-        localStorage.setItem("liked_" + pubmedId, "1");
-      }
-
       function disableLikedButtons() {
-        const buttons = document.querySelectorAll(".like-button");
-
-        buttons.forEach((button) => {
-          const pubmedId = button.dataset.pubmedId;
-          const countSpan = button.querySelector(".like-count");
-          const likeCount = countSpan ? countSpan.textContent.trim() : "0";
-
-          if (hasLiked(pubmedId)) {
-            button.innerHTML =
-              '<span>👍</span><span class="like-count">' +
-              likeCount +
-              "</span>";
-            button.classList.add("liked");
-            button.classList.add("disabled");
-            button.disabled = true;
-          }
-        });
+        // no-op: like state is now server-driven (paper.liked)
       }
 
       async function addLike(pubmedId, button) {
-        if (hasLiked(pubmedId)) {
-          button.classList.add("liked");
-          button.classList.add("disabled");
-          button.disabled = true;
-          return;
+        const wasLiked = button.classList.contains("liked");
+        const countSpan = button.querySelector(".like-count");
+        const current = parseInt(countSpan?.textContent || "0");
+
+        // Optimistic update
+        button.classList.toggle("liked", !wasLiked);
+        if (countSpan) countSpan.textContent = wasLiked ? current - 1 : current + 1;
+        button.classList.add("animate-pop");
+        setTimeout(() => button.classList.remove("animate-pop"), 250);
+
+        if (!wasLiked && navigator.vibrate) {
+          navigator.vibrate(20);
         }
 
         try {
-          const response = await fetch(`/like/${pubmedId}`, {
-            method: "POST",
-          });
-
+          const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
           const data = await response.json();
-
-          if (data.ok) {
-            button.innerHTML =
-              '<span>👍</span><span class="like-count">' +
-              data.likes +
-              "</span>";
-
-            setLiked(pubmedId);
-            button.classList.add("liked");
-            button.classList.add("disabled");
-            button.classList.add("animate-pop");
-            button.disabled = true;
-
-            if (navigator.vibrate) {
-              navigator.vibrate(20);
-            }
-
-            setTimeout(() => {
-              button.classList.remove("animate-pop");
-            }, 250);
+          if (data.ok && countSpan) {
+            countSpan.textContent = data.likes;
           }
         } catch (error) {
-          alert("いいねの更新に失敗しました");
+          // revert on failure
+          button.classList.toggle("liked", wasLiked);
+          if (countSpan) countSpan.textContent = current;
         }
       }
 
@@ -995,6 +975,12 @@
 
       function goBack(event) {
         event.preventDefault();
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("from") === "paper_memo") {
+          window.location.href = "/memo?tab=paper";
+          return;
+        }
 
         const searchUrl = sessionStorage.getItem(SEARCH_URL_KEY);
 
@@ -1217,6 +1203,148 @@
           message.style.display = "block";
         }
       }
+
+      // ── Highlights ──
+      const PAPER_ID = "{{ paper.id }}";
+      let highlights = [];
+      try {
+        const raw = {{ (paper.highlights or '[]') | tojson }};
+        highlights = typeof raw === "string" ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+        // 旧データにidがない場合は付与
+        highlights = highlights.map((h, i) => h.id ? h : { ...h, id: "legacy_" + i });
+      } catch(e) { highlights = []; }
+
+      // ポップアップの状態を activeMarkEl に依存せず管理
+      // mode: null | "new" | "edit"
+      let hlPopupMode = null;
+      let hlPopupId = null;   // "edit" 時：対象ハイライトのid
+      let hlPopupText = null; // "new" 時：選択テキスト
+
+      // ページ初期ロード時のオリジナルテキストを保存
+      const _origText = {};
+      ["hl-summary","hl-jp"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) _origText[id] = el.textContent;
+      });
+
+      function showPopupAt(x, y) {
+        const popup = document.getElementById("hl-popup");
+        popup.style.position = "fixed";
+        popup.style.left = Math.min(Math.max(x, 8), window.innerWidth - 160) + "px";
+        popup.style.top = Math.min(y, window.innerHeight - 100) + "px";
+        popup.classList.add("show");
+      }
+
+      function hidePopup() {
+        document.getElementById("hl-popup").classList.remove("show");
+        hlPopupMode = null;
+        hlPopupId = null;
+        hlPopupText = null;
+      }
+
+      function renderHighlights() {
+        ["hl-summary","hl-jp"].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.textContent = _origText[id] || "";
+          highlights.forEach(h => {
+            const escaped = h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // 置換文字列内の $ を $$ にエスケープ（正規表現の特殊置換パターンを無効化）
+            const safeText = h.text.replace(/\$/g, '$$$$');
+            el.innerHTML = el.innerHTML.replace(
+              new RegExp(escaped),
+              `<mark class="hl" style="background:${h.color}" data-hl-id="${h.id}">${safeText}</mark>`
+            );
+          });
+        });
+        document.querySelectorAll("mark.hl").forEach(m => {
+          m.addEventListener("mouseup", e => e.stopPropagation());
+          m.addEventListener("touchend", e => e.stopPropagation());
+          m.addEventListener("click", function(e) {
+            e.stopPropagation();
+            hlPopupMode = "edit";
+            hlPopupId = this.dataset.hlId;
+            hlPopupText = null;
+            window.getSelection()?.removeAllRanges();
+            showPopupAt(e.clientX, e.clientY + 10);
+          });
+        });
+      }
+
+      // テキスト選択時のポップアップ（新規ハイライト）
+      function onSelectionEnd(e) {
+        if (e.target && e.target.closest) {
+          if (e.target.closest("#hl-popup")) return;
+          if (e.target.closest("mark.hl")) return;
+        }
+        if (hlPopupMode === "edit") return; // markタップ処理中は割り込まない
+
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) {
+          if (hlPopupMode !== "edit") {
+            setTimeout(() => {
+              if (hlPopupMode !== "edit") hidePopup();
+            }, 200);
+          }
+          return;
+        }
+        const text = sel.toString().trim();
+        if (text.length < 2) return;
+        const range = sel.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const hlArea = (container.nodeType === 1 ? container : container.parentElement)
+          ?.closest(".highlightable");
+        if (!hlArea) return;
+        const rect = range.getBoundingClientRect();
+        hlPopupMode = "new";
+        hlPopupId = null;
+        hlPopupText = text;
+        showPopupAt(rect.left, rect.bottom + 8);
+      }
+
+      document.addEventListener("mouseup", onSelectionEnd);
+      document.addEventListener("touchend", function(e) {
+        setTimeout(() => onSelectionEnd(e), 150);
+      });
+
+      function applyHighlight(color) {
+        if (hlPopupMode === "edit" && hlPopupId) {
+          const idx = highlights.findIndex(h => h.id === hlPopupId);
+          if (idx !== -1) highlights[idx].color = color;
+        } else if (hlPopupMode === "new" && hlPopupText) {
+          highlights.push({ id: Date.now().toString(36), text: hlPopupText, color });
+        }
+        window.getSelection()?.removeAllRanges();
+        hidePopup();
+        renderHighlights();
+        saveHighlights();
+      }
+
+      function removeHighlight() {
+        if (hlPopupMode === "edit" && hlPopupId) {
+          highlights = highlights.filter(h => h.id !== hlPopupId);
+        }
+        hidePopup();
+        renderHighlights();
+        saveHighlights();
+      }
+
+      async function saveHighlights() {
+        const fd = new FormData();
+        fd.append("pubmed_id", PAPER_ID);
+        fd.append("highlights", JSON.stringify(highlights));
+        try { await fetch("/paper/highlight", { method: "POST", body: fd }); } catch(e) {}
+      }
+
+      // Initial render
+      if (highlights.length) renderHighlights();
     </script>
+    <nav class="mobile-footer">
+      <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+      <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+      <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+      <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+      <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+    </nav>
   </body>
 </html>

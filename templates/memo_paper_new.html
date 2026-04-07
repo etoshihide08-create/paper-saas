@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>論文メモを作成 — リハエビデンスナビ</title>
+
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --sidebar-bg: #ffffff;
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .app-layout { min-height: 100vh; }
+      .sidebar { display: none; }
+
+      .main-area {
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      /* ── トップバー ── */
+      .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(245, 247, 251, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .back-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--blue);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .top-bar-title {
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+
+      /* ── コンテンツ ── */
+      .content-wrap {
+        padding: 24px 16px 60px;
+        max-width: 680px;
+        margin: 0 auto;
+      }
+
+      .section-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--subtext);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      /* ── 検索ボックス ── */
+      .search-box {
+        position: relative;
+        margin-bottom: 16px;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        pointer-events: none;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 14px 14px 14px 42px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 15px;
+        background: var(--card);
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-family: inherit;
+      }
+
+      .search-input:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      /* ── 論文リスト ── */
+      .paper-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 28px;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+
+      .paper-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--card);
+        border: 2px solid var(--line);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: left;
+        width: 100%;
+        font-family: inherit;
+      }
+
+      .paper-item:hover {
+        border-color: #93c5fd;
+        background: #f0f7ff;
+      }
+
+      .paper-item.is-selected {
+        border-color: var(--blue);
+        background: #eff6ff;
+      }
+
+      .paper-item-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        line-height: 1;
+      }
+
+      .paper-item-info { flex: 1; min-width: 0; }
+
+      .paper-item-title {
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.5;
+        color: var(--text);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .paper-item-pmid {
+        font-size: 12px;
+        color: var(--subtext);
+        margin-top: 2px;
+      }
+
+      .paper-item-check {
+        font-size: 20px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+
+      .paper-item.is-selected .paper-item-check { opacity: 1; }
+
+      .empty-search {
+        text-align: center;
+        padding: 32px 0;
+        color: var(--subtext);
+        font-size: 14px;
+        line-height: 1.7;
+        display: none;
+      }
+
+      /* ── メモ入力 ── */
+      .memo-section {
+        margin-top: 24px;
+      }
+
+      .body-textarea {
+        width: 100%;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 15px;
+        line-height: 1.8;
+        color: var(--text);
+        background: var(--card);
+        resize: none;
+        outline: none;
+        min-height: 160px;
+        font-family: inherit;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .body-textarea:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      /* ── 選択中の論文プレビュー ── */
+      .selected-preview {
+        display: none;
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        font-size: 14px;
+        color: #1e40af;
+        font-weight: 600;
+        line-height: 1.5;
+      }
+
+      .selected-preview.show { display: block; }
+
+      /* ── 作成ボタン ── */
+      .submit-btn {
+        width: 100%;
+        margin-top: 16px;
+        padding: 16px;
+        background: #111827;
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+        font-family: inherit;
+        letter-spacing: -0.01em;
+      }
+
+      .submit-btn:hover { opacity: 0.88; }
+      .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+      /* ── 保存論文なし ── */
+      .no-papers-box {
+        text-align: center;
+        padding: 40px 20px;
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+      }
+
+      .no-papers-icon { font-size: 40px; margin-bottom: 12px; }
+
+      .no-papers-title {
+        font-size: 17px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+
+      .no-papers-sub {
+        font-size: 14px;
+        color: var(--subtext);
+        line-height: 1.7;
+        margin-bottom: 16px;
+      }
+
+      .go-search-btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: var(--blue);
+        color: #fff;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+      }
+
+      /* ── サイドバー ── */
+      @media (min-width: 980px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 18px 16px;
+          background: var(--sidebar-bg);
+          border-right: 1px solid var(--line);
+        }
+
+        .sidebar-brand { padding: 8px 10px 20px; }
+
+        .sidebar-title {
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: #111827;
+          line-height: 1.4;
+        }
+
+        .sidebar-subtext {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--subtext);
+        }
+
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 12px;
+          border-radius: 14px;
+          color: #374151;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .sidebar-link:hover { background: #f8fafc; color: #111827; }
+        .sidebar-link.is-active { background: #eef2ff; color: #1e3a8a; }
+        .sidebar-icon { width: 20px; text-align: center; font-size: 16px; line-height: 1; }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 14px 10px 8px;
+          border-top: 1px solid var(--line);
+        }
+
+        .sidebar-plan { font-size: 12px; line-height: 1.7; color: var(--subtext); margin-bottom: 10px; }
+        .sidebar-auth { display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-auth-text { font-size: 12px; color: #6b7280; line-height: 1.5; word-break: break-word; }
+
+        .sidebar-auth-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: #111827;
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .sidebar-auth-link:hover { opacity: 0.92; }
+
+        .top-bar { padding: 14px 32px; }
+        .content-wrap { padding: 28px 32px 60px; margin: 0; max-width: 720px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout">
+
+      <!-- サイドバー -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-title">リハエビデンスナビ</div>
+          <div class="sidebar-subtext">PubMed論文を日本語で素早く理解し、臨床判断にそのまま使える形で整理。</div>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link"><span class="sidebar-icon">🏠</span><span>検索</span></a>
+          <a href="/" class="sidebar-link"><span class="sidebar-icon">⭐</span><span>ランキング</span></a>
+          <a href="/memo" class="sidebar-link is-active"><span class="sidebar-icon">📝</span><span>メモ</span></a>
+          <a href="/saved" class="sidebar-link"><span class="sidebar-icon">📚</span><span>保存</span></a>
+          <a href="/plans" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-plan">現在のプラン：<b>{{ current_plan }}</b></div>
+          <div class="sidebar-auth">
+            <div class="sidebar-auth-text">{{ current_user.email }}</div>
+            <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- メインコンテンツ -->
+      <main class="main-area">
+
+        <div class="top-bar">
+          <a href="/memo?tab=paper" class="back-btn">← メモ</a>
+          <div class="top-bar-title">論文メモを作成</div>
+        </div>
+
+        <div class="content-wrap">
+
+          {% if paper_list %}
+
+          <!-- 論文選択 -->
+          <div class="section-label">論文を選択</div>
+
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="search-input"
+              id="paper-search"
+              placeholder="タイトルで絞り込む..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="paper-list" id="paper-list">
+            {% for paper in paper_list %}
+            <button
+              type="button"
+              class="paper-item"
+              data-pmid="{{ paper.pubmed_id }}"
+              data-title="{{ paper.display_title }}"
+              onclick="selectPaper(this)"
+            >
+              <span class="paper-item-icon">📄</span>
+              <div class="paper-item-info">
+                <div class="paper-item-title">{{ paper.display_title }}</div>
+                <div class="paper-item-pmid">PMID: {{ paper.pubmed_id }}</div>
+              </div>
+              <span class="paper-item-check">✓</span>
+            </button>
+            {% endfor %}
+          </div>
+
+          <div class="empty-search" id="empty-search">
+            該当する論文が見つかりません
+          </div>
+
+          <!-- 選択中プレビュー -->
+          <div class="selected-preview" id="selected-preview"></div>
+
+          <!-- メモ入力 -->
+          <form method="POST" action="/memo/paper/create" id="create-form">
+            <input type="hidden" name="pubmed_id" id="pubmed-id-input" value="" />
+            <input type="hidden" name="paper_title" id="paper-title-input" value="" />
+
+            <div class="memo-section">
+              <div class="section-label">メモ内容</div>
+              <textarea
+                name="body"
+                class="body-textarea"
+                placeholder="この論文についてのメモを書く..."
+                id="body-input"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+              論文メモを作成
+            </button>
+          </form>
+
+          {% else %}
+
+          <!-- 保存論文なし -->
+          <div class="no-papers-box">
+            <div class="no-papers-icon">📚</div>
+            <div class="no-papers-title">保存済みの論文がありません</div>
+            <div class="no-papers-sub">
+              論文メモは保存済み論文に紐付けて作成します。<br>
+              まず論文を検索・保存してみましょう。
+            </div>
+            <a href="/" class="go-search-btn">論文を検索する</a>
+          </div>
+
+          {% endif %}
+
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // 論文選択
+      let selectedPmid = "";
+      let selectedTitle = "";
+
+      function selectPaper(btn) {
+        document.querySelectorAll(".paper-item").forEach(el => el.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+
+        selectedPmid = btn.dataset.pmid;
+        selectedTitle = btn.dataset.title;
+
+        document.getElementById("pubmed-id-input").value = selectedPmid;
+        document.getElementById("paper-title-input").value = selectedTitle;
+        document.getElementById("submit-btn").disabled = false;
+
+        const preview = document.getElementById("selected-preview");
+        preview.textContent = "選択中: " + selectedTitle;
+        preview.classList.add("show");
+      }
+
+      // 論文絞り込み検索
+      const searchInput = document.getElementById("paper-search");
+      if (searchInput) {
+        searchInput.addEventListener("input", function() {
+          const q = this.value.toLowerCase();
+          const items = document.querySelectorAll(".paper-item");
+          let visibleCount = 0;
+
+          items.forEach(item => {
+            const title = item.dataset.title.toLowerCase();
+            const pmid = item.dataset.pmid.toLowerCase();
+            const match = title.includes(q) || pmid.includes(q);
+            item.style.display = match ? "" : "none";
+            if (match) visibleCount++;
+          });
+
+          const emptyEl = document.getElementById("empty-search");
+          emptyEl.style.display = visibleCount === 0 ? "block" : "none";
+        });
+      }
+
+      // bodyテキストエリア自動リサイズ
+      const bodyInput = document.getElementById("body-input");
+      if (bodyInput) {
+        bodyInput.addEventListener("input", function() {
+          this.style.height = "auto";
+          this.style.height = this.scrollHeight + "px";
+        });
+      }
+    </script>
+  </body>
+</html>

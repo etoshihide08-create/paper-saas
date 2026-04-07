@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>メモ エクスポート</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Hiragino Sans", "Yu Gothic", sans-serif; background: #f5f7fb; color: #111; padding-bottom: 80px; }
+
+    .controls {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.97);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      backdrop-filter: blur(8px);
+    }
+    .controls-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .back-btn { display: flex; align-items: center; gap: 5px; color: #2563eb; font-size: 14px; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .back-btn:hover { opacity: 0.8; }
+    .controls-title { font-size: 17px; font-weight: 800; }
+    .controls-meta { font-size: 12px; color: #6b7280; }
+    .controls-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-size: 12px; font-weight: 700; color: #374151; white-space: nowrap; }
+    .filter-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filter-chip { padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid #d1d5db; background: #fff; color: #6b7280; cursor: pointer; }
+    .filter-chip.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .select-all-btn { font-size: 12px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+    .select-all-btn:hover { background: #eff6ff; }
+
+    @media print {
+      .controls, .mobile-footer { display: none !important; }
+      body { background: #fff; padding-bottom: 0; }
+    }
+
+    .content { max-width: 800px; margin: 0 auto; padding: 16px; }
+    .count-bar { font-size: 13px; color: #6b7280; margin-bottom: 14px; }
+
+    .memo-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; margin-bottom: 12px; break-inside: avoid; }
+    .memo-item.hidden { display: none; }
+    .memo-item-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .memo-check { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+    .memo-check-label { flex: 1; cursor: pointer; }
+    .memo-type { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-bottom: 5px; }
+    .memo-type.quick { background: #eff6ff; color: #1d4ed8; }
+    .memo-type.paper { background: #f0fdf4; color: #15803d; }
+    .memo-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; line-height: 1.4; color: #111; }
+    .memo-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 7px; }
+    .memo-tag { padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 600; }
+    .memo-body { font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: #374151; }
+    .memo-date { font-size: 12px; color: #9ca3af; margin-top: 7px; }
+    .empty { text-align: center; padding: 60px; color: #9ca3af; font-size: 15px; }
+
+    .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid #e5e7eb; display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
+    .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; }
+    .mobile-footer-link.is-active { color: #2563eb; }
+    .mobile-footer-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="controls no-print">
+    <div class="controls-top">
+      <a href="javascript:history.back()" class="back-btn">← 戻る</a>
+      <span class="controls-title">📝 メモ エクスポート</span>
+      <span class="controls-meta" id="selected-count"></span>
+      <div class="controls-actions">
+        <button class="btn btn-primary" onclick="printSelected()">🖨 PDFとして保存</button>
+        <button class="btn btn-secondary" onclick="downloadCSV()">📥 CSVダウンロード</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">種別：</span>
+      <div class="filter-group">
+        <button class="filter-chip active" data-filter="all" onclick="setTypeFilter('all', this)">すべて</button>
+        <button class="filter-chip" data-filter="quick" onclick="setTypeFilter('quick', this)">クイックメモ</button>
+        <button class="filter-chip" data-filter="paper" onclick="setTypeFilter('paper', this)">論文メモ</button>
+      </div>
+      <span class="filter-label" style="margin-left:8px;">タグ：</span>
+      <div class="filter-group" id="tag-filter-group">
+        <button class="filter-chip active" data-tag="" onclick="setTagFilter('', this)">すべて</button>
+      </div>
+      <button class="select-all-btn" onclick="toggleSelectAll()">全選択 / 解除</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="count-bar" id="visible-count"></div>
+    <div id="memo-list">
+    {% if memos %}
+      {% for m in memos %}
+      <div class="memo-item"
+           data-type="{{ 'paper' if m.type == '論文メモ' else 'quick' }}"
+           data-tags="{{ m.tags or '' }}">
+        <div class="memo-item-top">
+          <input type="checkbox" class="memo-check" checked onchange="updateCount()">
+          <label class="memo-check-label">
+            <span class="memo-type {{ 'paper' if m.type == '論文メモ' else 'quick' }}">{{ m.type }}</span>
+            <div class="memo-title">{{ m.title or m.paper_title or "（タイトルなし）" }}</div>
+          </label>
+        </div>
+        {% if m.tags %}
+        <div class="memo-tags">
+          {% for tag in m.tags.split(",") %}{% if tag.strip() %}<span class="memo-tag">{{ tag.strip() }}</span>{% endif %}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="memo-body">{{ m.body or "（本文なし）" }}</div>
+        <div class="memo-date">更新: {{ m.updated_at[:16] if m.updated_at else "" }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">メモがありません</div>
+    {% endif %}
+    </div>
+  </div>
+
+  <nav class="mobile-footer no-print">
+    <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+    <a href="/board" class="mobile-footer-link"><span class="mobile-footer-icon">💬</span><span>掲示板</span></a>
+    <a href="/memo" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+    <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+    <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+  </nav>
+
+  <script>
+    let typeFilter = "all";
+    let tagFilter = "";
+
+    const allTags = new Set();
+    document.querySelectorAll(".memo-item[data-tags]").forEach(el => {
+      (el.dataset.tags || "").split(",").forEach(t => { if (t.trim()) allTags.add(t.trim()); });
+    });
+    const tagGroup = document.getElementById("tag-filter-group");
+    allTags.forEach(tag => {
+      const btn = document.createElement("button");
+      btn.className = "filter-chip";
+      btn.dataset.tag = tag;
+      btn.textContent = tag;
+      btn.onclick = () => setTagFilter(tag, btn);
+      tagGroup.appendChild(btn);
+    });
+
+    function setTypeFilter(type, btn) {
+      typeFilter = type;
+      document.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilters();
+    }
+
+    function setTagFilter(tag, btn) {
+      tagFilter = tag;
+      document.querySelectorAll("[data-tag]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilters();
+    }
+
+    function applyFilters() {
+      document.querySelectorAll(".memo-item").forEach(el => {
+        const typeMatch = typeFilter === "all" || el.dataset.type === typeFilter;
+        const tagMatch = !tagFilter || (el.dataset.tags || "").split(",").map(t=>t.trim()).includes(tagFilter);
+        el.classList.toggle("hidden", !(typeMatch && tagMatch));
+      });
+      updateCount();
+    }
+
+    function updateCount() {
+      const visible = document.querySelectorAll(".memo-item:not(.hidden)");
+      const checked = document.querySelectorAll(".memo-item:not(.hidden) .memo-check:checked");
+      document.getElementById("visible-count").textContent = `${visible.length} 件表示`;
+      document.getElementById("selected-count").textContent = `${checked.length} 件選択中`;
+    }
+
+    function toggleSelectAll() {
+      const visible = document.querySelectorAll(".memo-item:not(.hidden) .memo-check");
+      const allChecked = Array.from(visible).every(c => c.checked);
+      visible.forEach(c => c.checked = !allChecked);
+      updateCount();
+    }
+
+    function printSelected() {
+      document.querySelectorAll(".memo-item").forEach(el => {
+        const cb = el.querySelector(".memo-check");
+        el._wasHidden = el.classList.contains("hidden");
+        if (!cb || !cb.checked) el.classList.add("hidden");
+      });
+      window.print();
+      setTimeout(() => {
+        document.querySelectorAll(".memo-item").forEach(el => {
+          if (!el._wasHidden) el.classList.remove("hidden");
+        });
+      }, 500);
+    }
+
+    function downloadCSV() {
+      const rows = [["種別","タイトル","本文","タグ","更新日時"]];
+      document.querySelectorAll(".memo-item:not(.hidden)").forEach(el => {
+        const cb = el.querySelector(".memo-check");
+        if (!cb || !cb.checked) return;
+        const type = el.dataset.type === "paper" ? "論文メモ" : "クイックメモ";
+        const title = el.querySelector(".memo-title")?.textContent.trim() || "";
+        const body = el.querySelector(".memo-body")?.textContent.trim() || "";
+        const tags = el.dataset.tags || "";
+        const date = el.querySelector(".memo-date")?.textContent.replace("更新: ","").trim() || "";
+        rows.push([type, title, body, tags, date]);
+      });
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "memos.csv" });
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    updateCount();
+  </script>
+</body>
+</html>

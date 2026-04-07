@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学ぶ – リハエビデンスナビ</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --subtext: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --radius: 18px;
+      --shadow: 0 4px 16px rgba(15,23,42,0.07);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+    .page-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); padding: 14px 16px; }
+    .page-header h1 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+
+    /* Tab toggle */
+    .tab-bar { display: flex; gap: 0; }
+    .tab-btn { flex: 1; padding: 8px 0; font-size: 14px; font-weight: 700; border: none; background: none; cursor: pointer; color: var(--subtext); border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Recommended papers ── */
+    .rec-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+    .rec-reason { font-size: 11px; font-weight: 700; color: #7c3aed; background: #f5f3ff; padding: 3px 9px; border-radius: 999px; display: inline-block; margin-bottom: 10px; }
+    .rec-title { font-size: 15px; font-weight: 800; line-height: 1.5; margin-bottom: 6px; color: var(--text); }
+    .rec-meta { font-size: 12px; color: var(--subtext); margin-bottom: 10px; }
+    .rec-summary { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .rec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rec-btn { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; text-decoration: none; display: inline-block; }
+    .rec-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .rec-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .rec-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+
+    .rec-empty { text-align: center; padding: 60px 20px; color: var(--subtext); }
+    .rec-empty .icon { font-size: 48px; margin-bottom: 12px; }
+    .rec-empty p { font-size: 15px; line-height: 1.7; }
+
+    /* Tag filter bar */
+    .tag-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+    .tag-filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip { flex-shrink: 0; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .filter-chip:hover { border-color: var(--blue); color: var(--blue); }
+    .filter-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    /* Composer */
+    .composer { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 20px; }
+    .composer-top { display: flex; gap: 12px; align-items: flex-start; }
+    .composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .composer-body { flex: 1; }
+    textarea.composer-input { width: 100%; border: none; outline: none; resize: none; font-size: 15px; line-height: 1.6; min-height: 72px; background: transparent; font-family: inherit; color: var(--text); }
+    textarea.composer-input::placeholder { color: #9ca3af; }
+
+    .tag-btn-wrapper { position: relative; display: inline-block; margin-top: 8px; }
+    .tag-open-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
+    .tag-open-btn.has-tags { border-color: #6366f1; color: #4338ca; background: #eef2ff; }
+    .tag-open-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .tag-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.12); padding: 12px; width: 300px; max-height: 320px; overflow-y: auto; }
+    .tag-dropdown.open { display: block; }
+    .tag-dropdown-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag-toggle { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
+    .tag-toggle.on { background: #eef2ff; border-color: #6366f1; color: #4338ca; }
+    .tag-section-label { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tag-custom-input-row { display: flex; gap: 6px; margin-top: 4px; }
+    .tag-custom-input { flex: 1; padding: 5px 10px; border: 1.5px solid #d1d5db; border-radius: 999px; font-size: 12px; outline: none; }
+    .tag-custom-input:focus { border-color: #6366f1; }
+    .tag-custom-add-btn { padding: 5px 12px; border-radius: 999px; border: none; background: #6366f1; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .tag-selected-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; min-height: 0; }
+    .tag-selected-chip { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; }
+
+    .paper-attach-box { margin-top: 10px; padding: 10px 12px; background: var(--blue-soft); border-radius: 12px; display: none; position: relative; }
+    .paper-attach-box.visible { display: block; }
+    .paper-attach-label { font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 6px; }
+    .paper-attach-input { width: 100%; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 10px; font-size: 13px; background: #fff; outline: none; }
+    .paper-attach-input:focus { border-color: var(--blue); }
+    .attach-clear { position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--subtext); font-size: 16px; cursor: pointer; }
+
+    .composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
+    .btn-attach { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1.5px solid #d1d5db; background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; }
+    .btn-attach:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-post { margin-left: auto; padding: 9px 20px; border-radius: 999px; border: none; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
+    .char-count { font-size: 12px; color: var(--subtext); }
+    .char-count.over { color: #dc2626; }
+
+    .login-prompt { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; text-align: center; margin-bottom: 20px; font-size: 14px; color: var(--subtext); }
+    .login-prompt a { color: var(--blue); font-weight: 700; text-decoration: none; }
+
+    /* Posts */
+    .post-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ff; color: #3730a3; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .post-meta { flex: 1; min-width: 0; }
+    .post-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .post-time { font-size: 12px; color: var(--subtext); }
+    .post-content { font-size: 15px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-bottom: 10px; }
+    .post-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .post-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; text-decoration: none; }
+    .post-tag:hover { background: #e0e7ff; }
+    .paper-cite { margin-bottom: 10px; padding: 10px 12px; background: var(--blue-soft); border-left: 3px solid var(--blue); border-radius: 10px; }
+    .paper-cite-label { font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+    .paper-cite-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; line-height: 1.4; }
+    .paper-cite-link { font-size: 12px; color: var(--blue); text-decoration: none; }
+    .paper-cite-link:hover { text-decoration: underline; }
+    .post-footer { display: flex; align-items: center; gap: 8px; }
+    .btn-like { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; transition: all 0.15s; }
+    .btn-like:hover { border-color: #f43f5e; color: #f43f5e; }
+    .btn-like.liked { background: #fff1f2; border-color: #f43f5e; color: #f43f5e; }
+    .btn-reply-toggle { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; }
+    .btn-reply-toggle:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-delete { margin-left: auto; background: none; border: none; color: #9ca3af; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+    .btn-delete:hover { color: #dc2626; background: #fef2f2; }
+    .replies-section { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; display: none; }
+    .replies-section.open { display: block; }
+    .reply-card { display: flex; gap: 10px; margin-bottom: 12px; }
+    .reply-avatar { width: 30px; height: 30px; border-radius: 50%; background: #f3f4f6; color: #6b7280; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .reply-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .reply-body { flex: 1; }
+    .reply-name { font-size: 13px; font-weight: 700; }
+    .reply-time { font-size: 11px; color: var(--subtext); }
+    .reply-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
+    .reply-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .btn-like-sm { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 12px; color: var(--subtext); cursor: pointer; }
+    .btn-like-sm.liked { background: #fff1f2; border-color: #f43f5e; color: #f43f5e; }
+    .btn-delete-sm { margin-left: auto; background: none; border: none; color: #d1d5db; font-size: 12px; cursor: pointer; }
+    .btn-delete-sm:hover { color: #dc2626; }
+    .reply-composer { display: flex; gap: 10px; margin-top: 10px; align-items: flex-start; }
+    .reply-input { flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 14px; font-family: inherit; resize: none; min-height: 44px; outline: none; }
+    .reply-input:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .btn-reply-send { padding: 8px 14px; border-radius: 12px; border: none; background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-reply-send:disabled { opacity: 0.4; cursor: not-allowed; }
+    .replies-loading { font-size: 13px; color: var(--subtext); padding: 8px 0; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--subtext); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111827; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 200; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid var(--line); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
+    .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--subtext); text-decoration: none; }
+    .mobile-footer-link.is-active { color: var(--blue); }
+    .mobile-footer-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>📖 学ぶ</h1>
+    <div class="tab-bar">
+      <button class="tab-btn {% if tab != 'board' %}active{% endif %}" onclick="switchTab('recommend')">おすすめ論文</button>
+      <button class="tab-btn {% if tab == 'board' %}active{% endif %}" onclick="switchTab('board')">学習掲示板</button>
+    </div>
+  </div>
+
+  <!-- ── Tab: おすすめ論文 ── -->
+  <div id="tab-recommend" class="tab-panel {% if tab != 'board' %}active{% endif %}">
+    <div class="container">
+      {% if recommended %}
+        {% for item in recommended %}
+        <div class="rec-card">
+          <span class="rec-reason">{{ item.reason }}</span>
+          <div class="rec-title">{{ item.paper.jp_title or item.paper.title or "（タイトル不明）" }}</div>
+          {% if item.paper.journal or item.paper.pubdate %}
+          <div class="rec-meta">{{ item.paper.journal }}{% if item.paper.pubdate %} · {{ item.paper.pubdate }}{% endif %}</div>
+          {% endif %}
+          {% if item.paper.summary_jp %}
+          <div class="rec-summary">{{ item.paper.summary_jp }}</div>
+          {% endif %}
+          <div class="rec-actions">
+            <a href="/paper?id={{ item.paper.pubmed_id }}" class="rec-btn primary">詳細を見る →</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="rec-empty">
+          <div class="icon">📚</div>
+          <p>論文を検索・保存・要約すると<br>あなたに合ったおすすめが表示されます</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Tab: 学習掲示板 ── -->
+  <div id="tab-board" class="tab-panel {% if tab == 'board' %}active{% endif %}">
+
+    <!-- Tag filter -->
+    <div class="tag-filter-bar">
+      <a href="/learn?tab=board" class="filter-chip {% if not active_tag %}active{% endif %}">すべて</a>
+      {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
+      <a href="/learn?tab=board&tag={{ tag }}" class="filter-chip {% if active_tag == tag %}active{% endif %}">{{ tag }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="container">
+      {% if current_user %}
+      <div class="composer">
+        <form method="post" action="/board/post" id="post-form">
+          <input type="hidden" name="parent_id" value="">
+          <input type="hidden" name="redirect_to" value="/learn?tab=board">
+          <div class="composer-top">
+            <div class="composer-avatar">
+              {% if current_user.avatar %}
+                {% if current_user.avatar|length <= 4 %}{{ current_user.avatar }}
+                {% else %}<img src="{{ current_user.avatar }}" alt="avatar">{% endif %}
+              {% else %}{{ (current_user.display_name or current_user.email)[0]|upper }}{% endif %}
+            </div>
+            <div class="composer-body">
+              <textarea class="composer-input" name="content" id="composer-content"
+                placeholder="気づいたこと、論文の感想、臨床知識をシェア…"
+                maxlength="500" oninput="updateComposer()"></textarea>
+            </div>
+          </div>
+          <div class="tag-btn-wrapper" id="tag-btn-wrapper">
+            <button type="button" class="tag-open-btn" id="tag-open-btn" onclick="toggleTagDropdown()">
+              🏷 タグ <span id="tag-open-count"></span>
+            </button>
+            <div class="tag-dropdown" id="tag-dropdown">
+              <div id="user-tags-section" style="display:none;">
+                <div class="tag-section-label">よく使うタグ</div>
+                <div class="tag-dropdown-grid" id="user-tags-grid"></div>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
+              </div>
+              <div class="tag-section-label">カテゴリ</div>
+              <div class="tag-dropdown-grid">
+                {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
+                <button type="button" class="tag-toggle" data-tag="{{ tag }}" onclick="togglePostTag('{{ tag }}', this)">{{ tag }}</button>
+                {% endfor %}
+              </div>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
+              <div class="tag-custom-input-row">
+                <input type="text" id="custom-tag-input" class="tag-custom-input" placeholder="カスタムタグを追加..." maxlength="20"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomTag();}">
+                <button type="button" class="tag-custom-add-btn" onclick="addCustomTag()">追加</button>
+              </div>
+            </div>
+          </div>
+          <div class="tag-selected-preview" id="tag-selected-preview"></div>
+          <input type="hidden" name="tags" id="composer-tags">
+          <div class="paper-attach-box" id="paper-attach-box">
+            <div class="paper-attach-label">📄 論文を引用</div>
+            <input type="text" class="paper-attach-input" name="pubmed_id" id="attach-pmid"
+              placeholder="PMID（例: 12345678）" oninput="fetchPaperTitle(this.value)">
+            <input type="hidden" name="paper_title" id="attach-title">
+            <input type="hidden" name="paper_jp_title" id="attach-jp-title">
+            <div id="attach-preview" style="margin-top:8px;font-size:13px;color:#374151;"></div>
+            <button type="button" class="attach-clear" onclick="clearAttach()">✕</button>
+          </div>
+          <div class="composer-actions">
+            <button type="button" class="btn-attach" onclick="toggleAttach()">📄 論文を引用</button>
+            <span class="char-count" id="char-count">0 / 500</span>
+            <button type="submit" class="btn-post" id="btn-post" disabled>投稿</button>
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div class="login-prompt">
+        <a href="/login">ログイン</a>すると投稿・いいねができます
+      </div>
+      {% endif %}
+
+      {% if active_tag %}
+      <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">🏷 「{{ active_tag }}」の投稿</p>
+      {% endif %}
+
+      {% if posts %}
+        {% for post in posts %}
+        <div class="post-card" id="post-{{ post.id }}">
+          <div class="post-header">
+            <div class="post-avatar">
+              {% if post.avatar %}
+                {% if post.avatar|length <= 4 %}{{ post.avatar }}
+                {% else %}<img src="{{ post.avatar }}" alt="avatar">{% endif %}
+              {% else %}{{ (post.display_name or "?")[0]|upper }}{% endif %}
+            </div>
+            <div class="post-meta">
+              <div class="post-name">{{ post.display_name or "名前未設定" }}</div>
+              <div class="post-time">{{ post.created_at[:16].replace("T"," ") if "T" in post.created_at else post.created_at[:16] }}</div>
+            </div>
+          </div>
+          <div class="post-content">{{ post.content }}</div>
+          {% if post.tags_list %}
+          <div class="post-tags">
+            {% for t in post.tags_list %}
+            <a href="/learn?tab=board&tag={{ t }}" class="post-tag">{{ t }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if post.pubmed_id %}
+          <div class="paper-cite">
+            <div class="paper-cite-label">📄 引用論文</div>
+            <div class="paper-cite-title">{{ post.paper_jp_title or post.paper_title or post.pubmed_id }}</div>
+            <a href="/paper?id={{ post.pubmed_id }}" class="paper-cite-link">論文を見る →</a>
+          </div>
+          {% endif %}
+          <div class="post-footer">
+            <button class="btn-like {% if post.liked %}liked{% endif %}" onclick="toggleLike({{ post.id }}, this)">
+              ❤ <span class="like-num">{{ post.likes or 0 }}</span>
+            </button>
+            <button class="btn-reply-toggle" onclick="toggleReplies({{ post.id }}, this)">
+              💬 <span class="reply-num">{{ post.reply_count or 0 }}</span>
+            </button>
+            {% if current_user and current_user.id == post.user_id %}
+            <form method="post" action="/board/post/{{ post.id }}/delete"
+              style="margin-left:auto;" onsubmit="return confirm('削除しますか？')">
+              <button type="submit" class="btn-delete">削除</button>
+            </form>
+            {% endif %}
+          </div>
+          <div class="replies-section" id="replies-{{ post.id }}">
+            <div class="replies-loading" id="replies-loading-{{ post.id }}">読み込み中…</div>
+            <div id="replies-list-{{ post.id }}"></div>
+            {% if current_user %}
+            <div class="reply-composer">
+              <div class="reply-avatar">
+                {% if current_user.avatar %}
+                  {% if current_user.avatar|length <= 4 %}{{ current_user.avatar }}
+                  {% else %}<img src="{{ current_user.avatar }}" alt="a">{% endif %}
+                {% else %}{{ (current_user.display_name or current_user.email)[0]|upper }}{% endif %}
+              </div>
+              <textarea class="reply-input" id="reply-input-{{ post.id }}" placeholder="返信を入力…" rows="1"
+                oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';document.getElementById('reply-btn-{{ post.id }}').disabled=this.value.trim().length===0;"></textarea>
+              <button class="btn-reply-send" id="reply-btn-{{ post.id }}" disabled
+                onclick="submitReply({{ post.id }})">返信</button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="icon">📖</div>
+          <p>{% if active_tag %}「{{ active_tag }}」の投稿はまだありません。{% else %}まだ投稿がありません。<br>最初の投稿をしてみましょう！{% endif %}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <nav class="mobile-footer">
+    <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+    <a href="/learn" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+    <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+    <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+    <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+  </nav>
+
+  <script>
+    // ── Tab switching ──
+    function switchTab(tab) {
+      document.getElementById("tab-recommend").classList.toggle("active", tab === "recommend");
+      document.getElementById("tab-board").classList.toggle("active", tab === "board");
+      document.querySelectorAll(".tab-btn").forEach((b, i) => {
+        b.classList.toggle("active", (i === 0 && tab === "recommend") || (i === 1 && tab === "board"));
+      });
+      // Update URL without reload
+      const url = new URL(window.location);
+      if (tab === "board") url.searchParams.set("tab", "board");
+      else url.searchParams.delete("tab");
+      history.replaceState({}, "", url);
+    }
+
+    // ── Composer ──
+    let selectedTags = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("post-form");
+      if (form) {
+        form.addEventListener("submit", () => {
+          if (selectedTags.length > 0) learnTagsFromPost(selectedTags);
+        });
+      }
+    });
+
+    function updateComposer() {
+      const ta = document.getElementById("composer-content");
+      const btn = document.getElementById("btn-post");
+      const counter = document.getElementById("char-count");
+      const len = ta.value.trim().length;
+      counter.textContent = len + " / 500";
+      counter.classList.toggle("over", len > 500);
+      btn.disabled = len === 0 || len > 500;
+    }
+
+    // ── User tags ──
+    let userTagsLoaded = false;
+
+    function loadUserTags() {
+      if (userTagsLoaded) return;
+      fetch("/user/tags")
+        .then(r => r.json())
+        .then(data => {
+          userTagsLoaded = true;
+          const tags = data.tags || [];
+          const section = document.getElementById("user-tags-section");
+          const grid = document.getElementById("user-tags-grid");
+          if (tags.length === 0) return;
+          grid.innerHTML = "";
+          tags.forEach(t => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "tag-toggle";
+            btn.dataset.tag = t.tag;
+            btn.textContent = t.tag;
+            if (selectedTags.includes(t.tag)) btn.classList.add("on");
+            btn.onclick = function() { togglePostTag(t.tag, this); };
+            grid.appendChild(btn);
+          });
+          section.style.display = "";
+        })
+        .catch(() => {});
+    }
+
+    function addCustomTag() {
+      const input = document.getElementById("custom-tag-input");
+      const tag = input.value.trim();
+      if (!tag) return;
+      input.value = "";
+      if (!selectedTags.includes(tag)) {
+        const fakeBtn = { classList: { add: () => {}, remove: () => {}, contains: () => false } };
+        togglePostTag(tag, fakeBtn);
+      }
+      const fd = new FormData();
+      fd.append("tag", tag);
+      fetch("/user/tags", { method: "POST", body: fd })
+        .then(() => { userTagsLoaded = false; loadUserTags(); })
+        .catch(() => {});
+    }
+
+    function learnTagsFromPost(tags) {
+      tags.forEach(tag => {
+        const fd = new FormData();
+        fd.append("tag", tag);
+        fetch("/user/tags", { method: "POST", body: fd }).catch(() => {});
+      });
+    }
+
+    function toggleTagDropdown() {
+      const dd = document.getElementById("tag-dropdown");
+      dd.classList.toggle("open");
+      if (dd.classList.contains("open")) {
+        loadUserTags();
+        setTimeout(() => {
+          document.addEventListener("click", closeTagDropdownOutside, { once: true });
+        }, 0);
+      }
+    }
+
+    function closeTagDropdownOutside(e) {
+      const wrapper = document.getElementById("tag-btn-wrapper");
+      if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById("tag-dropdown").classList.remove("open");
+      } else if (wrapper && wrapper.contains(e.target)) {
+        document.addEventListener("click", closeTagDropdownOutside, { once: true });
+      }
+    }
+
+    function togglePostTag(tag, btn) {
+      const idx = selectedTags.indexOf(tag);
+      if (idx !== -1) { selectedTags.splice(idx, 1); btn.classList.remove("on"); }
+      else { selectedTags.push(tag); btn.classList.add("on"); }
+      document.getElementById("composer-tags").value = selectedTags.join(",");
+      const openBtn = document.getElementById("tag-open-btn");
+      const countEl = document.getElementById("tag-open-count");
+      if (selectedTags.length > 0) {
+        openBtn.classList.add("has-tags");
+        countEl.textContent = "(" + selectedTags.length + ")";
+      } else {
+        openBtn.classList.remove("has-tags");
+        countEl.textContent = "";
+      }
+      const preview = document.getElementById("tag-selected-preview");
+      preview.innerHTML = selectedTags.map(t => `<span class="tag-selected-chip">${t}</span>`).join("");
+    }
+
+    function toggleAttach() {
+      const box = document.getElementById("paper-attach-box");
+      box.classList.toggle("visible");
+      if (!box.classList.contains("visible")) clearAttach();
+    }
+
+    function clearAttach() {
+      document.getElementById("attach-pmid").value = "";
+      document.getElementById("attach-title").value = "";
+      document.getElementById("attach-jp-title").value = "";
+      document.getElementById("attach-preview").textContent = "";
+      document.getElementById("paper-attach-box").classList.remove("visible");
+    }
+
+    let fetchTimer = null;
+    function fetchPaperTitle(pmid) {
+      clearTimeout(fetchTimer);
+      const preview = document.getElementById("attach-preview");
+      const clean = pmid.trim();
+      if (!clean || !/^\d+$/.test(clean)) { preview.textContent = ""; return; }
+      preview.textContent = "取得中...";
+      fetchTimer = setTimeout(() => {
+        fetch("/paper/meta?id=" + clean)
+          .then(r => r.json())
+          .then(data => {
+            if (data.title || data.jp_title) {
+              document.getElementById("attach-title").value = data.title || "";
+              document.getElementById("attach-jp-title").value = data.jp_title || "";
+              preview.textContent = data.jp_title || data.title;
+            } else { preview.textContent = "論文が見つかりませんでした"; }
+          })
+          .catch(() => { preview.textContent = ""; });
+      }, 600);
+    }
+
+    // ── Like ──
+    function toggleLike(postId, btn) {
+      const numEl = btn.querySelector(".like-num");
+      const wasLiked = btn.classList.contains("liked");
+      const current = parseInt(numEl.textContent) || 0;
+      btn.classList.toggle("liked", !wasLiked);
+      numEl.textContent = wasLiked ? current - 1 : current + 1;
+      fetch("/board/post/" + postId + "/like", { method: "POST" })
+        .then(r => r.json())
+        .then(data => { btn.classList.toggle("liked", data.liked); })
+        .catch(() => { btn.classList.toggle("liked", wasLiked); numEl.textContent = current; });
+    }
+
+    // ── Replies ──
+    const loadedReplies = new Set();
+
+    function toggleReplies(postId, btn) {
+      const section = document.getElementById("replies-" + postId);
+      const isOpen = section.classList.contains("open");
+      if (isOpen) { section.classList.remove("open"); return; }
+      section.classList.add("open");
+      if (!loadedReplies.has(postId)) loadReplies(postId);
+    }
+
+    function loadReplies(postId) {
+      fetch("/board/post/" + postId + "/replies")
+        .then(r => r.json())
+        .then(data => {
+          loadedReplies.add(postId);
+          const loading = document.getElementById("replies-loading-" + postId);
+          if (loading) loading.remove();
+          renderReplies(postId, data.replies);
+        });
+    }
+
+    function renderReplies(postId, replies) {
+      const list = document.getElementById("replies-list-" + postId);
+      if (!list) return;
+      list.innerHTML = "";
+      replies.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "reply-card";
+        div.id = "post-" + r.id;
+        let avatarHtml = "";
+        if (r.avatar && r.avatar.length <= 4) avatarHtml = r.avatar;
+        else if (r.avatar) avatarHtml = `<img src="${r.avatar}" alt="a">`;
+        else avatarHtml = (r.display_name || "?")[0].toUpperCase();
+        const likedClass = r.liked ? "liked" : "";
+        div.innerHTML = `
+          <div class="reply-avatar">${avatarHtml}</div>
+          <div class="reply-body">
+            <div class="reply-name">${r.display_name || "名前未設定"}</div>
+            <div class="reply-time">${(r.created_at||"").slice(0,16).replace("T"," ")}</div>
+            <div class="reply-content">${r.content.replace(/</g,"&lt;")}</div>
+            <div class="reply-actions">
+              <button class="btn-like-sm ${likedClass}" onclick="toggleLike(${r.id}, this)">❤ <span class="like-num">${r.likes||0}</span></button>
+              ${r.is_own ? `<button class="btn-delete-sm" onclick="if(confirm('削除しますか？'))fetch('/board/post/${r.id}/delete',{method:'POST'}).then(()=>this.closest('.reply-card').remove())">削除</button>` : ""}
+            </div>
+          </div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function submitReply(postId) {
+      const input = document.getElementById("reply-input-" + postId);
+      const content = input.value.trim();
+      if (!content) return;
+      const btn = document.getElementById("reply-btn-" + postId);
+      btn.disabled = true;
+      const fd = new FormData();
+      fd.append("content", content);
+      fd.append("parent_id", postId);
+      fetch("/board/post", { method: "POST", body: fd })
+        .then(r => { if (r.redirected || r.ok) { input.value = ""; loadedReplies.delete(postId); loadReplies(postId); showToast("返信しました"); } })
+        .catch(() => {})
+        .finally(() => { btn.disabled = false; });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2200);
+    }
+  </script>
+</body>
+</html>

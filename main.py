@@ -1,17 +1,21 @@
 import re
 import os
+import time
 import hashlib
+import urllib.request as _urlreq
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from Bio import Entrez
 from openai import OpenAI
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Request, Query
 from db import (
     init_db,
+    init_memos_tables,
     save_paper,
     get_saved_papers,
     get_public_papers,
@@ -32,6 +36,36 @@ from db import (
     update_saved_paper_folder,
     update_saved_paper_custom_title,
     update_saved_paper_user_note,
+    rename_folder,
+    update_user_profile,
+    get_user_daily_usage,
+    count_user_all_memos,
+    get_user_memos,
+    get_memo_by_id,
+    create_memo,
+    update_memo,
+    delete_memo,
+    get_user_paper_memos,
+    get_paper_memo_by_id,
+    create_paper_memo,
+    update_paper_memo,
+    delete_paper_memo,
+    create_post,
+    get_posts,
+    get_replies,
+    toggle_post_like,
+    delete_post,
+    update_saved_paper_highlights,
+    toggle_paper_like,
+    get_paper_liked,
+    update_memo_tags,
+    update_paper_memo_tags,
+    get_paper_jp_title_global,
+    get_user_tags,
+    upsert_user_tag,
+    delete_user_tag,
+    record_interest,
+    get_recommended_papers,
 )
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -40,6 +74,8 @@ load_dotenv()
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
 templates = Jinja2Templates(directory="templates")
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 Entrez.email = os.getenv("ENTREZ_EMAIL")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -128,6 +164,7 @@ JAPANESE_MEDICAL_KEYWORDS = {
 @app.on_event("startup")
 def startup_event():
     init_db()
+    init_memos_tables()
 
 def get_current_user(request: Request):
     user_id = request.session.get("user_id")
@@ -156,6 +193,7 @@ def get_plan_limits(plan):
             "save_limit": 0,
             "ranking_limit": 20,
             "can_view_score_ranking": True,
+            "memo_limit": 0,
         },
 
         "free": {
@@ -163,13 +201,15 @@ def get_plan_limits(plan):
             "save_limit": 10,
             "ranking_limit": 20,
             "can_view_score_ranking": True,
+            "memo_limit": 15,
         },
 
         "pro": {
             "daily_summary_limit": 50,
-            "save_limit": 150,
+            "save_limit": 300,
             "ranking_limit": 100,
             "can_view_score_ranking": True,
+            "memo_limit": None,
         },
 
         "expert": {
@@ -177,6 +217,7 @@ def get_plan_limits(plan):
             "save_limit": None,
             "ranking_limit": 300,
             "can_view_score_ranking": True,
+            "memo_limit": None,
         },
     }
 
@@ -325,6 +366,124 @@ def contains_japanese(text: str) -> bool:
     return re.search(r"[ぁ-んァ-ン一-龥]", text) is not None
 
 keyword_cache = {}
+
+# ─── PubMed トレンドキャッシュ ────────────────────────────────────
+_trending_cache: dict = {"papers": None, "ts": 0.0, "fetching": False}
+TRENDING_CACHE_TTL = 10800  # 3 hours
+
+
+def _fetch_trending_pmids(limit: int = 20) -> list:
+    """PubMed Trending ページから PMID を抽出する"""
+    try:
+        req = _urlreq.Request(
+            "https://pubmed.ncbi.nlm.nih.gov/trending/",
+            headers={"User-Agent": "Mozilla/5.0 (compatible; research-tool/1.0)"},
+        )
+        with _urlreq.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+        ids = re.findall(r'data-article-id="(\d+)"', html)
+        if not ids:
+            ids = re.findall(r'href="/(\d{6,9})/"', html)
+        if not ids:
+            ids = re.findall(r'"docsum-pmid">(\d+)', html)
+        return list(dict.fromkeys(ids))[:limit]
+    except Exception:
+        return []
+
+
+def _fetch_trending_papers_bg(limit: int = 20):
+    """バックグラウンドでトレンド論文を取得してキャッシュに保存"""
+    try:
+        now = time.time()
+        pmids = _fetch_trending_pmids(limit)
+        if not pmids:
+            _trending_cache.update({"papers": [], "ts": now, "fetching": False})
+            return
+
+        saved_map = {p["pubmed_id"]: p for p in get_saved_papers()}
+        missing = [pid for pid in pmids if pid not in saved_map]
+
+        entrez_map: dict = {}
+        if missing:
+            try:
+                handle = Entrez.efetch(db="pubmed", id=",".join(missing), retmode="xml")
+                records = Entrez.read(handle)
+                handle.close()
+
+                for article in records.get("PubmedArticle", []):
+                    try:
+                        citation = article.get("MedlineCitation", {})
+                        pmid = str(citation.get("PMID", ""))
+                        article_data = citation.get("Article", {})
+                        raw_title = str(article_data.get("ArticleTitle", ""))
+
+                        raw_journal = ""
+                        raw_pubdate = ""
+                        if "Journal" in article_data:
+                            raw_journal = str(article_data["Journal"].get("Title", ""))
+                            issue = article_data["Journal"].get("JournalIssue", {})
+                            pub = issue.get("PubDate", {})
+                            year = pub.get("Year", "")
+                            month = pub.get("Month", "")
+                            raw_pubdate = f"{year} {month}".strip()
+
+                        authors = []
+                        if "AuthorList" in article_data:
+                            for a in article_data["AuthorList"]:
+                                full = f"{a.get('LastName','')} {a.get('ForeName','')}".strip()
+                                if full:
+                                    authors.append(full)
+
+                        jp_title = ""
+                        try:
+                            jp_title = translate_title_to_japanese(raw_title) if raw_title else ""
+                        except Exception:
+                            jp_title = raw_title
+
+                        entrez_map[pmid] = {
+                            "pubmed_id": pmid,
+                            "title": raw_title,
+                            "jp_title": jp_title,
+                            "authors": ", ".join(authors),
+                            "journal": raw_journal,
+                            "pubdate": raw_pubdate,
+                            "likes": 0,
+                            "clinical_score": "",
+                            "folder_name": "",
+                            "summary_jp": "",
+                        }
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+
+        papers = []
+        for pid in pmids:
+            if pid in saved_map:
+                papers.append(dict(saved_map[pid]))
+            elif pid in entrez_map:
+                papers.append(entrez_map[pid])
+
+        _trending_cache.update({"papers": papers, "ts": now, "fetching": False})
+    except Exception:
+        _trending_cache["fetching"] = False
+
+
+def get_pubmed_trending_papers(limit: int = 20) -> list:
+    """PubMed トレンド論文を取得（キャッシュ付き・非ブロッキング）"""
+    now = time.time()
+    # キャッシュが有効ならそのまま返す
+    if _trending_cache["papers"] is not None and (now - _trending_cache["ts"]) < TRENDING_CACHE_TTL:
+        return _trending_cache["papers"]
+
+    # キャッシュ切れまたは未取得 — バックグラウンドで取得開始し即返す
+    if not _trending_cache["fetching"]:
+        _trending_cache["fetching"] = True
+        import threading
+        threading.Thread(target=_fetch_trending_papers_bg, args=(limit,), daemon=True).start()
+
+    # キャッシュが古くてもあれば返す、なければ空リスト
+    return _trending_cache["papers"] if _trending_cache["papers"] is not None else []
 
 def stable_score_offset(pubmed_id: str) -> float:
     seed = hashlib.md5(pubmed_id.encode("utf-8")).hexdigest()
@@ -478,7 +637,7 @@ def summarize_abstract_in_japanese(text: str):
 項目名も完全に一致させてください。
 
 【臨床参考度】
-1.0〜5.0の範囲で、0.1刻みの数値だけを書く
+0.0〜5.0の範囲で、0.1刻みの数値だけを書く
 
 【参考度の理由】
 1〜2文で簡潔に書く
@@ -507,14 +666,20 @@ abstractに書かれている情報のみ使う。
 サンプル数、対象の偏り、期間の短さなど、abstractに書かれている制限を書く。
 明確な記載がなければ「記載なし」と書く。
 
-臨床参考度の評価では以下を総合的に見ること。
-・研究デザイン
-・対象人数
-・対象の明確さ
+臨床参考度は0.0〜5.0で厳密に評価する。平均的な論文は2.5〜3.0。以下の基準を使うこと：
+・0.0〜1.0：症例報告（n<5）、abstractのみで内容不明、エビデンス皆無
+・1.0〜2.0：小規模観察研究（n<20）、方法論が不明確、臨床適用困難
+・2.0〜3.0：中規模研究（n=20〜50）、一定の方法論あり、限界が大きい
+・3.0〜4.0：RCTまたは良質コホート（n≥30）、介入・評価が明確、一般化に制限あり
+・4.0〜5.0：高品質RCT（n≥100）またはシステマティックレビュー・メタ解析、強いエビデンス
+
+以下を総合的に判断すること：
+・研究デザイン（RCT>コホート>横断>症例）
+・対象人数（少ないほど低評価）
 ・介入と評価方法の明確さ
 ・臨床応用のしやすさ
 ・一般化のしやすさ
-・限界の大きさ
+・限界の大きさ（大きいほど低評価）
 
 ルール:
 ・日本語で書く
@@ -587,35 +752,13 @@ def root(request: Request):
 
     papers = get_saved_papers()
 
+    # ホームページでは翻訳APIを呼ばない（速度優先）
+    # jp_titleがない場合は英語titleをそのまま使う
     updated_papers = []
-
     for paper in papers:
-
         jp_title = paper.get("jp_title") or ""
-        title = paper.get("title") or ""
-
-        if not jp_title and title:
-
-            jp_title = translate_title_to_japanese(title)
-
-            save_paper(
-                pubmed_id=paper["pubmed_id"],
-                title=title,
-                jp_title=jp_title,
-                authors=paper.get("authors") or "",
-                journal=paper.get("journal") or "",
-                pubdate=paper.get("pubdate") or "",
-                abstract=paper.get("abstract") or "",
-                jp=paper.get("jp") or "",
-                summary_jp=paper.get("summary_jp") or "",
-                folder_name=paper.get("folder_name") or "",
-                clinical_score=paper.get("clinical_score") or "",
-                clinical_reason=paper.get("clinical_reason") or "",
-                user_id=paper.get("user_id"),
-            )
-
-            paper["jp_title"] = jp_title
-
+        if not jp_title:
+            paper["jp_title"] = paper.get("title") or ""
         updated_papers.append(paper)
 
     # 人気ランキング
@@ -640,12 +783,18 @@ def root(request: Request):
 
     top_rated_papers = sorted_score[:limit]
 
+    try:
+        trending_papers = get_pubmed_trending_papers(20)
+    except Exception:
+        trending_papers = []
+
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
             "popular_papers": popular_papers,
             "top_rated_papers": top_rated_papers,
+            "trending_papers": trending_papers,
             "current_user": current_user,
             "current_plan": plan,
             "can_view_score_ranking": limits["can_view_score_ranking"],
@@ -701,6 +850,277 @@ def plans(request: Request):
         }
     )
 
+@app.get("/mypage")
+def mypage(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    user = get_user_by_id(current_user["id"])
+    user = check_trial_expired(user)
+
+    current_plan = user.get("plan") or "free"
+    limits = get_plan_limits(current_plan)
+    trial_ends_at = user.get("trial_ends_at")
+    plan_renews_at = user.get("plan_renews_at")
+    ref_code = user.get("ref_code") or ""
+    trial_extend_days = int(user.get("trial_extend_days") or 0)
+
+    trial_days_left = None
+    if trial_ends_at:
+        today = datetime.now().date()
+        end = datetime.strptime(trial_ends_at, "%Y-%m-%d").date()
+        diff = (end - today).days
+        if diff > 0:
+            trial_days_left = diff
+
+    daily_usage = get_user_daily_usage(current_user["id"])
+    saved_count = count_user_saved_papers(current_user["id"])
+    memo_count = count_user_all_memos(current_user["id"])
+
+    recent_papers = get_saved_papers(user_id=current_user["id"])
+    recent_papers = sorted(recent_papers, key=lambda x: x.get("created_at", ""), reverse=True)[:3]
+
+    return templates.TemplateResponse(
+        "mypage.html",
+        {
+            "request": request,
+            "current_user": user,
+            "current_plan": current_plan,
+            "limits": limits,
+            "trial_days_left": trial_days_left,
+            "plan_renews_at": plan_renews_at,
+            "ref_code": ref_code,
+            "trial_extend_days": trial_extend_days,
+            "daily_usage": daily_usage,
+            "saved_count": saved_count,
+            "memo_count": memo_count,
+            "recent_papers": recent_papers,
+        }
+    )
+
+
+@app.post("/mypage/profile")
+def mypage_profile_update(
+    request: Request,
+    display_name: str = Form(""),
+    bio: str = Form(""),
+    avatar: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    update_user_profile(
+        current_user["id"],
+        display_name.strip()[:40],
+        bio.strip()[:160],
+        avatar.strip()[:200000],
+    )
+    return RedirectResponse("/mypage?saved=1", status_code=303)
+
+
+@app.get("/board")
+def board_page(request: Request, tag: str = Query("")):
+    # /board は /learn?tab=board にリダイレクト（既存リンクの後方互換）
+    dest = "/learn?tab=board"
+    if tag:
+        dest += f"&tag={tag}"
+    return RedirectResponse(dest, status_code=301)
+
+
+@app.get("/learn")
+def learn_page(request: Request, tab: str = Query("recommend"), tag: str = Query("")):
+    current_user = get_current_user(request)
+    posts = get_posts(limit=50, viewer_user_id=current_user["id"] if current_user else None, tag_filter=tag)
+    recommended = []
+    if current_user:
+        try:
+            recommended = get_recommended_papers(current_user["id"], limit=10)
+        except Exception:
+            recommended = []
+    return templates.TemplateResponse("learn.html", {
+        "request": request,
+        "current_user": current_user,
+        "posts": posts,
+        "active_tag": tag,
+        "tab": tab,
+        "recommended": recommended,
+    })
+
+
+@app.post("/board/post")
+def board_create_post(
+    request: Request,
+    content: str = Form(""),
+    pubmed_id: str = Form(""),
+    paper_title: str = Form(""),
+    paper_jp_title: str = Form(""),
+    tags: str = Form(""),
+    parent_id: str = Form(""),
+    redirect_to: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    content = content.strip()
+    if not content:
+        return RedirectResponse(redirect_to or "/learn?tab=board", status_code=303)
+    pid = int(parent_id) if parent_id.strip().isdigit() else None
+    create_post(
+        user_id=current_user["id"],
+        content=content[:500],
+        pubmed_id=pubmed_id.strip(),
+        paper_title=paper_title.strip(),
+        paper_jp_title=paper_jp_title.strip(),
+        tags=tags.strip(),
+        parent_id=pid,
+    )
+    # 投稿タグを興味スコアに反映（重み2）
+    if tags.strip() and current_user:
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        try:
+            record_interest(current_user["id"], tag_list, weight=2.0)
+        except Exception:
+            pass
+    dest = redirect_to or "/learn?tab=board"
+    if pid:
+        dest += f"#{pid}"
+    return RedirectResponse(dest, status_code=303)
+
+
+@app.post("/board/post/{post_id}/like")
+def board_like_post(post_id: int, request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"error": "login required"}, status_code=401)
+    liked = toggle_post_like(post_id, current_user["id"])
+    return JSONResponse({"liked": liked})
+
+
+@app.post("/board/post/{post_id}/delete")
+def board_delete_post(post_id: int, request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    delete_post(post_id, current_user["id"])
+    return RedirectResponse("/board", status_code=303)
+
+
+@app.get("/board/post/{post_id}/replies")
+def board_get_replies(post_id: int, request: Request):
+    current_user = get_current_user(request)
+    replies = get_replies(post_id, viewer_user_id=current_user["id"] if current_user else None)
+    return JSONResponse({"replies": replies})
+
+
+@app.get("/user/tags")
+def user_tags_get(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"tags": []})
+    tags = get_user_tags(current_user["id"])
+    return JSONResponse({"tags": tags})
+
+
+@app.post("/user/tags")
+async def user_tags_add(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    form = await request.form()
+    tag = (form.get("tag") or "").strip()
+    if not tag:
+        return JSONResponse({"ok": False})
+    upsert_user_tag(current_user["id"], tag)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/user/tags/{tag}/delete")
+def user_tags_delete(tag: str, request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    delete_user_tag(current_user["id"], tag)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/paper/highlight")
+def paper_highlight_save(
+    request: Request,
+    pubmed_id: str = Form(""),
+    highlights: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user or not pubmed_id:
+        return JSONResponse({"ok": False})
+    update_saved_paper_highlights(pubmed_id, highlights, current_user["id"])
+    return JSONResponse({"ok": True})
+
+
+@app.post("/memo/{memo_id}/tags")
+def save_memo_tags(memo_id: int, request: Request, tags: str = Form("")):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    update_memo_tags(memo_id, current_user["id"], tags.strip())
+    return JSONResponse({"ok": True})
+
+
+@app.post("/memo/paper/{memo_id}/tags")
+def save_paper_memo_tags(memo_id: int, request: Request, tags: str = Form("")):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    update_paper_memo_tags(memo_id, current_user["id"], tags.strip())
+    return JSONResponse({"ok": True})
+
+
+@app.get("/memo/export")
+def memo_export(request: Request, fmt: str = Query("csv")):
+    import csv, io
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    memos = get_user_memos(current_user["id"])
+    paper_memos = get_user_paper_memos(current_user["id"])
+
+    if fmt == "csv":
+        from fastapi.responses import StreamingResponse
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["種別", "タイトル", "本文", "タグ", "更新日時"])
+        for m in memos:
+            writer.writerow(["メモ", m.get("title",""), m.get("body",""), m.get("tags",""), m.get("updated_at","")])
+        for m in paper_memos:
+            writer.writerow(["論文メモ", m.get("paper_title",""), m.get("body",""), m.get("tags",""), m.get("updated_at","")])
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=memos.csv"}
+        )
+    # print (HTML for browser print-to-PDF)
+    all_memos = [{"type": "メモ", **m} for m in memos] + [{"type": "論文メモ", **m} for m in paper_memos]
+    return templates.TemplateResponse("memo_export_print.html", {
+        "request": request,
+        "memos": all_memos,
+        "current_user": current_user,
+    })
+
+
+@app.get("/saved/export")
+def saved_export(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    papers = get_saved_papers(current_user["id"])
+    return templates.TemplateResponse("saved_export_print.html", {
+        "request": request,
+        "papers": papers,
+        "current_user": current_user,
+    })
+
+
 @app.get("/search")
 def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     current_user = get_current_user(request)
@@ -713,7 +1133,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "request": request,
                 "papers": [],
                 "keyword": keyword,
-                "converted_keyword": ""
+                "converted_keyword": "",
+                "current_user": current_user,
             }
         )
 
@@ -742,7 +1163,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "request": request,
                 "papers": [],
                 "keyword": keyword,
-                "converted_keyword": converted_keyword
+                "converted_keyword": converted_keyword,
+                "current_user": current_user,
             }
         )
 
@@ -758,6 +1180,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "converted_keyword": converted_keyword,
                 "page": 1,
                 "total_pages": 1,
+                "current_user": current_user,
             }
         )
 
@@ -846,6 +1269,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                     "converted_keyword": converted_keyword,
                     "page": page,
                     "total_pages": total_pages,
+                    "current_user": current_user,
                 }
             )
 
@@ -892,8 +1316,11 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 pubdate = saved.get("pubdate", raw_pubdate) if saved else raw_pubdate
                 abstract = saved.get("abstract", raw_abstract) if saved else raw_abstract
 
-                # 日本語タイトルを優先。なければ初回だけ翻訳して保存する
+                # 日本語タイトルを優先。なければグローバルキャッシュ→翻訳の順で取得
                 jp_title = saved.get("jp_title", "") if saved else ""
+
+                if not jp_title:
+                    jp_title = get_paper_jp_title_global(pmid)
 
                 if not jp_title and title:
                     try:
@@ -964,8 +1391,30 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             "converted_keyword": converted_keyword,
             "page": page,
             "total_pages": total_pages,
+            "current_user": current_user,
         }
     )
+
+@app.get("/paper/meta")
+def paper_meta(request: Request, id: str = Query("")):
+    """Return basic paper metadata (title/jp_title) for board attachment preview."""
+    pmid = id.strip()
+    if not pmid:
+        return JSONResponse({})
+    current_user = get_current_user(request)
+    saved = get_saved_paper_by_id(pmid, current_user["id"] if current_user else None)
+    if saved:
+        return JSONResponse({"title": saved.get("title", ""), "jp_title": saved.get("jp_title", "")})
+    try:
+        handle = Entrez.esummary(db="pubmed", id=pmid)
+        record = Entrez.read(handle)
+        handle.close()
+        item = record[0] if record else {}
+        title = str(item.get("Title", ""))
+        return JSONResponse({"title": title, "jp_title": ""})
+    except Exception:
+        return JSONResponse({})
+
 
 @app.get("/paper")
 def paper(
@@ -1114,6 +1563,7 @@ def paper(
         "clinical_score": clinical_score,
         "clinical_reason": clinical_reason,
         "likes": int(refreshed_saved.get("likes") or 0) if refreshed_saved else 0,
+        "liked": get_paper_liked(id, current_user_id) if current_user_id else False,
         "is_favorite": int(refreshed_saved.get("is_favorite") or 0) if refreshed_saved else 0,
         "folder_name": refreshed_saved.get("folder_name") or "" if refreshed_saved else "",
         "custom_title": refreshed_saved.get("custom_title") or "" if refreshed_saved else "",
@@ -1177,6 +1627,14 @@ def save_paper_route(
         clinical_reason=clinical_reason,
         user_id=current_user["id"],
     )
+
+    # 保存行動を興味タグに記録（重み3）
+    try:
+        _tags_from_title = [w for w in (jp_title or title or "").split() if len(w) >= 2][:5]
+        if _tags_from_title:
+            record_interest(current_user["id"], _tags_from_title, weight=3.0)
+    except Exception:
+        pass
 
     return JSONResponse(
         {"ok": True, "message": "保存しました"}
@@ -1333,6 +1791,15 @@ def favorite(request: Request, pubmed_id: str):
 
     if paper:
         is_favorite = int(paper.get("is_favorite") or 0)
+        # お気に入り追加時に興味タグ記録（重み4）
+        if is_favorite and current_user_id:
+            try:
+                _title = paper.get("jp_title") or paper.get("title") or ""
+                _tags = [w for w in _title.split() if len(w) >= 2][:5]
+                if _tags:
+                    record_interest(current_user_id, _tags, weight=4.0)
+            except Exception:
+                pass
 
     return JSONResponse(
         {
@@ -1402,12 +1869,15 @@ def like(request: Request, pubmed_id: str):
             user_id=current_user_id,
         )
 
-    add_like(pubmed_id, user_id=current_user_id)
+    if current_user_id:
+        result = toggle_paper_like(pubmed_id, current_user_id)
+        return JSONResponse({"ok": True, "likes": result["likes"], "liked": result["liked"]})
 
-    paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
-    likes = int(paper["likes"] or 0) if paper else 0
-
-    return JSONResponse({"ok": True, "likes": likes})
+    # guest: legacy add_like (no toggle)
+    add_like(pubmed_id, user_id=None)
+    paper_row = get_saved_paper_by_id(pubmed_id, user_id=None)
+    likes = int(paper_row["likes"] or 0) if paper_row else 0
+    return JSONResponse({"ok": True, "likes": likes, "liked": True})
 
 @app.post("/saved/{pubmed_id}/move")
 def move_saved_paper(
@@ -1495,37 +1965,48 @@ def update_saved_paper_note_route(
         "message": "メモを更新しました",
     })
 
+@app.post("/saved/folder/rename")
+def rename_folder_route(
+    request: Request,
+    old_name: str = Form(...),
+    new_name: str = Form(...),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+    new_name = new_name.strip()
+    if not new_name:
+        return JSONResponse({"ok": False, "message": "フォルダ名を入力してください"})
+    rename_folder(current_user["id"], old_name.strip(), new_name)
+    return JSONResponse({"ok": True, "new_name": new_name})
+
+
 @app.get("/ranking")
 def ranking_list(request: Request, sort: str = "likes"):
     current_user = get_current_user(request)
     plan = get_user_plan(current_user)
     limits = get_plan_limits(plan)
 
-    papers = get_saved_papers()
-
-    if sort == "score" and not limits["can_view_score_ranking"]:
-        return RedirectResponse(url="/?ranking_error=score_locked", status_code=303)
-
-    if sort == "likes":
-        papers = sorted(
-            papers,
-            key=lambda x: int(x.get("likes") or 0),
-            reverse=True
-        )
-    elif sort == "score":
-        papers = sorted(
-            papers,
-            key=lambda x: float(x.get("clinical_score") or 0),
-            reverse=True
-        )
+    if sort == "trend":
+        papers = get_pubmed_trending_papers(limits["ranking_limit"])
+        page_title = "PubMedトレンド論文ランキング"
+        page_description = "PubMedで最近アクティビティが増えている論文を表示しています。累積閲覧数順ではありません。"
     else:
-        papers = sorted(
-            papers,
-            key=lambda x: x.get("created_at", ""),
-            reverse=True
-        )
+        papers = get_saved_papers()
 
-    papers = papers[:limits["ranking_limit"]]
+        if sort == "score" and not limits["can_view_score_ranking"]:
+            return RedirectResponse(url="/?ranking_error=score_locked", status_code=303)
+
+        if sort == "likes":
+            papers = sorted(papers, key=lambda x: int(x.get("likes") or 0), reverse=True)
+        elif sort == "score":
+            papers = sorted(papers, key=lambda x: float(x.get("clinical_score") or 0), reverse=True)
+        else:
+            papers = sorted(papers, key=lambda x: x.get("created_at", ""), reverse=True)
+
+        papers = papers[:limits["ranking_limit"]]
+        page_title = "人気論文ランキング" if sort == "likes" else "臨床参考度ランキング"
+        page_description = "SaaS内で保存・要約された論文の中から読めるランキング一覧です。"
 
     return templates.TemplateResponse(
         "public_list.html",
@@ -1534,8 +2015,8 @@ def ranking_list(request: Request, sort: str = "likes"):
             "papers": papers,
             "sort": sort,
             "page_mode": "ranking",
-            "page_title": "人気論文ランキング" if sort == "likes" else "臨床参考度ランキング",
-            "page_description": "SaaS内で保存・要約された論文の中から読めるランキング一覧です。",
+            "page_title": page_title,
+            "page_description": page_description,
             "base_path": "/ranking",
             "empty_message": "まだランキング対象の論文がありません。",
         }
@@ -1700,6 +2181,239 @@ def public_toggle(request: Request, pubmed_id: str):
             "is_public": is_public
         }
     )
+
+# ─── メモ機能 ──────────────────────────────────────────
+
+@app.get("/memo")
+def memo_list(request: Request, tab: str = "quick"):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = current_user["id"]
+    plan = get_user_plan(current_user)
+    limits = get_plan_limits(plan)
+    memo_limit = limits["memo_limit"]
+
+    quick_memos = get_user_memos(user_id)
+    paper_memos = get_user_paper_memos(user_id)
+    total_count = len(quick_memos) + len(paper_memos)
+
+    return templates.TemplateResponse(
+        "memo.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "current_plan": plan,
+            "tab": tab,
+            "quick_memos": quick_memos,
+            "paper_memos": paper_memos,
+            "total_count": total_count,
+            "memo_limit": memo_limit,
+        }
+    )
+
+
+@app.post("/memo/create")
+def memo_create(request: Request, title: str = Form(""), body: str = Form("")):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    user_id = current_user["id"]
+    plan = get_user_plan(current_user)
+    limits = get_plan_limits(plan)
+    memo_limit = limits["memo_limit"]
+
+    if memo_limit is not None:
+        total = count_user_all_memos(user_id)
+        if total >= memo_limit:
+            return RedirectResponse("/memo?tab=quick&error=limit_reached", status_code=303)
+
+    memo_id = create_memo(user_id, title.strip(), body.strip())
+    return RedirectResponse(f"/memo/{memo_id}", status_code=303)
+
+
+@app.get("/memo/{memo_id}")
+def memo_detail(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    memo = get_memo_by_id(memo_id, current_user["id"])
+    if not memo:
+        return RedirectResponse("/memo", status_code=303)
+
+    plan = get_user_plan(current_user)
+
+    return templates.TemplateResponse(
+        "memo_detail.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "current_plan": plan,
+            "memo": memo,
+            "memo_type": "quick",
+        }
+    )
+
+
+@app.post("/memo/{memo_id}/update")
+def memo_update(
+    request: Request,
+    memo_id: int,
+    title: str = Form(""),
+    body: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    update_memo(memo_id, current_user["id"], title.strip(), body.strip())
+    return JSONResponse({"ok": True})
+
+
+@app.post("/memo/{memo_id}/delete")
+def memo_delete(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    delete_memo(memo_id, current_user["id"])
+    return RedirectResponse("/memo?tab=quick", status_code=303)
+
+
+@app.post("/memo/{memo_id}/delete_if_empty")
+def memo_delete_if_empty(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    memo = get_memo_by_id(memo_id, current_user["id"])
+    if memo and not memo["title"].strip() and not memo["body"].strip():
+        delete_memo(memo_id, current_user["id"])
+    return JSONResponse({"ok": True})
+
+
+@app.get("/memo/paper/new")
+def paper_memo_new_page(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = current_user["id"]
+    plan = get_user_plan(current_user)
+    limits = get_plan_limits(plan)
+    memo_limit = limits["memo_limit"]
+
+    if memo_limit is not None:
+        total = count_user_all_memos(user_id)
+        if total >= memo_limit:
+            return RedirectResponse("/memo?tab=paper&error=limit_reached", status_code=303)
+
+    saved_papers = get_saved_papers(user_id=user_id)
+    paper_list = [
+        {
+            "pubmed_id": p["pubmed_id"],
+            "display_title": (p.get("jp_title") or p.get("title") or p["pubmed_id"])[:60],
+        }
+        for p in saved_papers
+        if (p.get("folder_name") or "").strip()
+    ]
+
+    return templates.TemplateResponse(
+        "memo_paper_new.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "current_plan": plan,
+            "paper_list": paper_list,
+        }
+    )
+
+
+@app.post("/memo/paper/create")
+def paper_memo_create(
+    request: Request,
+    pubmed_id: str = Form(...),
+    paper_title: str = Form(""),
+    body: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = current_user["id"]
+    plan = get_user_plan(current_user)
+    limits = get_plan_limits(plan)
+    memo_limit = limits["memo_limit"]
+
+    if memo_limit is not None:
+        total = count_user_all_memos(user_id)
+        if total >= memo_limit:
+            return RedirectResponse("/memo?tab=paper&error=limit_reached", status_code=303)
+
+    memo_id = create_paper_memo(user_id, pubmed_id.strip(), paper_title.strip(), body.strip())
+    return RedirectResponse(f"/memo/paper/{memo_id}", status_code=303)
+
+
+@app.get("/memo/paper/{memo_id}")
+def paper_memo_detail(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    memo = get_paper_memo_by_id(memo_id, current_user["id"])
+    if not memo:
+        return RedirectResponse("/memo?tab=paper", status_code=303)
+
+    plan = get_user_plan(current_user)
+
+    return templates.TemplateResponse(
+        "memo_detail.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "current_plan": plan,
+            "memo": memo,
+            "memo_type": "paper",
+        }
+    )
+
+
+@app.post("/memo/paper/{memo_id}/update")
+def paper_memo_update(
+    request: Request,
+    memo_id: int,
+    body: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    update_paper_memo(memo_id, current_user["id"], body.strip())
+    return JSONResponse({"ok": True})
+
+
+@app.post("/memo/paper/{memo_id}/delete")
+def paper_memo_delete(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+
+    delete_paper_memo(memo_id, current_user["id"])
+    return RedirectResponse("/memo?tab=paper", status_code=303)
+
+
+@app.post("/memo/paper/{memo_id}/delete_if_empty")
+def paper_memo_delete_if_empty(request: Request, memo_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False})
+    memo = get_paper_memo_by_id(memo_id, current_user["id"])
+    if memo and not memo["body"].strip():
+        delete_paper_memo(memo_id, current_user["id"])
+    return JSONResponse({"ok": True})
+
 
 def check_trial_expired(user):
 

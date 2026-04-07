@@ -32,7 +32,7 @@
         background: var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 24px 14px 40px;
+        padding: 24px 14px 88px;
       }
 
       .container {
@@ -120,7 +120,7 @@
 
       .tag {
         display: inline-block;
-        background: #eef2ff;
+        background: #eff6ff;
         color: #3730a3;
         padding: 4px 8px;
         margin-right: 6px;
@@ -131,11 +131,13 @@
         text-decoration: none;
         transition:
           background 0.15s ease,
+          color 0.15s ease,
           transform 0.15s ease;
       }
 
       .tag:hover {
-        background: #dbeafe;
+        background: #2563eb;
+        color: #fff;
         transform: translateY(-1px);
       }
 
@@ -179,7 +181,7 @@
         user-select: none;
         border: none;
         background: var(--blue-soft);
-        color: #1d4ed8;
+        color: #2563eb;
         padding: 10px 14px;
         border-radius: 12px;
         font-size: 14px;
@@ -212,58 +214,51 @@
       }
 
       .action-row {
-        margin-top: 14px;
+        margin-top: 10px;
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 2px;
         align-items: center;
+        margin-left: -8px;
       }
 
       .action-button,
       .like-button {
         border: none;
+        background: transparent;
+        color: var(--subtext);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .action-button:hover {
         background: var(--gray-btn);
         color: var(--text);
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 14px;
-        cursor: pointer;
-        transition:
-          background 0.15s ease,
-          transform 0.15s ease,
-          opacity 0.15s ease;
-      }
-
-      .action-button:hover,
-      .like-button:hover {
-        background: var(--gray-btn-hover);
-        transform: translateY(-1px);
-      }
-
-      .like-button {
-        background: var(--blue-soft);
-        color: #1d4ed8;
       }
 
       .like-button:hover {
-        background: var(--blue-soft-hover);
+        background: #eff6ff;
+        color: #2563eb;
       }
 
       .like-button.disabled {
         opacity: 0.45;
         cursor: not-allowed;
-        transform: none;
       }
 
       .like-button.liked {
-        background: #dbeafe;
-        color: #1d4ed8;
+        color: #2563eb;
       }
 
       .like-button.animate-pop {
-        transform: scale(1.06);
-        transition: transform 0.2s ease;
+        transform: scale(1.12);
+        transition: transform 0.18s ease;
       }
 
       .meta {
@@ -370,7 +365,7 @@
         margin-top: 10px;
         font-size: 13px;
         font-weight: 600;
-        color: #64748b;
+        color: #6b7280;
       }
 
       .summary-toggle.is-loading .summary-loading {
@@ -381,12 +376,18 @@
         display: none;
       }
 
-      .like-button.liked::after {
-        content: " ✓";
+      .like-button.liked svg {
+        fill: #2563eb;
+        stroke: #2563eb;
       }
+      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); box-shadow: 0 -8px 32px rgba(15,23,42,0.08); display: flex; align-items: stretch; z-index: 150; }
+      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; }
+      .mobile-footer-link.is-active { color: #2563eb; }
+      .mobile-footer-icon { font-size: 20px; line-height: 1; }
+
       @media (max-width: 640px) {
         body {
-          padding: 16px 12px 28px;
+          padding: 16px 12px 88px;
         }
 
         .page-title {
@@ -508,7 +509,8 @@
               data-pubmed-id="{{ paper.id }}"
               onclick="addLike('{{ paper.id }}', this)"
             >
-              👍 いいね <span class="like-count">{{ paper.likes or 0 }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <span class="like-count">{{ paper.likes or 0 }}</span>
             </button>
 
             <button
@@ -517,7 +519,8 @@
               data-title="{{ paper.jp_title or paper.title }}"
               data-url="/paper?id={{ paper.id }}"
             >
-              ↗ 共有
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              共有
             </button>
           </div>
 
@@ -606,72 +609,49 @@
       <div class="empty-box">論文が見つかりませんでした。</div>
       {% endif %}
     </div>
+    <nav class="mobile-footer">
+      <a href="/" class="mobile-footer-link is-active"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+      <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+      <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+      <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+      <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+    </nav>
+
     <script>
       const SCROLL_KEY = "search_scroll_y";
       const SEARCH_URL_KEY = "search_scroll_url";
 
-      function hasLiked(pubmedId) {
-        const liked = localStorage.getItem("liked_" + pubmedId);
-        return liked === "1";
-      }
-
-      function setLiked(pubmedId) {
-        localStorage.setItem("liked_" + pubmedId, "1");
-      }
-
       function disableLikedButtons() {
-        const buttons = document.querySelectorAll(".like-button");
-
-        buttons.forEach((button) => {
-          const pubmedId = button.dataset.pubmedId;
-          const countSpan = button.querySelector(".like-count");
-          const likeCount = countSpan ? countSpan.textContent.trim() : "0";
-
-          if (hasLiked(pubmedId)) {
-            button.textContent = "👍 いいね " + likeCount;
-            button.classList.add("liked");
-            button.disabled = true;
-          }
-        });
+        // no-op: liked state is now server-driven
       }
 
       async function addLike(pubmedId, button) {
-        if (hasLiked(pubmedId)) {
-          button.classList.add("liked");
-          button.disabled = true;
-          return;
-        }
+        const wasLiked = button.classList.contains("liked");
+        const countSpan = button.querySelector(".like-count");
+        const current = parseInt(countSpan?.textContent || "0");
+
+        // optimistic update
+        button.classList.toggle("liked", !wasLiked);
+        if (countSpan) countSpan.textContent = wasLiked ? current - 1 : current + 1;
+        button.classList.add("animate-pop");
+        setTimeout(() => button.classList.remove("animate-pop"), 250);
+        if (!wasLiked && navigator.vibrate) navigator.vibrate(20);
 
         try {
-          const response = await fetch(`/like/${pubmedId}`, {
-            method: "POST",
-          });
+          const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
 
           if (!response.ok) {
-            alert("いいねAPIでエラーが発生しました: " + response.status);
+            // revert
+            button.classList.toggle("liked", wasLiked);
+            if (countSpan) countSpan.textContent = current;
             return;
           }
 
           const data = await response.json();
-          console.log("like response:", data);
-
-          const countSpan = button.querySelector(".like-count");
 
           if (typeof data.likes !== "undefined") {
-            button.textContent = "👍 いいね " + data.likes;
-
-            setLiked(pubmedId);
-            button.classList.add("liked");
-            button.classList.add("animate-pop");
-            button.disabled = true;
-
-            if (navigator.vibrate) {
-              navigator.vibrate(20);
-            }
-
-            setTimeout(() => {
-              button.classList.remove("animate-pop");
-            }, 250);
+            if (countSpan) countSpan.textContent = data.likes;
+            button.classList.toggle("liked", data.liked);
 
             return;
           }

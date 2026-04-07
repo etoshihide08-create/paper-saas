@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>保存論文 エクスポート</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Hiragino Sans", "Yu Gothic", sans-serif; background: #f5f7fb; color: #111; padding-bottom: 80px; }
+
+    .controls {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.97);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      backdrop-filter: blur(8px);
+    }
+    .controls-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .back-btn { display: flex; align-items: center; gap: 5px; color: #2563eb; font-size: 14px; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .back-btn:hover { opacity: 0.8; }
+    .controls-title { font-size: 17px; font-weight: 800; }
+    .controls-meta { font-size: 12px; color: #6b7280; }
+    .controls-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-size: 12px; font-weight: 700; color: #374151; white-space: nowrap; }
+    .filter-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filter-chip { padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid #d1d5db; background: #fff; color: #6b7280; cursor: pointer; }
+    .filter-chip.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .select-all-btn { font-size: 12px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+    .select-all-btn:hover { background: #eff6ff; }
+
+    /* content */
+    .content { max-width: 800px; margin: 0 auto; padding: 16px; }
+    .count-bar { font-size: 13px; color: #6b7280; margin-bottom: 14px; }
+
+    .paper-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; margin-bottom: 12px; break-inside: avoid; }
+    .paper-item.hidden { display: none; }
+    .paper-item-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .paper-check { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; flex-shrink: 0; margin-top: 3px; }
+    .paper-check-label { flex: 1; cursor: pointer; }
+    .paper-title-ja { font-size: 15px; font-weight: 700; line-height: 1.4; color: #111; margin-bottom: 4px; }
+    .paper-title-en { font-size: 12px; color: #6b7280; line-height: 1.4; margin-bottom: 6px; }
+    .paper-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+    .paper-folder { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; background: #f3f4f6; color: #374151; font-size: 11px; font-weight: 600; }
+    .paper-note { font-size: 13px; line-height: 1.7; color: #374151; white-space: pre-wrap; margin-top: 6px; border-left: 3px solid #e5e7eb; padding-left: 10px; }
+    .paper-link { font-size: 12px; color: #2563eb; text-decoration: none; }
+    .paper-link:hover { text-decoration: underline; }
+
+    .options-row { display: flex; gap: 16px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .options-label { font-size: 12px; font-weight: 700; color: #374151; }
+    .option-check-wrap { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #374151; cursor: pointer; }
+    .option-check-wrap input { accent-color: #2563eb; }
+
+    .empty { text-align: center; padding: 60px; color: #9ca3af; font-size: 15px; }
+
+    @media print {
+      .controls, .mobile-footer { display: none !important; }
+      body { background: #fff; padding-bottom: 0; }
+      .paper-item { border-color: #d1d5db; }
+    }
+
+    .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid #e5e7eb; display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
+    .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; }
+    .mobile-footer-link.is-active { color: #2563eb; }
+    .mobile-footer-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="controls no-print">
+    <div class="controls-top">
+      <a href="javascript:history.back()" class="back-btn">← 戻る</a>
+      <span class="controls-title">📚 保存論文 エクスポート</span>
+      <span class="controls-meta" id="selected-count"></span>
+      <div class="controls-actions">
+        <button class="btn btn-primary" onclick="printSelected()">🖨 PDFとして保存</button>
+        <button class="btn btn-secondary" onclick="downloadCSV()">📥 CSVダウンロード</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">フォルダ：</span>
+      <div class="filter-group" id="folder-filter-group">
+        <button class="filter-chip active" data-folder="" onclick="setFolderFilter('', this)">すべて</button>
+      </div>
+      <button class="select-all-btn" onclick="toggleSelectAll()">全選択 / 解除</button>
+    </div>
+
+    <div class="options-row">
+      <span class="options-label">出力内容：</span>
+      <label class="option-check-wrap"><input type="checkbox" id="opt-abstract" checked> 要約</label>
+      <label class="option-check-wrap"><input type="checkbox" id="opt-note" checked> メモ</label>
+      <label class="option-check-wrap"><input type="checkbox" id="opt-url"> PubMed URL</label>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="count-bar" id="visible-count"></div>
+    <div id="paper-list">
+    {% if papers %}
+      {% for p in papers %}
+      <div class="paper-item"
+           data-folder="{{ p.folder_name or '' }}"
+           data-pubmed="{{ p.pubmed_id }}">
+        <div class="paper-item-top">
+          <input type="checkbox" class="paper-check" checked onchange="updateCount()">
+          <label class="paper-check-label">
+            {% if p.folder_name %}
+            <span class="paper-folder">📁 {{ p.folder_name }}</span>
+            {% endif %}
+            <div class="paper-title-ja">{{ p.jp_title or p.title }}</div>
+            {% if p.jp_title and p.title %}
+            <div class="paper-title-en">{{ p.title }}</div>
+            {% endif %}
+          </label>
+        </div>
+        <div class="paper-meta">
+          {% if p.authors %}<span>{{ p.authors[:60] }}{% if p.authors|length > 60 %}…{% endif %}</span>{% endif %}
+          {% if p.journal %}<span>{{ p.journal }}</span>{% endif %}
+          {% if p.pubdate %}<span>{{ p.pubdate }}</span>{% endif %}
+        </div>
+        {% if p.summary_jp %}
+        <div class="paper-note export-abstract" style="border-color:#bfdbfe;background:#f0f9ff;margin-bottom:6px;">{{ p.summary_jp }}</div>
+        {% endif %}
+        {% if p.user_note %}
+        <div class="paper-note export-note">{{ p.user_note }}</div>
+        {% endif %}
+        <div class="export-url" style="display:none;margin-top:6px;">
+          <a href="https://pubmed.ncbi.nlm.nih.gov/{{ p.pubmed_id }}/" class="paper-link" target="_blank">
+            https://pubmed.ncbi.nlm.nih.gov/{{ p.pubmed_id }}/
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">保存した論文がありません</div>
+    {% endif %}
+    </div>
+  </div>
+
+  <nav class="mobile-footer no-print">
+    <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+    <a href="/board" class="mobile-footer-link"><span class="mobile-footer-icon">💬</span><span>掲示板</span></a>
+    <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+    <a href="/saved" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+    <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+  </nav>
+
+  <script>
+    let folderFilter = "";
+
+    // Build folder chips
+    const folders = new Set();
+    document.querySelectorAll(".paper-item[data-folder]").forEach(el => {
+      if (el.dataset.folder) folders.add(el.dataset.folder);
+    });
+    const fg = document.getElementById("folder-filter-group");
+    folders.forEach(f => {
+      const btn = document.createElement("button");
+      btn.className = "filter-chip";
+      btn.dataset.folder = f;
+      btn.textContent = "📁 " + f;
+      btn.onclick = () => setFolderFilter(f, btn);
+      fg.appendChild(btn);
+    });
+
+    function setFolderFilter(folder, btn) {
+      folderFilter = folder;
+      document.querySelectorAll("[data-folder]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilters();
+    }
+
+    function applyFilters() {
+      document.querySelectorAll(".paper-item").forEach(el => {
+        const match = !folderFilter || el.dataset.folder === folderFilter;
+        el.classList.toggle("hidden", !match);
+      });
+      updateCount();
+    }
+
+    // Content options
+    document.getElementById("opt-abstract").addEventListener("change", function() {
+      document.querySelectorAll(".export-abstract").forEach(el => el.style.display = this.checked ? "" : "none");
+    });
+    document.getElementById("opt-note").addEventListener("change", function() {
+      document.querySelectorAll(".export-note").forEach(el => el.style.display = this.checked ? "" : "none");
+    });
+    document.getElementById("opt-url").addEventListener("change", function() {
+      document.querySelectorAll(".export-url").forEach(el => el.style.display = this.checked ? "" : "none");
+    });
+
+    function updateCount() {
+      const visible = document.querySelectorAll(".paper-item:not(.hidden)");
+      const checked = document.querySelectorAll(".paper-item:not(.hidden) .paper-check:checked");
+      document.getElementById("visible-count").textContent = `${visible.length} 件表示`;
+      document.getElementById("selected-count").textContent = `${checked.length} 件選択中`;
+    }
+
+    function toggleSelectAll() {
+      const visible = document.querySelectorAll(".paper-item:not(.hidden) .paper-check");
+      const allChecked = Array.from(visible).every(c => c.checked);
+      visible.forEach(c => c.checked = !allChecked);
+      updateCount();
+    }
+
+    function printSelected() {
+      document.querySelectorAll(".paper-item").forEach(el => {
+        const cb = el.querySelector(".paper-check");
+        el._wasHidden = el.classList.contains("hidden");
+        if (!cb || !cb.checked) el.classList.add("hidden");
+      });
+      window.print();
+      setTimeout(() => {
+        document.querySelectorAll(".paper-item").forEach(el => {
+          if (!el._wasHidden) el.classList.remove("hidden");
+        });
+      }, 500);
+    }
+
+    function downloadCSV() {
+      const inclAbstract = document.getElementById("opt-abstract").checked;
+      const inclNote = document.getElementById("opt-note").checked;
+      const inclUrl = document.getElementById("opt-url").checked;
+
+      const headers = ["タイトル（日本語）","タイトル（英語）","著者","雑誌","公開日","フォルダ"];
+      if (inclAbstract) headers.push("要約");
+      if (inclNote) headers.push("メモ");
+      if (inclUrl) headers.push("URL");
+      const rows = [headers];
+
+      document.querySelectorAll(".paper-item:not(.hidden)").forEach(el => {
+        const cb = el.querySelector(".paper-check");
+        if (!cb || !cb.checked) return;
+        const titleJa = el.querySelector(".paper-title-ja")?.textContent.trim() || "";
+        const titleEn = el.querySelector(".paper-title-en")?.textContent.trim() || "";
+        const metas = el.querySelectorAll(".paper-meta span");
+        const authors = metas[0]?.textContent.trim() || "";
+        const journal = metas[1]?.textContent.trim() || "";
+        const pubdate = metas[2]?.textContent.trim() || "";
+        const folder = el.dataset.folder || "";
+        const row = [titleJa, titleEn, authors, journal, pubdate, folder];
+        if (inclAbstract) row.push(el.querySelector(".export-abstract")?.textContent.trim() || "");
+        if (inclNote) row.push(el.querySelector(".export-note")?.textContent.trim() || "");
+        if (inclUrl) row.push(`https://pubmed.ncbi.nlm.nih.gov/${el.dataset.pubmed}/`);
+        rows.push(row);
+      });
+
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "saved_papers.csv" });
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    updateCount();
+  </script>
+</body>
+</html>

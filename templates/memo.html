@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>メモ — リハエビデンスナビ</title>
+
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --sidebar-bg: #ffffff;
+        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .app-layout { min-height: 100vh; }
+
+      .sidebar { display: none; }
+
+      .main-area {
+        min-height: 100vh;
+        padding: 20px 16px 100px;
+      }
+
+      .container { max-width: 680px; margin: 0 auto; }
+
+      /* ── ヘッダー ── */
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .page-title {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .memo-count-badge {
+        font-size: 12px;
+        color: var(--subtext);
+        font-weight: 600;
+        padding: 4px 10px;
+        background: #f1f5f9;
+        border-radius: 999px;
+      }
+
+      /* ── タブ切り替え (月額/年額スタイル) ── */
+      .tab-toggle {
+        display: inline-flex;
+        background: #f1f5f9;
+        border-radius: 999px;
+        padding: 4px;
+        margin-bottom: 20px;
+        gap: 2px;
+      }
+
+      .tab-btn {
+        padding: 8px 20px;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--subtext);
+        cursor: pointer;
+        transition: all 0.18s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .tab-btn.is-active {
+        background: #111827;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(17, 24, 39, 0.18);
+      }
+
+      /* ── 制限バナー ── */
+      .limit-banner {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #92400e;
+      }
+
+      .limit-banner a {
+        color: #b45309;
+        font-weight: 700;
+        text-decoration: underline;
+      }
+
+      /* ── メモカード ── */
+      .memo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .memo-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--line);
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+      }
+
+      .memo-card:hover {
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
+      }
+
+      .memo-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .memo-card-title {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.45;
+        letter-spacing: -0.01em;
+        flex: 1;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .memo-card-title.empty {
+        color: var(--subtext);
+        font-style: italic;
+        font-weight: 500;
+      }
+
+      .memo-card-date {
+        font-size: 12px;
+        color: var(--subtext);
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .memo-card-preview {
+        font-size: 14px;
+        color: var(--subtext);
+        line-height: 1.65;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .memo-paper-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 10px;
+        padding: 4px 10px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* ── 空の状態 ── */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--subtext);
+      }
+
+      .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        line-height: 1;
+      }
+
+      .empty-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+
+      .empty-sub {
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      /* ── FAB (+ ボタン) ── */
+      .fab {
+        position: fixed;
+        bottom: calc(24px + env(safe-area-inset-bottom));
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        border: none;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 24px rgba(17, 24, 39, 0.3);
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        z-index: 500;
+        line-height: 1;
+      }
+
+      .fab:hover {
+        transform: scale(1.08);
+        box-shadow: 0 10px 32px rgba(17, 24, 39, 0.38);
+      }
+
+      .fab:active { transform: scale(0.96); }
+
+      /* ── モバイルフッター ── */
+      .mobile-footer { display: none; }
+
+      /* ── サイドバー (デスクトップ) ── */
+      @media (min-width: 980px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 18px 16px;
+          background: var(--sidebar-bg);
+          border-right: 1px solid var(--line);
+        }
+
+        .sidebar-brand { padding: 8px 10px 20px; }
+
+        .sidebar-title {
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: #111827;
+          line-height: 1.4;
+        }
+
+        .sidebar-subtext {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--subtext);
+        }
+
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .sidebar-link, .sidebar-button {
+          width: 100%;
+          border: none;
+          background: transparent;
+          text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 12px;
+          border-radius: 14px;
+          color: #374151;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .sidebar-link:hover, .sidebar-button:hover {
+          background: #f8fafc;
+          color: #111827;
+        }
+
+        .sidebar-link.is-active {
+          background: #eff6ff;
+          color: #3730a3;
+        }
+
+        .sidebar-icon {
+          width: 20px;
+          text-align: center;
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 14px 10px 8px;
+          border-top: 1px solid var(--line);
+        }
+
+        .sidebar-plan {
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--subtext);
+          margin-bottom: 10px;
+        }
+
+        .sidebar-auth {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .sidebar-auth-text {
+          font-size: 12px;
+          color: #6b7280;
+          line-height: 1.5;
+          word-break: break-word;
+        }
+
+        .sidebar-auth-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: #111827;
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .sidebar-auth-link:hover { opacity: 0.92; }
+
+        .main-area { padding: 28px 32px 60px; }
+
+        .fab {
+          bottom: 32px;
+          right: 36px;
+        }
+      }
+
+      @media (max-width: 979px) {
+        .main-area { padding: 16px 12px 100px; }
+
+        .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
+        .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+        .mobile-footer-link.is-active { color: #2563eb; }
+        .mobile-footer-icon { font-size: 20px; line-height: 1; }
+
+        .fab { bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout">
+
+      <!-- サイドバー -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-title">リハエビデンスナビ</div>
+          <div class="sidebar-subtext">PubMed論文を日本語で素早く理解し、臨床判断にそのまま使える形で整理。</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link">
+            <span class="sidebar-icon">🏠</span><span>検索</span>
+          </a>
+          <a href="/" class="sidebar-link">
+            <span class="sidebar-icon">⭐</span><span>ランキング</span>
+          </a>
+          <a href="/memo" class="sidebar-link is-active">
+            <span class="sidebar-icon">📝</span><span>メモ</span>
+          </a>
+          <a href="/saved" class="sidebar-link">
+            <span class="sidebar-icon">📚</span><span>保存</span>
+          </a>
+          <a href="/plans" class="sidebar-link">
+            <span class="sidebar-icon">👤</span><span>マイページ</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-plan">現在のプラン：<b>{{ current_plan }}</b></div>
+          <div class="sidebar-auth">
+            <div class="sidebar-auth-text">{{ current_user.email }}</div>
+            <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- メインコンテンツ -->
+      <main class="main-area">
+        <div class="container">
+
+          <!-- ヘッダー -->
+          <div class="page-header">
+            <div class="page-title">メモ</div>
+            {% if memo_limit is not none %}
+            <div class="memo-count-badge">{{ total_count }} / {{ memo_limit }}件</div>
+            {% else %}
+            <div class="memo-count-badge">{{ total_count }}件</div>
+            {% endif %}
+            <a href="/memo/export?fmt=print" target="_blank" style="margin-left:auto;font-size:12px;color:#6b7280;text-decoration:none;font-weight:600;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;">📥 エクスポート</a>
+          </div>
+
+          <!-- タブ切り替え -->
+          <div>
+            <div class="tab-toggle">
+              <a href="/memo?tab=quick"
+                 class="tab-btn {% if tab == 'quick' %}is-active{% endif %}">
+                ✏️ クイックメモ
+              </a>
+              <a href="/memo?tab=paper"
+                 class="tab-btn {% if tab == 'paper' %}is-active{% endif %}">
+                📄 論文メモ
+              </a>
+            </div>
+          </div>
+
+          <!-- 制限バナー -->
+          {% if memo_limit == 0 %}
+          <div class="limit-banner">
+            メモ機能はログインユーザー限定です。<a href="/register">無料登録</a>すると15件まで使えます。
+          </div>
+          {% elif memo_limit is not none and total_count >= memo_limit %}
+          <div class="limit-banner">
+            メモが上限（{{ memo_limit }}件）に達しました。
+            <a href="/plans">プランをアップグレード</a>すると無制限で使えます。
+          </div>
+          {% endif %}
+
+          {% set can_add = (memo_limit is none) or (total_count < memo_limit) %}
+
+          <!-- クイックメモタブ -->
+          {% if tab == 'quick' %}
+            {% if quick_memos %}
+            <div class="memo-list">
+              {% for memo in quick_memos %}
+              <a href="/memo/{{ memo.id }}" class="memo-card">
+                <div class="memo-card-header">
+                  <div class="memo-card-title {% if not memo.title %}empty{% endif %}">
+                    {{ memo.title if memo.title else "無題のメモ" }}
+                  </div>
+                  <div class="memo-card-date">
+                    {{ memo.updated_at[:10] }}
+                  </div>
+                </div>
+                {% if memo.body %}
+                <div class="memo-card-preview">{{ memo.body }}</div>
+                {% endif %}
+              </a>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">✏️</div>
+              <div class="empty-title">クイックメモはまだありません</div>
+              <div class="empty-sub">右下の + ボタンで<br>すぐにメモを始められます</div>
+            </div>
+            {% endif %}
+
+            {% if can_add %}
+            <a href="#" class="fab" id="fab-quick" onclick="createQuickMemo(event)">+</a>
+            {% endif %}
+
+          <!-- 論文メモタブ -->
+          {% else %}
+            {% if paper_memos %}
+            <div class="memo-list">
+              {% for memo in paper_memos %}
+              <a href="/memo/paper/{{ memo.id }}" class="memo-card">
+                <div class="memo-card-header">
+                  <div class="memo-card-title {% if not memo.body %}empty{% endif %}">
+                    {{ memo.paper_title[:50] if memo.paper_title else "論文メモ" }}
+                  </div>
+                  <div class="memo-card-date">
+                    {{ memo.updated_at[:10] }}
+                  </div>
+                </div>
+                {% if memo.body %}
+                <div class="memo-card-preview">{{ memo.body }}</div>
+                {% endif %}
+                <div class="memo-paper-tag">
+                  📄 PMID: {{ memo.pubmed_id }}
+                </div>
+              </a>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">📄</div>
+              <div class="empty-title">論文メモはまだありません</div>
+              <div class="empty-sub">保存済みの論文にメモを紐付けて<br>知識を体系化できます</div>
+            </div>
+            {% endif %}
+
+            {% if can_add %}
+            <a href="/memo/paper/new" class="fab">+</a>
+            {% endif %}
+          {% endif %}
+
+        </div>
+      </main>
+
+      <!-- モバイルフッター -->
+      <nav class="mobile-footer">
+        <a href="/" class="mobile-footer-link">
+          <span class="mobile-footer-icon">🏠</span>
+          <span>検索</span>
+        </a>
+        <a href="/learn" class="mobile-footer-link">
+          <span class="mobile-footer-icon">📖</span>
+          <span>学ぶ</span>
+        </a>
+        <a href="/memo" class="mobile-footer-link is-active">
+          <span class="mobile-footer-icon">📝</span>
+          <span>メモ</span>
+        </a>
+        <a href="/saved" class="mobile-footer-link">
+          <span class="mobile-footer-icon">📚</span>
+          <span>保存</span>
+        </a>
+        <a href="/mypage" class="mobile-footer-link">
+          <span class="mobile-footer-icon">👤</span>
+          <span>マイページ</span>
+        </a>
+      </nav>
+    </div>
+
+    <script>
+      function createQuickMemo(e) {
+        e.preventDefault();
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/memo/create";
+        document.body.appendChild(form);
+        form.submit();
+      }
+    </script>
+  </body>
+</html>

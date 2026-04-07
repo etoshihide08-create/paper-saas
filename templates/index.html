@@ -65,7 +65,7 @@
 
       .plan-box {
         padding: 8px 12px;
-        background: #eef2ff;
+        background: #eff6ff;
         border-radius: 999px;
         font-size: 13px;
         color: #374151;
@@ -73,13 +73,10 @@
       }
 
       .top-auth {
-        position: fixed;
-        top: 16px;
-        right: 16px;
         display: flex;
         align-items: center;
         gap: 10px;
-        z-index: 1000;
+        margin-left: auto;
       }
 
       .top-auth-text {
@@ -107,15 +104,16 @@
       }
 
       .top-auth-link:hover {
-        opacity: 0.92;
+        opacity: 0.88;
       }
 
       .main-card {
         background: var(--card);
-        border: 1px solid rgba(229, 231, 235, 0.9);
+        border: 1px solid rgba(226,232,240,0.8);
+        border-top: 3px solid #2563eb;
         border-radius: var(--radius);
         padding: 36px;
-        box-shadow: var(--shadow);
+        box-shadow: 0 4px 24px rgba(15,23,42,0.08);
         margin-bottom: 28px;
       }
 
@@ -162,8 +160,8 @@
 
       .search-input:focus {
         outline: none;
-        border-color: #93c5fd;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        border-color: #2563eb;
+        
       }
 
       .search-btn {
@@ -171,20 +169,85 @@
         font-size: 16px;
         font-weight: 800;
         border: none;
-        border-radius: 16px;
+        border-radius: 14px;
         background: var(--blue);
         color: white;
         cursor: pointer;
-        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
       }
 
       .search-btn:hover {
         opacity: 0.94;
       }
 
+      /* ── Search Tag Picker ── */
+      .tag-section {
+        margin-top: 16px;
+      }
+
+      .tag-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+      }
+      .tag-row::-webkit-scrollbar { display: none; }
+
+      .tag-chip {
+        flex-shrink: 0;
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1.5px solid #d1d5db;
+        background: #fff;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        user-select: none;
+      }
+      .tag-chip:hover { border-color: var(--blue); color: var(--blue); }
+      .tag-chip.active {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+
+      .tag-sub-section {
+        display: none;
+        margin-top: 10px;
+        padding: 12px 14px;
+        background: #eff6ff;
+        border-radius: 14px;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag-sub-section.open { display: flex; }
+
+      .tag-sub-chip {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1.5px solid #bfdbfe;
+        background: #fff;
+        color: #1e40af;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        user-select: none;
+      }
+      .tag-sub-chip:hover { background: #dbeafe; }
+      .tag-sub-chip.selected {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+
       .ranking-card {
         background: var(--card);
-        border: 1px solid rgba(229, 231, 235, 0.9);
+        border: 1px solid rgba(226,232,240,0.8);
         border-radius: var(--radius);
         padding: 28px;
         box-shadow: var(--shadow);
@@ -242,7 +305,7 @@
         font-weight: 700;
         padding: 6px 10px;
         border-radius: 999px;
-        background: #eef2ff;
+        background: #eff6ff;
         color: #3730a3;
       }
 
@@ -319,7 +382,7 @@
 
       .section-toggle-btn {
         border: none;
-        background: #eef2ff;
+        background: #eff6ff;
         color: #3730a3;
         padding: 10px 14px;
         border-radius: 999px;
@@ -414,7 +477,7 @@
 
         .sidebar-link.is-active,
         .sidebar-button.is-active {
-          background: #eef2ff;
+          background: #eff6ff;
           color: #1e3a8a;
         }
 
@@ -487,7 +550,7 @@
         }
       }
 
-      @media (max-width: 640px) {
+      @media (max-width: 979px) {
         .main-area {
           padding: 16px 12px 92px;
         }
@@ -506,15 +569,10 @@
         }
 
         .top-auth {
-          position: fixed;
-          top: 10px;
-          right: 12px;
-          width: 132px;
-          display: flex;
-          flex-direction: column-reverse;
-          align-items: stretch;
-          gap: 4px;
-          z-index: 1000;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 6px;
         }
 
         .top-auth-link {
@@ -640,10 +698,11 @@
           display: grid;
           grid-template-columns: repeat(5, 1fr);
           align-items: stretch;
-          background: rgba(255, 255, 255, 0.96);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-top: 1px solid rgba(229, 231, 235, 0.95);
+          background: #fff;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(226,232,240,0.8);
+          box-shadow: 0 -2px 12px rgba(15,23,42,0.06);
           padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
           z-index: 1100;
         }
@@ -679,7 +738,7 @@
 
         .mobile-footer-link.is-active,
         .mobile-footer-button.is-active {
-          color: #111827;
+          color: #2563eb;
           background: #f8fafc;
         }
 
@@ -736,21 +795,17 @@
             <span>ランキング</span>
           </button>
 
-          <button
-            type="button"
-            class="sidebar-button"
-            onclick="openDesktopNoteToast()"
-          >
+          <a href="/memo" class="sidebar-link">
             <span class="sidebar-icon">📝</span>
             <span>メモ</span>
-          </button>
+          </a>
 
           <a href="/saved" class="sidebar-link">
             <span class="sidebar-icon">📚</span>
             <span>保存</span>
           </a>
 
-          <a href="/plans" class="sidebar-link">
+          <a href="/mypage" class="sidebar-link">
             <span class="sidebar-icon">👤</span>
             <span>マイページ</span>
           </a>
@@ -786,16 +841,16 @@
               endif %}
             </b>
           </div>
-        </div>
 
-        <div class="top-auth">
-          {% if current_user %}
-          <span class="top-auth-text">{{ current_user.email }}</span>
-          <a href="/logout" class="top-auth-link">ログアウト</a>
-          {% else %}
-          <a href="/register" class="top-auth-link">新規登録</a>
-          <a href="/login" class="top-auth-link">ログイン</a>
-          {% endif %}
+          <div class="top-auth">
+            {% if current_user %}
+            <span class="top-auth-text">{{ current_user.email }}</span>
+            <a href="/logout" class="top-auth-link">ログアウト</a>
+            {% else %}
+            <a href="/register" class="top-auth-link">新規登録</a>
+            <a href="/login" class="top-auth-link">ログイン</a>
+            {% endif %}
+          </div>
         </div>
 
         <div class="container">
@@ -824,6 +879,12 @@
               </div>
             </form>
 
+            <!-- Search Tag Picker -->
+            <div class="tag-section" id="tag-section">
+              <div class="tag-row" id="tag-main-row"></div>
+              <div class="tag-sub-section" id="tag-sub-section"></div>
+            </div>
+
             <p class="sub-text">
               検索からすぐ読み始められます。保存・ランキング・マイページはナビから移動できます。
             </p>
@@ -845,6 +906,15 @@
               onclick="showRankingSection('score-ranking')"
             >
               臨床参考度ランキング
+            </button>
+            <button
+              type="button"
+              class="section-toggle-btn"
+              id="trend-toggle-btn"
+              onclick="showRankingSection('trend-ranking')"
+              style="background:#f3e8ff; color:#7c3aed;"
+            >
+              📈 PubMedトレンド
             </button>
           </div>
 
@@ -883,6 +953,7 @@
                 <div>PubMed ID: {{ paper.pubmed_id }}</div>
                 <div>雑誌: {{ paper.journal }}</div>
                 <div>公開日: {{ paper.pubdate }}</div>
+                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
               </div>
 
               <div class="ranking-link-row">
@@ -933,6 +1004,7 @@
                 <div>PubMed ID: {{ paper.pubmed_id }}</div>
                 <div>雑誌: {{ paper.journal }}</div>
                 <div>公開日: {{ paper.pubdate }}</div>
+                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
               </div>
 
               <div class="ranking-link-row">
@@ -947,6 +1019,53 @@
             <div class="empty-box">まだ高評価論文はありません。</div>
             {% endif %}
           </div>
+
+          <div id="trend-ranking" class="ranking-card hidden">
+            <div class="card-header">
+              <h2>📈 PubMedトレンド論文</h2>
+            </div>
+            <div style="padding:10px 0 14px; font-size:13px; color:#7c3aed; line-height:1.7; background:#f3e8ff; border-radius:12px; padding:10px 14px; margin-bottom:14px;">
+              PubMedで最近アクティビティが増えている論文です。累積閲覧数順ではありません。
+            </div>
+
+            {% if trending_papers %} {% for paper in trending_papers %}
+            <div class="ranking-item">
+              <div class="ranking-item-header">
+                <div class="ranking-rank">
+                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
+                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
+                  loop.index }}位 {% endif %}
+                </div>
+                <div class="ranking-badge" style="background:#f3e8ff; color:#7c3aed;">
+                  📈 トレンド
+                </div>
+              </div>
+
+              <div class="ranking-title-ja">
+                <a href="/paper?id={{ paper.pubmed_id }}">
+                  {{ paper.jp_title or paper.title }}
+                </a>
+              </div>
+
+              {% if paper.jp_title %}
+              <div class="ranking-title-en">{{ paper.title }}</div>
+              {% endif %}
+
+              <div class="ranking-meta">
+                <div>PubMed ID: {{ paper.pubmed_id }}</div>
+                <div>雑誌: {{ paper.journal }}</div>
+                <div>公開日: {{ paper.pubdate }}</div>
+                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
+              </div>
+
+              <div class="ranking-link-row">
+                <a href="/paper?id={{ paper.pubmed_id }}" class="ranking-detail-link">詳細を見る</a>
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <div class="empty-box">トレンドデータを取得中です。しばらくしてから再度お試しください。</div>
+            {% endif %}
+          </div>
         </div>
       </main>
     </div>
@@ -957,43 +1076,27 @@
         <span>検索</span>
       </a>
 
-      <button
-        type="button"
-        class="mobile-footer-button"
-        id="mobile-ranking-button"
-        onclick="toggleRankingHome()"
-      >
-        <span class="mobile-footer-icon">⭐</span>
-        <span>ランキング</span>
-      </button>
+      <a href="/learn" class="mobile-footer-link">
+        <span class="mobile-footer-icon">📖</span>
+        <span>学ぶ</span>
+      </a>
 
-      <button
-        type="button"
-        class="mobile-footer-button"
-        onclick="openMobileNoteToast()"
-      >
+      <a href="/memo" class="mobile-footer-link">
         <span class="mobile-footer-icon">📝</span>
         <span>メモ</span>
-      </button>
+      </a>
 
       <a href="/saved" class="mobile-footer-link">
         <span class="mobile-footer-icon">📚</span>
         <span>保存</span>
       </a>
 
-      <a href="/plans" class="mobile-footer-link">
+      <a href="/mypage" class="mobile-footer-link">
         <span class="mobile-footer-icon">👤</span>
         <span>マイページ</span>
       </a>
     </nav>
 
-    <div id="mobile-note-toast" class="mobile-note-toast">
-      <div class="mobile-note-toast-title">メモは準備中です</div>
-      <div>
-        まずは保存した論文の整理機能を優先しています。<br />
-        今後、学習メモを残せる形へつなげる予定です。
-      </div>
-    </div>
 
     <script>
       function setRankingActiveState(isRankingOpen) {
@@ -1023,28 +1126,25 @@
       function showRankingSection(sectionId) {
         const popular = document.getElementById("popular-ranking");
         const score = document.getElementById("score-ranking");
+        const trend = document.getElementById("trend-ranking");
         const popularBtn = document.getElementById("popular-toggle-btn");
         const scoreBtn = document.getElementById("score-toggle-btn");
+        const trendBtn = document.getElementById("trend-toggle-btn");
 
-        if (!popular || !score) return;
-
-        popular.classList.add("hidden");
-        score.classList.add("hidden");
-
-        if (popularBtn) popularBtn.classList.remove("is-active");
-        if (scoreBtn) scoreBtn.classList.remove("is-active");
+        [popular, score, trend].forEach(el => { if (el) el.classList.add("hidden"); });
+        [popularBtn, scoreBtn, trendBtn].forEach(btn => { if (btn) btn.classList.remove("is-active"); });
 
         const target = document.getElementById(sectionId);
         if (!target) return;
 
         target.classList.remove("hidden");
 
-        if (sectionId === "popular-ranking" && popularBtn) {
-          popularBtn.classList.add("is-active");
-        }
-
-        if (sectionId === "score-ranking" && scoreBtn) {
-          scoreBtn.classList.add("is-active");
+        if (sectionId === "popular-ranking" && popularBtn) popularBtn.classList.add("is-active");
+        if (sectionId === "score-ranking" && scoreBtn) scoreBtn.classList.add("is-active");
+        if (sectionId === "trend-ranking" && trendBtn) {
+          trendBtn.classList.add("is-active");
+          trendBtn.style.background = "#7c3aed";
+          trendBtn.style.color = "white";
         }
 
         setRankingActiveState(true);
@@ -1071,6 +1171,110 @@
         showRankingSection("popular-ranking");
       }
 
+      // ── Search Tag Picker ──
+      const SEARCH_TAGS = {
+        "整形":           ["変形性膝関節症", "人工膝関節術後", "前十字靱帯損傷", "半月板損傷", "変形性股関節症", "人工股関節術後", "肩関節周囲炎", "腱板損傷", "肩峰下インピンジメント症候群", "反復性肩関節脱臼", "腰痛症", "腰部脊柱管狭窄症", "腰椎椎間板ヘルニア", "骨粗鬆症", "肩こり"],
+        "骨折":           ["大腿骨近位部骨折", "橈骨遠位端骨折", "上腕骨近位端骨折", "骨盤骨折", "脊椎圧迫骨折", "疲労骨折", "骨粗鬆症性骨折"],
+        "中枢":           ["脳梗塞", "脳出血", "くも膜下出血", "片麻痺", "四肢麻痺", "脳性麻痺", "脊髄損傷", "プッシャー症候群", "高次脳機能障害"],
+        "脳神経":         ["パーキンソン病", "神経難病", "多系統萎縮症", "進行性核上性麻痺", "筋萎縮性側索硬化症", "多発性硬化症", "ギラン・バレー症候群", "末梢神経障害"],
+        "呼吸器":         ["COPD", "誤嚥性肺炎", "間質性肺炎", "呼吸不全", "術後肺合併症", "人工呼吸器管理", "嚥下障害"],
+        "循環器":         ["心不全", "心筋梗塞", "狭心症", "不整脈", "末梢動脈疾患", "心臓術後", "心臓リハビリテーション"],
+        "糖尿病":         ["2型糖尿病", "糖尿病性末梢神経障害", "糖尿病足病変", "糖尿病腎症", "低血糖", "フットケア", "血糖管理"],
+        "腎臓リハ":       ["慢性腎臓病", "保存期CKD", "血液透析", "腹膜透析", "腎性貧血", "低栄養", "透析中運動"],
+        "高齢者・フレイル": ["フレイル", "プレフレイル", "サルコペニア", "ロコモティブシンドローム", "認知症", "軽度認知障害", "廃用症候群", "せん妄", "多疾患併存", "転倒", "介護予防", "在宅復帰"],
+        "小児リハ":       ["脳性麻痺", "発達障害", "自閉スペクトラム症", "ダウン症", "摂食嚥下障害", "姿勢運動発達遅滞", "家族支援"],
+        "訪問・地域":     ["訪問リハビリテーション", "在宅生活支援", "家屋調査", "福祉用具選定", "家族指導", "地域連携", "介護予防"],
+        "歩行・バランス": ["歩行障害", "歩行速度低下", "すくみ足", "バランス障害", "転倒予防", "6分間歩行試験", "TUG", "歩行補助具"],
+        "上肢":           ["上肢機能障害", "肩痛", "手指巧緻動作障害", "拘縮", "スプリント", "肩関節周囲炎", "腱板損傷"],
+        "ADL・生活機能":  ["ADL低下", "IADL低下", "移乗動作", "起立動作", "更衣動作", "排泄動作", "入浴動作", "退院支援"],
+        "嚥下・言語・認知": ["嚥下障害", "誤嚥", "失語症", "注意障害", "認知障害", "半側空間無視", "コミュニケーション障害"],
+        "検査測定":       ["問診", "血圧", "心拍数", "SpO2", "筋力評価", "可動域測定", "疼痛評価", "FIM", "Berg Balance Scale", "TUG", "6分間歩行試験"],
+        "目標設定・教育": ["短期目標", "長期目標", "退院目標", "在宅復帰目標", "SMART目標", "患者参加型目標設定", "患者教育", "家族指導", "自己管理", "セルフエフェカシー", "セルフマネジメント"],
+        "アセスメント":   ["ICF", "問題点抽出", "予後予測", "臨床推論", "情報統合", "活動制限", "参加制約", "環境因子"],
+        "心のケア":       ["ラポール形成", "傾聴", "家族対応", "認知症対応", "動機づけ面接", "不安", "抑うつ", "意欲低下", "受容支援", "心理的サポート"],
+        "薬":             ["鎮痛薬", "NSAIDs", "オピオイド", "β遮断薬", "利尿薬", "抗凝固薬", "抗血小板薬", "抗パーキンソン薬"],
+        "リスク管理":     ["転倒リスク", "血圧変動", "不整脈", "呼吸困難", "低酸素", "DVT", "PE", "出血リスク", "急変対応", "一次救命"],
+        "離床":           ["早期離床", "ICU離床", "術後離床", "ベッド上離床", "端座位", "立位練習", "離床中止基準"],
+        "感染症":         ["誤嚥性肺炎", "COVID-19", "院内感染", "感染対策", "標準予防策", "PPE", "手指衛生"],
+        "多職種連携":     ["カンファレンス", "退院前カンファレンス", "情報共有", "ゴール共有", "地域連携", "退院支援"],
+        "疼痛":           ["急性疼痛", "慢性疼痛", "神経障害性疼痛", "術後疼痛", "慢性腰痛", "CRPS", "疼痛評価", "疼痛教育"],
+        "装具":           ["AFO", "KAFO", "短下肢装具", "長下肢装具", "手関節装具", "スプリント", "杖", "歩行器"],
+        "スポーツ":       ["足関節捻挫", "ACL損傷", "半月板損傷", "ジャンパー膝", "シンスプリント", "疲労骨折", "肉離れ", "return to sport"],
+        "病期・場面":     ["急性期", "ICU", "回復期", "地域包括期", "在宅・訪問", "術後"],
+        "防災リハ":       ["災害時支援", "避難所生活", "在宅避難", "廃用予防", "要配慮者支援", "福祉用具", "地域連携"],
+        "基礎医学":       ["解剖学", "生理学", "運動学", "病理学"],
+        "評価・研究デザイン": ["RCT", "システマティックレビュー", "メタアナリシス", "コホート研究", "症例報告", "評価指標", "介入研究"],
+      };
+
+      let activeCategory = null;
+
+      function initTagPicker() {
+        const mainRow = document.getElementById("tag-main-row");
+        Object.keys(SEARCH_TAGS).forEach(cat => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "tag-chip";
+          chip.textContent = cat;
+          chip.onclick = () => toggleCategory(cat, chip);
+          mainRow.appendChild(chip);
+        });
+      }
+
+      function toggleCategory(cat, chip) {
+        const subSection = document.getElementById("tag-sub-section");
+        const allChips = document.querySelectorAll(".tag-chip");
+
+        if (activeCategory === cat) {
+          // Collapse
+          activeCategory = null;
+          subSection.classList.remove("open");
+          allChips.forEach(c => c.classList.remove("active"));
+          return;
+        }
+
+        activeCategory = cat;
+        allChips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+
+        // Build sub-chips
+        subSection.innerHTML = "";
+        SEARCH_TAGS[cat].forEach(sub => {
+          const sc = document.createElement("button");
+          sc.type = "button";
+          sc.className = "tag-sub-chip";
+          sc.textContent = sub;
+          sc.onclick = () => selectSubTag(sub, sc);
+          subSection.appendChild(sc);
+        });
+        subSection.classList.add("open");
+
+        // Scroll sub section into view smoothly
+        subSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function selectSubTag(term, chip) {
+        const input = document.querySelector(".search-input");
+        if (!input) return;
+
+        // Toggle: if already in input, remove it; otherwise append
+        const current = input.value.trim();
+        const terms = current ? current.split(/\s+/) : [];
+        const idx = terms.indexOf(term);
+
+        if (idx !== -1) {
+          terms.splice(idx, 1);
+          chip.classList.remove("selected");
+        } else {
+          terms.push(term);
+          chip.classList.add("selected");
+        }
+
+        input.value = terms.join(" ");
+        input.focus();
+      }
+
+      document.addEventListener("DOMContentLoaded", initTagPicker);
+
       function showSearchLoading(form) {
         const submitButton =
           form.querySelector("[data-search-submit]") ||
@@ -1086,23 +1290,6 @@
         return true;
       }
 
-      function openMobileNoteToast() {
-        const toast = document.getElementById("mobile-note-toast");
-        if (!toast) return;
-
-        toast.classList.add("show");
-
-        clearTimeout(window.mobileNoteToastTimer);
-        window.mobileNoteToastTimer = setTimeout(() => {
-          toast.classList.remove("show");
-        }, 2600);
-      }
-
-      function openDesktopNoteToast() {
-        alert(
-          "メモは準備中です。まずは保存した論文の整理機能を優先しています。",
-        );
-      }
     </script>
   </body>
 </html>

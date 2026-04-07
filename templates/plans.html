@@ -2,510 +2,294 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>料金プラン</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>料金プラン — PT Research</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --radius: 20px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.10);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+            --pro-from: #6366f1;
+            --pro-to: #8b5cf6;
+            --expert-from: #f59e0b;
+            --expert-to: #ef4444;
+        }
+
         body {
-            font-family: sans-serif;
-            background: #f5f7fb;
-            margin: 0;
-            padding: 48px 16px;
-            color: #222;
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+            background: #f0f2f8;
+            color: #1a1a2e;
+            min-height: 100vh;
         }
 
-        .container {
-            max-width: 1180px;
-            margin: 0 auto;
+        /* ── Hero ────────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            padding: 56px 20px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-
-        .top-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 600;
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 70% 30%, rgba(99,102,241,0.25) 0%, transparent 60%),
+                        radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.15) 0%, transparent 50%);
         }
-
-        .top-link:hover {
-            text-decoration: underline;
+        .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+        .hero-back {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: rgba(255,255,255,0.65); text-decoration: none; font-size: 14px; font-weight: 600;
+            margin-bottom: 28px; transition: color 0.2s;
         }
-
-        .hero-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            margin-bottom: 24px;
+        .hero-back:hover { color: #fff; }
+        .hero-eyebrow {
+            font-size: 13px; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: #a5b4fc; margin-bottom: 12px;
         }
+        .hero-title { font-size: clamp(28px, 5vw, 42px); font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
+        .hero-sub { font-size: 16px; color: rgba(255,255,255,0.70); line-height: 1.7; margin-bottom: 28px; }
 
-        .hero-title {
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 34px;
-            line-height: 1.4;
+        .current-plan-pill {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px); border-radius: 999px;
+            padding: 10px 20px; font-size: 14px; font-weight: 600; color: #fff;
+            margin-bottom: 32px;
         }
+        .current-plan-pill span { color: #a5b4fc; }
 
-        .hero-lead {
-            color: #555;
-            line-height: 1.8;
-            font-size: 16px;
-            margin-bottom: 0;
+        /* Billing toggle */
+        .billing-wrap {
+            display: inline-flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 999px; padding: 6px 6px 6px 16px;
         }
-
-        .plan-info-box {
-            margin-top: 18px;
-            padding: 14px 16px;
-            background: #eef2ff;
-            border-radius: 14px;
-            color: #1f2937;
-            line-height: 1.9;
-            font-size: 14px;
-        }
-
-        .billing-toggle-wrap {
-            margin-top: 22px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .billing-label {
-            font-size: 14px;
-            color: #555;
-            font-weight: 700;
-        }
-
-        .billing-toggle {
-            display: inline-flex;
-            background: #eef2ff;
-            padding: 4px;
-            border-radius: 999px;
-            gap: 4px;
-        }
-
+        .billing-label { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 600; }
+        .billing-toggle { display: flex; gap: 4px; }
         .billing-btn {
-            border: none;
-            background: transparent;
-            color: #374151;
-            padding: 10px 18px;
-            border-radius: 999px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 14px;
+            border: none; background: transparent; color: rgba(255,255,255,0.65);
+            padding: 8px 18px; border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 13px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .billing-btn.active { background: #fff; color: #111; }
+        .billing-save-badge {
+            background: linear-gradient(135deg, var(--pro-from), var(--pro-to));
+            color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
+            padding: 4px 10px; border-radius: 999px; white-space: nowrap;
         }
 
-        .billing-btn.active {
-            background: #111827;
-            color: #fff;
-        }
+        /* ── Layout ───────────────────────────── */
+        .page-body { max-width: 1100px; margin: -40px auto 0; padding: 0 16px 80px; position: relative; z-index: 2; }
 
-        .billing-note {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .referral-apply-card,
-        .referral-own-card,
-        .compare-card,
-        .notes-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            margin-top: 24px;
-        }
-
-        .referral-apply-card h3,
-        .referral-own-card h3,
-        .compare-card h2,
-        .notes-card h2 {
-            margin-top: 0;
-        }
-
-        .referral-form {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        .referral-input {
-            flex: 1;
-            min-width: 220px;
-            padding: 12px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            font-size: 14px;
-        }
-
-        .referral-button {
-            border: none;
-            background: #111827;
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .referral-button:hover {
-            opacity: 0.92;
-        }
-
-        .referral-success {
-            margin-top: 12px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #dcfce7;
-            color: #166534;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .referral-error {
-            margin-top: 12px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #fef2f2;
-            color: #b91c1c;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .referral-toggle {
-            border: none;
-            background: #111827;
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .referral-toggle:hover {
-            opacity: 0.92;
-        }
-
-        .referral-code-label {
-            margin-top: 14px;
-            font-weight: 700;
-        }
-
-        .referral-code-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .referral-code-input {
-            flex: 1;
-            min-width: 220px;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            background: #f9fafb;
-        }
-
-        .referral-copy-btn {
-            border: none;
-            background: #2563eb;
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .referral-copy-btn:hover {
-            opacity: 0.92;
-        }
-
-        .referral-note {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.7;
-        }
-
+        /* ── Plan cards ───────────────────────── */
         .plans-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 16px;
             align-items: stretch;
-            margin-top: 24px;
         }
-
         .plan-card {
             background: #fff;
-            border-radius: 20px;
-            padding: 26px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            box-shadow: var(--shadow);
+            display: flex; flex-direction: column;
             border: 2px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+        .plan-card.plan-free { border-color: #e5e7eb; }
+        .plan-card.plan-pro {
+            background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 100%);
+            border-color: var(--pro-from);
+        }
+        .plan-card.plan-expert {
+            background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: var(--expert-from);
         }
 
-        .plan-card.current {
-            border-color: #2563eb;
-        }
-
-        .plan-card.recommended {
-            border-color: #16a34a;
-        }
-
-        .badge-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
-            min-height: 28px;
-        }
-
+        .badge-row { display: flex; gap: 6px; flex-wrap: wrap; min-height: 26px; margin-bottom: 16px; }
         .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
+            display: inline-block; padding: 4px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.03em;
+        }
+        .badge-current { background: #dbeafe; color: #1d4ed8; }
+        .badge-rec { background: linear-gradient(135deg, var(--pro-from), var(--pro-to)); color: #fff; }
+        .badge-trial { background: #dcfce7; color: #166534; }
+
+        .plan-icon { font-size: 32px; margin-bottom: 8px; }
+        .plan-name { font-size: 26px; font-weight: 800; margin-bottom: 6px; color: #111; }
+        .plan-tagline { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 20px; min-height: 40px; }
+
+        .price-block { margin-bottom: 20px; }
+        .plan-price { font-size: 44px; font-weight: 800; line-height: 1; color: #111; }
+        .plan-price-annual { font-size: 44px; font-weight: 800; line-height: 1; color: #111; }
+        .plan-period { font-size: 16px; font-weight: 600; color: #666; margin-left: 4px; }
+        .price-note { font-size: 12px; color: #888; margin-top: 4px; }
+
+        .plan-cta { margin-bottom: 24px; }
+        .plan-cta form { margin: 0; }
+        .btn {
+            display: block; width: 100%; text-align: center;
+            padding: 14px 20px; border-radius: 14px;
+            font-weight: 700; font-size: 14px; cursor: pointer;
+            border: none; text-decoration: none; transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-dark { background: #111827; color: #fff; }
+        .btn-pro { background: linear-gradient(135deg, var(--pro-from), var(--pro-to)); color: #fff; box-shadow: 0 4px 16px rgba(99,102,241,0.35); }
+        .btn-expert { background: linear-gradient(135deg, var(--expert-from), var(--expert-to)); color: #fff; box-shadow: 0 4px 16px rgba(245,158,11,0.35); }
+        .btn-muted { background: #e5e7eb; color: #6b7280; cursor: default; }
+        .btn-muted:hover { opacity: 1; transform: none; }
+        .btn-outline { background: transparent; color: var(--pro-from); border: 2px solid var(--pro-from); }
+
+        .divider { border: none; border-top: 1px solid rgba(0,0,0,0.07); margin-bottom: 20px; }
+
+        .feature-list { list-style: none; flex: 1; }
+        .feature-list li {
+            display: flex; align-items: flex-start; gap: 9px;
+            font-size: 13.5px; color: #374151; line-height: 1.55; padding: 5px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .feature-list li:last-child { border-bottom: none; }
+        .feat-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+        .feat-text { flex: 1; }
+        .feat-highlight { font-weight: 700; color: var(--pro-from); }
+        .feat-expert-highlight { font-weight: 700; color: var(--expert-from); }
+
+        /* ── Referral ─────────────────────────── */
+        .referral-section {
+            background: #fff; border-radius: var(--radius);
+            padding: 24px 28px; box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+        .referral-header {
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; gap: 12px;
+        }
+        .referral-header h3 { font-size: 16px; font-weight: 700; }
+        .referral-body { display: none; margin-top: 20px; }
+        .referral-body.open { display: block; }
+        .referral-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        .ref-subtitle { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 10px; }
+        .referral-form { display: flex; gap: 8px; }
+        .referral-input {
+            flex: 1; padding: 11px 14px; border: 1.5px solid #e5e7eb;
+            border-radius: 12px; font-size: 14px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .referral-input:focus { border-color: var(--pro-from); }
+        .referral-button {
+            border: none; background: #111827; color: #fff;
+            padding: 11px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 14px;
+        }
+        .referral-note { font-size: 12px; color: #888; margin-top: 8px; line-height: 1.6; }
+        .referral-success { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #dcfce7; color: #166534; font-size: 13px; }
+        .referral-error { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
+        .ref-code-row { display: flex; gap: 8px; margin-top: 6px; }
+        .ref-code-input {
+            flex: 1; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #e5e7eb;
+            background: #f9fafb; font-size: 14px; color: #374151;
+        }
+        .ref-copy-btn {
+            border: none; background: var(--pro-from); color: #fff;
+            padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px;
         }
 
-        .badge-current {
-            background: #dbeafe;
-            color: #1d4ed8;
+        /* ── Compare table ────────────────────── */
+        .compare-section {
+            background: #fff; border-radius: var(--radius);
+            padding: 28px; box-shadow: var(--shadow); margin-top: 20px; overflow-x: auto;
+        }
+        .compare-section h2 { font-size: 20px; font-weight: 800; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 620px; }
+        thead th {
+            padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 800;
+            color: #fff; background: #1a1a2e;
+        }
+        thead th:first-child { text-align: left; background: #f9fafb; color: #374151; border-radius: 10px 0 0 0; }
+        thead th:last-child { border-radius: 0 10px 0 0; }
+        thead th.th-pro { background: linear-gradient(135deg, var(--pro-from), var(--pro-to)); }
+        thead th.th-expert { background: linear-gradient(135deg, var(--expert-from), var(--expert-to)); }
+        tbody td {
+            padding: 12px 16px; border-bottom: 1px solid #f3f4f6;
+            font-size: 13.5px; text-align: center; color: #374151;
+        }
+        tbody td:first-child { text-align: left; font-weight: 600; color: #111; }
+        tbody tr:hover td { background: #fafbff; }
+        tbody tr:last-child td { border-bottom: none; }
+        .td-check { color: var(--pro-from); font-size: 16px; font-weight: 800; }
+        .td-expert-check { color: var(--expert-from); font-size: 16px; font-weight: 800; }
+        .td-no { color: #d1d5db; font-size: 18px; }
+
+        /* ── Notes ────────────────────────────── */
+        .notes-section {
+            background: linear-gradient(135deg, #f0f2f8, #e8eaf6);
+            border-radius: var(--radius); padding: 24px 28px;
+            margin-top: 20px; border: 1px solid #e5e7eb;
+        }
+        .notes-section h2 { font-size: 16px; font-weight: 800; margin-bottom: 12px; color: #374151; }
+        .notes-section p { font-size: 13px; color: #6b7280; line-height: 1.8; margin-bottom: 6px; }
+
+        /* ── Responsive ───────────────────────── */
+        @media (max-width: 860px) {
+            .plans-grid { grid-template-columns: 1fr; }
+            .referral-cols { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .hero { padding: 40px 16px 64px; }
+            .page-body { padding: 0 12px 60px; }
+            .compare-section, .referral-section, .notes-section { padding: 20px 16px; }
         }
 
-        .badge-recommended {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .plan-name {
-            font-size: 30px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .price-line {
-            margin-bottom: 10px;
-        }
-
-        .plan-price {
-            font-size: 46px;
-            font-weight: 800;
-            line-height: 1.1;
-        }
-
-        .plan-period {
-            font-size: 18px;
-            color: #444;
-            font-weight: 700;
-            margin-left: 6px;
-        }
-
-        .plan-sub {
-            color: #666;
-            font-size: 15px;
-            margin-bottom: 18px;
-            line-height: 1.7;
-            min-height: 52px;
-        }
-
-        .plan-footer {
-            margin: 8px 0 18px 0;
-        }
-
-        .plan-footer form {
-            margin: 0;
-        }
-
-        .plan-button {
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: center;
-            padding: 13px 16px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            background: #111827;
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .plan-button:hover {
-            opacity: 0.92;
-        }
-
-        .plan-button.secondary {
-            background: #2563eb;
-        }
-
-        .plan-button.current {
-            background: #6b7280;
-            cursor: default;
-        }
-
-        .feature-list {
-            margin: 0;
-            padding-left: 18px;
-            line-height: 1.95;
-            color: #333;
-            font-size: 15px;
-            flex: 1;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 760px;
-        }
-
-        th, td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-            vertical-align: top;
-            line-height: 1.7;
-            font-size: 14px;
-        }
-
-        th {
-            font-size: 14px;
-            color: #374151;
-            background: #f8fafc;
-        }
-
-        .notes-card p {
-            color: #555;
-            line-height: 1.8;
-            margin-bottom: 10px;
-        }
-
-        .annual-only {
-            display: none;
-        }
-
-        .monthly-only {
-            display: inline;
-        }
-
-        body.annual-mode .annual-only {
-            display: inline;
-        }
-
-        body.annual-mode .monthly-only {
-            display: none;
-        }
-
-        @media (max-width: 980px) {
-            .plans-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .hero-title {
-                font-size: 28px;
-            }
-
-            .plan-name {
-                font-size: 28px;
-            }
-
-            .plan-price {
-                font-size: 40px;
-            }
-        }
+        /* Billing mode visibility */
+        .annual-only { display: none; }
+        .monthly-only { display: inline; }
+        body.annual-mode .annual-only { display: inline; }
+        body.annual-mode .monthly-only { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="/" class="top-link">← トップへ戻る</a>
-
-        <div class="hero-card">
-            <h1 class="hero-title">プランを選択</h1>
-            <p class="hero-lead">
-                使用回数・保存数・ランキング表示などの制限が変わります。
-            </p>
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-inner">
+            <a href="/" class="hero-back">← トップへ戻る</a>
+            <div class="hero-eyebrow">Pricing</div>
+            <h1 class="hero-title">理学療法士のための<br>研究ツール</h1>
+            <p class="hero-sub">論文検索・要約・マーカー・学習掲示板まで。<br>あなたの臨床と学習をワンプラットフォームで。</p>
 
             {% if current_user %}
-            <div class="plan-info-box">
-                <div><strong>現在のプラン：</strong>{{ current_plan }}</div>
-
-                {% if trial_days_left %}
-                <div><strong>無料体験：</strong>残り {{ trial_days_left }} 日</div>
-                {% endif %}
-
-                {% if plan_renews_at %}
-                <div><strong>次回更新：</strong>{{ plan_renews_at }}</div>
-                {% endif %}
+            <div class="current-plan-pill">
+                現在のプラン：<span>{{ current_plan | upper }}</span>
+                {% if trial_days_left %}&nbsp;｜ 体験残り <span>{{ trial_days_left }} 日</span>{% endif %}
             </div>
             {% else %}
-            <div class="plan-info-box">
-                <div><strong>現在の状態：</strong>未登録</div>
-            </div>
+            <div class="current-plan-pill">ログインすると詳細設定が可能になります</div>
             {% endif %}
 
-            <div class="billing-toggle-wrap">
-                <span class="billing-label">料金表示</span>
-
+            <div class="billing-wrap">
+                <span class="billing-label">支払い</span>
                 <div class="billing-toggle">
-                    <button type="button" class="billing-btn active" id="monthly-btn" onclick="setBillingMode('monthly')">
-                        月額
-                    </button>
-                    <button type="button" class="billing-btn" id="annual-btn" onclick="setBillingMode('annual')">
-                        年額
-                    </button>
+                    <button type="button" class="billing-btn active" id="monthly-btn" onclick="setBillingMode('monthly')">月額</button>
+                    <button type="button" class="billing-btn" id="annual-btn" onclick="setBillingMode('annual')">年額</button>
                 </div>
-
-                <span class="billing-note">年額は10か月分の価格です</span>
+                <span class="billing-save-badge annual-only">2ヶ月分お得</span>
             </div>
         </div>
+    </div>
 
-        {% if current_user %}
-        <div class="referral-apply-card">
-            <h3>紹介コードを使う</h3>
-
-            <form action="/apply-referral" method="post" class="referral-form">
-                <input type="text" name="ref_code" class="referral-input" placeholder="紹介コードを入力">
-                <button type="submit" class="referral-button">適用する</button>
-            </form>
-
-            {% if referral_message %}
-                <div class="{% if referral_success %}referral-success{% else %}referral-error{% endif %}">
-                    {{ referral_message }}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="referral-own-card">
-            <h3>紹介する</h3>
-
-            <button type="button" class="referral-toggle" onclick="toggleReferralBox()">
-                紹介コードを表示する
-            </button>
-
-            <div id="referral-box" style="display:none;">
-                <div class="referral-code-label">あなたの紹介コード</div>
-
-                <div class="referral-code-row">
-                    <input id="refCode" class="referral-code-input" value="{{ ref_code }}" readonly>
-                    <button type="button" class="referral-copy-btn" onclick="copyRefCode()">コピー</button>
-                </div>
-
-                <div class="referral-note">
-                    紹介された人は Pro 7日、紹介した人は +7日。延長は最大60日までです。
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
+    <div class="page-body">
+        <!-- Plans grid -->
         <div class="plans-grid">
-            <div class="plan-card {% if current_plan == 'free' or not current_user %}current{% endif %}">
+            <!-- Free -->
+            <div class="plan-card plan-free {% if current_plan == 'free' or not current_user %}current{% endif %}">
                 <div class="badge-row">
                     {% if not current_user %}
                         <span class="badge badge-current">現在の状態</span>
@@ -513,205 +297,276 @@
                         <span class="badge badge-current">現在のプラン</span>
                     {% endif %}
                 </div>
-
+                <div class="plan-icon">🆓</div>
                 <div class="plan-name">Free</div>
-
-                <div class="price-line">
+                <div class="plan-tagline">まずは体験したい方。基本的な論文検索と要約を試せます。</div>
+                <div class="price-block">
                     <span class="plan-price">¥0</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                    <div class="price-note">クレジットカード不要</div>
                 </div>
-
-                <div class="plan-sub">まずは試して価値を体験したい人向け</div>
-
-                <div class="plan-footer">
+                <div class="plan-cta">
                     {% if not current_user %}
-                        <a href="/register" class="plan-button secondary">無料ではじめる</a>
+                        <a href="/register" class="btn btn-dark">無料ではじめる</a>
                     {% elif current_plan == 'free' %}
-                        <button class="plan-button current" type="button">利用中</button>
+                        <button class="btn btn-muted" type="button">現在のプラン</button>
                     {% else %}
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="free">
-                            <button class="plan-button" type="submit">Freeに変更</button>
+                            <button class="btn btn-dark" type="submit">Freeに変更</button>
                         </form>
                     {% endif %}
                 </div>
-
+                <hr class="divider">
                 <ul class="feature-list">
-                    <li>詳細・要約 5回 / 日</li>
-                    <li>総合人気ランキング TOP20</li>
-                    <li>総合臨床参考度ランキング TOP20</li>
-                    <li>保存 10件まで</li>
-                    <li>保存候補・履歴管理</li>
+                    <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <strong>5回 / 日</strong></span></li>
+                    <li><span class="feat-icon">🔍</span><span class="feat-text">キーワード検索</span></li>
+                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <strong>TOP20</strong></span></li>
+                    <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <strong>10件まで</strong></span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">クイックメモ <strong>15件まで</strong></span></li>
                 </ul>
             </div>
 
-            <div class="plan-card recommended {% if current_plan == 'pro' %}current{% endif %}">
+            <!-- Pro -->
+            <div class="plan-card plan-pro {% if current_plan == 'pro' %}current{% endif %}">
                 <div class="badge-row">
-                    <span class="badge badge-recommended">おすすめ</span>
+                    <span class="badge badge-rec">おすすめ</span>
                     {% if current_plan == 'pro' %}
                         <span class="badge badge-current">現在のプラン</span>
                     {% endif %}
+                    <span class="badge badge-trial">7日無料体験</span>
                 </div>
-
+                <div class="plan-icon">⚡</div>
                 <div class="plan-name">Pro</div>
-
-                <div class="price-line">
+                <div class="plan-tagline">臨床で毎日活用したい方向けの主力プラン。全機能が解放されます。</div>
+                <div class="price-block">
                     <span class="plan-price monthly-only">¥1,500</span>
                     <span class="plan-price annual-only">¥15,000</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                    <div class="price-note">
+                        <span class="monthly-only">7日間の無料体験あり</span>
+                        <span class="annual-only">月あたり ¥1,250（2ヶ月分お得）</span>
+                    </div>
                 </div>
-
-                <div class="plan-sub">臨床で継続的に使いたい人向けの主力プラン</div>
-
-                <div class="plan-footer">
+                <div class="plan-cta">
                     {% if not current_user %}
-                        <a href="/login" class="plan-button secondary">ログインしてProを始める</a>
+                        <a href="/login" class="btn btn-pro">ログインしてProを始める</a>
                     {% elif current_plan == 'pro' %}
-                        <button class="plan-button current" type="button">利用中</button>
+                        <button class="btn btn-muted" type="button">現在のプラン</button>
                     {% else %}
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="pro">
-                            <button class="plan-button secondary" type="submit">
-                                <span class="monthly-only">Proを始める</span>
+                            <button class="btn btn-pro" type="submit">
+                                <span class="monthly-only">Proを始める（7日無料）</span>
                                 <span class="annual-only">Pro年額を始める</span>
                             </button>
                         </form>
                     {% endif %}
                 </div>
-
+                <hr class="divider">
                 <ul class="feature-list">
-                    <li>詳細・要約 50回 / 日</li>
-                    <li>総合人気ランキング TOP100</li>
-                    <li>総合臨床参考度ランキング TOP100</li>
-                    <li>保存 150件まで</li>
-                    <li>分野別ランキング 解放予定</li>
-                    <li>7日間無料体験（キャンペーン時は14日）</li>
+                    <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <span class="feat-highlight">50回 / 日</span></span></li>
+                    <li><span class="feat-icon">🔍</span><span class="feat-text">キーワード検索 ＋ 専門タグ検索</span></li>
+                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <span class="feat-highlight">TOP100</span></span></li>
+                    <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <span class="feat-highlight">300件まで</span></span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">クイックメモ <span class="feat-highlight">無制限</span></span></li>
+                    <li><span class="feat-icon">🖊️</span><span class="feat-text">論文マーカー（カラー4色）</span></li>
+                    <li><span class="feat-icon">📖</span><span class="feat-text">学習掲示板 ＆ おすすめ論文</span></li>
+                    <li><span class="feat-icon">🏷️</span><span class="feat-text">カスタムタグ ＆ 興味学習エンジン</span></li>
+                    <li><span class="feat-icon">📁</span><span class="feat-text">フォルダ管理</span></li>
                 </ul>
             </div>
 
-            <div class="plan-card {% if current_plan == 'expert' %}current{% endif %}">
+            <!-- Expert -->
+            <div class="plan-card plan-expert {% if current_plan == 'expert' %}current{% endif %}">
                 <div class="badge-row">
                     {% if current_plan == 'expert' %}
                         <span class="badge badge-current">現在のプラン</span>
                     {% endif %}
+                    <span class="badge badge-trial">7日無料体験</span>
                 </div>
-
+                <div class="plan-icon">🎓</div>
                 <div class="plan-name">Expert</div>
-
-                <div class="price-line">
+                <div class="plan-tagline">大学院生・研究者・施設での本格運用向け。すべて無制限。</div>
+                <div class="price-block">
                     <span class="plan-price monthly-only">¥4,980</span>
                     <span class="plan-price annual-only">¥49,800</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                    <div class="price-note">
+                        <span class="monthly-only">7日間の無料体験あり</span>
+                        <span class="annual-only">月あたり ¥4,150（2ヶ月分お得）</span>
+                    </div>
                 </div>
-
-                <div class="plan-sub">大学院生・研究者・本格運用向け</div>
-
-                <div class="plan-footer">
+                <div class="plan-cta">
                     {% if not current_user %}
-                        <a href="/login" class="plan-button secondary">ログインしてExpertを始める</a>
+                        <a href="/login" class="btn btn-expert">ログインしてExpertを始める</a>
                     {% elif current_plan == 'expert' %}
-                        <button class="plan-button current" type="button">利用中</button>
+                        <button class="btn btn-muted" type="button">現在のプラン</button>
                     {% else %}
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="expert">
-                            <button class="plan-button secondary" type="submit">
-                                <span class="monthly-only">Expertを始める</span>
+                            <button class="btn btn-expert" type="submit">
+                                <span class="monthly-only">Expertを始める（7日無料）</span>
                                 <span class="annual-only">Expert年額を始める</span>
                             </button>
                         </form>
                     {% endif %}
                 </div>
-
+                <hr class="divider">
                 <ul class="feature-list">
-                    <li>詳細・要約 無制限</li>
-                    <li>総合人気ランキング TOP300</li>
-                    <li>総合臨床参考度ランキング TOP300</li>
-                    <li>保存 無制限</li>
-                    <li>優先処理</li>
-                    <li>ダウンロード機能</li>
-                    <li>研究用の引用整理</li>
-                    <li>要約テンプレ切替（臨床向け / 研究向け）</li>
-                    <li>7日間無料体験（キャンペーン時は14日）</li>
+                    <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <span class="feat-expert-highlight">無制限</span></span></li>
+                    <li><span class="feat-icon">🔍</span><span class="feat-text">Pro の全検索機能</span></li>
+                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <span class="feat-expert-highlight">TOP300</span></span></li>
+                    <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <span class="feat-expert-highlight">無制限</span></span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">メモ・マーカー・掲示板 全機能</span></li>
+                    <li><span class="feat-icon">⚡</span><span class="feat-text">優先処理（レスポンス高速化）</span></li>
+                    <li><span class="feat-icon">📥</span><span class="feat-text">論文・メモ エクスポート</span></li>
+                    <li><span class="feat-icon">📚</span><span class="feat-text">研究用の引用整理</span></li>
+                    <li><span class="feat-icon">🔧</span><span class="feat-text">要約テンプレ切替（臨床 / 研究）</span></li>
                 </ul>
             </div>
         </div>
 
-        <div class="compare-card">
-            <h2>プラン比較</h2>
+        <!-- Referral -->
+        {% if current_user %}
+        <div class="referral-section">
+            <div class="referral-header" onclick="toggleReferral()">
+                <h3>🎁 特典・紹介コード</h3>
+                <span id="ref-arrow" style="color:#aaa; font-size:20px;">▾</span>
+            </div>
+            <div class="referral-body" id="referral-body">
+                <div class="referral-cols">
+                    <div>
+                        <div class="ref-subtitle">紹介コードを使う</div>
+                        <form action="/apply-referral" method="post" class="referral-form">
+                            <input type="text" name="ref_code" class="referral-input" placeholder="コードを入力…">
+                            <button type="submit" class="referral-button">適用</button>
+                        </form>
+                        {% if referral_message %}
+                        <div class="{% if referral_success %}referral-success{% else %}referral-error{% endif %}">{{ referral_message }}</div>
+                        {% endif %}
+                        <div class="referral-note">紹介された方は Pro 7日間無料で体験できます</div>
+                    </div>
+                    <div>
+                        <div class="ref-subtitle">あなたの紹介コードをシェア</div>
+                        <div class="ref-code-row">
+                            <input id="refCode" class="ref-code-input" value="{{ ref_code }}" readonly>
+                            <button type="button" class="ref-copy-btn" onclick="copyRefCode()">コピー</button>
+                        </div>
+                        <div class="referral-note">紹介すると＋7日（最大60日）追加されます</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
+        <!-- Compare -->
+        <div class="compare-section">
+            <h2>プラン比較</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>項目</th>
+                        <th style="background:#f9fafb; color:#374151;">機能</th>
                         <th>Free</th>
-                        <th>Pro</th>
-                        <th>Expert</th>
+                        <th class="th-pro">Pro</th>
+                        <th class="th-expert">Expert</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>詳細・要約回数</td>
+                        <td>論文詳細・要約回数</td>
                         <td>5回 / 日</td>
-                        <td>50回 / 日</td>
-                        <td>無制限</td>
+                        <td><span class="td-check">50回 / 日</span></td>
+                        <td><span class="td-expert-check">無制限</span></td>
                     </tr>
                     <tr>
-                        <td>総合人気ランキング</td>
+                        <td>キーワード検索</td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>専門タグ検索（31分野）</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>人気 / 参考度ランキング</td>
                         <td>TOP20</td>
-                        <td>TOP100</td>
-                        <td>TOP300</td>
+                        <td><span class="td-check">TOP100</span></td>
+                        <td><span class="td-expert-check">TOP300</span></td>
                     </tr>
                     <tr>
-                        <td>総合臨床参考度ランキング</td>
-                        <td>TOP20</td>
-                        <td>TOP100</td>
-                        <td>TOP300</td>
+                        <td>論文保存件数</td>
+                        <td>10件</td>
+                        <td><span class="td-check">300件</span></td>
+                        <td><span class="td-expert-check">無制限</span></td>
                     </tr>
                     <tr>
-                        <td>保存件数</td>
-                        <td>10件まで</td>
-                        <td>150件まで</td>
-                        <td>無制限</td>
+                        <td>クイックメモ</td>
+                        <td>15件</td>
+                        <td><span class="td-check">無制限</span></td>
+                        <td><span class="td-expert-check">無制限</span></td>
                     </tr>
                     <tr>
-                        <td>分野別ランキング</td>
-                        <td>—</td>
-                        <td>対応予定</td>
-                        <td>対応予定</td>
+                        <td>論文マーカー（4色）</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>学習掲示板 / おすすめ論文</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>カスタムタグ & 興味学習</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>フォルダ管理</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">○</span></td>
+                        <td><span class="td-expert-check">○</span></td>
                     </tr>
                     <tr>
                         <td>優先処理</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>○</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-expert-check">○</span></td>
                     </tr>
                     <tr>
-                        <td>ダウンロード機能</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>○</td>
-                    </tr>
-                    <tr>
-                        <td>研究用の引用整理</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>○</td>
+                        <td>エクスポート / 引用整理</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-expert-check">○</span></td>
                     </tr>
                     <tr>
                         <td>要約テンプレ切替</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td>○</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-expert-check">○</span></td>
+                    </tr>
+                    <tr>
+                        <td>無料体験期間</td>
+                        <td><span class="td-no">—</span></td>
+                        <td><span class="td-check">7日間</span></td>
+                        <td><span class="td-expert-check">7日間</span></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="notes-card">
-            <h2>補足</h2>
-            <p>ProとExpertは通常7日間の無料体験を想定しています。キャンペーン時は14日まで拡張できます。</p>
-            <p>無料体験の期間中は、ProとExpertの間で変更できる設計にすると導入ハードルを下げやすいです。</p>
-            <p>年額は10か月分の価格として表示し、割引を強く見せすぎない構成にしています。</p>
+        <!-- Notes -->
+        <div class="notes-section">
+            <h2>補足事項</h2>
+            <p>Pro・Expertは通常7日間の無料体験を提供しています。キャンペーン時は14日まで延長される場合があります。</p>
+            <p>年額プランは10か月分の価格で2か月分お得です。いつでもキャンセル・変更できます。</p>
+            <p>紹介コードを使うと体験期間が延長されます。紹介した方にも最大60日のボーナスが付与されます。</p>
         </div>
     </div>
 
@@ -720,7 +575,6 @@
             const body = document.body;
             const monthlyBtn = document.getElementById("monthly-btn");
             const annualBtn = document.getElementById("annual-btn");
-
             if (mode === "annual") {
                 body.classList.add("annual-mode");
                 annualBtn.classList.add("active");
@@ -734,35 +588,31 @@
             }
         }
 
-        function toggleReferralBox() {
-            const box = document.getElementById("referral-box");
-            if (!box) return;
-
-            if (box.style.display === "none" || box.style.display === "") {
-                box.style.display = "block";
-            } else {
-                box.style.display = "none";
-            }
+        function toggleReferral() {
+            const body = document.getElementById("referral-body");
+            const arrow = document.getElementById("ref-arrow");
+            if (!body) return;
+            const open = body.classList.toggle("open");
+            if (arrow) arrow.textContent = open ? "▴" : "▾";
         }
 
         function copyRefCode() {
             const input = document.getElementById("refCode");
             if (!input) return;
-
-            input.select();
-            input.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            alert("紹介コードをコピーしました");
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = input.nextElementSibling;
+                const orig = btn.textContent;
+                btn.textContent = "コピー済 ✓";
+                setTimeout(() => btn.textContent = orig, 2000);
+            }).catch(() => {
+                input.select();
+                document.execCommand("copy");
+            });
         }
 
-        window.addEventListener("load", function () {
-            const savedMode = localStorage.getItem("billing_mode");
-
-            if (savedMode === "annual") {
-                setBillingMode("annual");
-            } else {
-                setBillingMode("monthly");
-            }
+        window.addEventListener("load", function() {
+            const saved = localStorage.getItem("billing_mode");
+            setBillingMode(saved === "annual" ? "annual" : "monthly");
         });
     </script>
 </body>
