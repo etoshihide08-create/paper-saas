@@ -540,14 +540,14 @@
               {% for memo in quick_memos %}
               <a href="/memo/{{ memo.id }}" class="memo-card">
                 <div class="memo-card-header">
-                  <div class="memo-card-title {% if not memo.title %}empty{% endif %}">
-                    {{ memo.title if memo.title else "無題のメモ" }}
+                  <div class="memo-card-title {% if not memo.title and not memo.body %}empty{% endif %}">
+                    {% if memo.title %}{{ memo.title }}{% elif memo.body %}{{ memo.body[:40] }}{% endif %}
                   </div>
                   <div class="memo-card-date">
                     {{ memo.updated_at[:10] }}
                   </div>
                 </div>
-                {% if memo.body %}
+                {% if memo.title and memo.body %}
                 <div class="memo-card-preview">{{ memo.body }}</div>
                 {% endif %}
               </a>

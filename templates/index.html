@@ -918,16 +918,18 @@
               class="section-toggle-btn"
               id="popular-toggle-btn"
               onclick="showRankingSection('popular-ranking')"
+              style="background:#fef3c7; color:#d97706;"
             >
-              人気ランキング
+              🔥 人気ランキング
             </button>
             <button
               type="button"
               class="section-toggle-btn"
               id="score-toggle-btn"
               onclick="showRankingSection('score-ranking')"
+              style="background:#e0f2fe; color:#0369a1; white-space: normal; text-align: center; line-height: 1.3;"
             >
-              臨床参考度ランキング
+              ⭐ 臨床参考度<br>ランキング
             </button>
             <button
               type="button"
@@ -1203,11 +1205,11 @@
           "スポーツ": ["ACL損傷", "半月板損傷", "足関節捻挫", "ジャンパー膝", "シンスプリント", "肉離れ", "疲労骨折", "return to sport"],
         },
         "中枢":           {
-          "疾患・病態": ["脳梗塞", "脳出血", "くも膜下出血", "片麻痺", "四肢麻痺", "脳性麻痺", "脊髄損傷", "プッシャー症候群", "高次脳機能障害", "半側空間無視"],
+          "_direct":    ["脳梗塞", "脳出血", "くも膜下出血", "片麻痺", "四肢麻痺", "脳性麻痺", "脊髄損傷", "プッシャー症候群", "高次脳機能障害", "半側空間無視"],
           "便秘":       ["腸管機能低下", "排便困難", "便秘予防", "排便コントロール", "排便習慣"],
         },
         "脳神経":         {
-          "疾患・病態": ["パーキンソン病", "神経難病", "多系統萎縮症", "進行性核上性麻痺", "筋萎縮性側索硬化症", "多発性硬化症", "ギラン・バレー症候群", "末梢神経障害"],
+          "_direct":    ["パーキンソン病", "神経難病", "多系統萎縮症", "進行性核上性麻痺", "筋萎縮性側索硬化症", "多発性硬化症", "ギラン・バレー症候群", "末梢神経障害"],
           "便秘":       ["腸管機能低下", "排便困難", "便秘予防", "排便コントロール", "排便習慣"],
         },
         "呼吸器":         ["COPD", "誤嚥性肺炎", "間質性肺炎", "呼吸不全", "術後肺合併症", "人工呼吸器管理", "嚥下障害"],
@@ -1318,12 +1320,24 @@
       function renderSubCategories(cat, data, subSection) {
         subSection.innerHTML = "";
         Object.keys(data).forEach(subCat => {
-          const sc = document.createElement("button");
-          sc.type = "button";
-          sc.className = "tag-sub-chip tag-sub-category";
-          sc.textContent = subCat;
-          sc.onclick = () => renderLeafTags(cat, subCat, data[subCat], subSection);
-          subSection.appendChild(sc);
+          if (subCat === "_direct") {
+            // 直接タグとして表示（中項目ラベルなし）
+            data[subCat].forEach(item => {
+              const sc = document.createElement("button");
+              sc.type = "button";
+              sc.className = "tag-sub-chip";
+              sc.textContent = item;
+              sc.onclick = () => selectSubTag(item, sc);
+              subSection.appendChild(sc);
+            });
+          } else {
+            const sc = document.createElement("button");
+            sc.type = "button";
+            sc.className = "tag-sub-chip tag-sub-category";
+            sc.textContent = subCat;
+            sc.onclick = () => renderLeafTags(cat, subCat, data[subCat], subSection);
+            subSection.appendChild(sc);
+          }
         });
       }
 

@@ -382,6 +382,8 @@
       .hl-color-btn:hover { border-color: #fff; }
       .hl-remove-btn { padding: 5px 12px; font-size: 12px; color: #f87171; background: none; border: none; cursor: pointer; text-align: left; }
       .hl-remove-btn:hover { color: #fca5a5; }
+      .hl-add-memo-btn { padding: 5px 12px; font-size: 12px; color: #86efac; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: left; width: 100%; }
+      .hl-add-memo-btn:hover { color: #bbf7d0; }
 
       .meta-list {
         display: grid;
@@ -908,6 +910,7 @@
         <button class="hl-color-btn" style="background:#fce7f3;" onclick="applyHighlight('#fce7f3')" title="ピンク"></button>
       </div>
       <button class="hl-remove-btn" onclick="removeHighlight()">ハイライトを削除</button>
+      <button class="hl-add-memo-btn" onclick="addSelectionToMemo()">📝 メモに追加</button>
     </div>
 
     <script src="/static/js/paper_organize.js"></script>
@@ -1327,6 +1330,23 @@
         hidePopup();
         renderHighlights();
         saveHighlights();
+      }
+
+      function addSelectionToMemo() {
+        const text = hlPopupText;
+        hidePopup();
+        window.getSelection()?.removeAllRanges();
+        if (!text) return;
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/memo/create";
+        const bodyInput = document.createElement("input");
+        bodyInput.type = "hidden";
+        bodyInput.name = "body";
+        bodyInput.value = text;
+        form.appendChild(bodyInput);
+        document.body.appendChild(form);
+        form.submit();
       }
 
       async function saveHighlights() {

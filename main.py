@@ -1336,6 +1336,10 @@ def saved_export(request: Request):
     current_user = get_current_user(request)
     if not current_user:
         return RedirectResponse("/login", status_code=303)
+    user = get_user_by_id(current_user["id"])
+    plan = get_user_plan(user)
+    if plan not in ("pro", "expert"):
+        return RedirectResponse("/plans?error=export_requires_pro", status_code=303)
     papers = get_saved_papers(current_user["id"])
     return templates.TemplateResponse("saved_export_print.html", {
         "request": request,
