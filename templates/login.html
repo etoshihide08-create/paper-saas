@@ -130,50 +130,10 @@
         .context-card-desc {
             font-size: 13px;
             color: #3b82f6;
-            margin: 0 0 14px;
+            margin: 0;
             line-height: 1.5;
         }
 
-        .context-card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .context-btn-primary {
-            flex: 1;
-            padding: 9px 0;
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .context-btn-primary:hover { background: #1d4ed8; }
-
-        .context-btn-secondary {
-            flex: 1;
-            padding: 9px 0;
-            background: #fff;
-            color: #2563eb;
-            border: 1.5px solid #bfdbfe;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .context-btn-secondary:hover { background: #f0f7ff; }
 
         .error {
             background: #fef2f2;
@@ -224,19 +184,11 @@
         <div class="context-card">
             <p class="context-card-title">📝 メモ機能はログイン後に使えます</p>
             <p class="context-card-desc">気づきの保存や、<br>あとで見返す整理に使えます。</p>
-            <div class="context-card-actions">
-                <a href="#email" class="context-btn-primary" onclick="document.getElementById('email').focus();return false;">ログインする</a>
-                <a href="/register" class="context-btn-secondary">新規登録する</a>
-            </div>
         </div>
         {% elif from_page == "saved" %}
         <div class="context-card">
             <p class="context-card-title">📚 保存機能はログイン後に使えます</p>
             <p class="context-card-desc">気になった論文をあとからすぐ見返せます。</p>
-            <div class="context-card-actions">
-                <a href="#email" class="context-btn-primary" onclick="document.getElementById('email').focus();return false;">ログインする</a>
-                <a href="/register" class="context-btn-secondary">新規登録する</a>
-            </div>
         </div>
         {% endif %}
 
