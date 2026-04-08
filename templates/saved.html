@@ -195,6 +195,15 @@
   </head>
   <body>
     <div class="container">
+      <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        保存フォルダ
+        {% if not is_guest %}
+        <a href="/saved/export" style="font-size:12px;color:#6b7280;text-decoration:none;font-weight:600;padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">📥 エクスポート</a>
+        {% endif %}
+      </h1>
+
+      <a href="/" class="top-link">← トップへ</a>
+
       {% if is_guest %}
       <div class="login-prompt-card">
         <div class="login-prompt-card-icon">📚</div>
@@ -206,15 +215,6 @@
         </div>
       </div>
       {% endif %}
-
-      <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        保存フォルダ
-        {% if not is_guest %}
-        <a href="/saved/export" style="font-size:12px;color:#6b7280;text-decoration:none;font-weight:600;padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">📥 エクスポート</a>
-        {% endif %}
-      </h1>
-
-      <a href="/" class="top-link">← トップへ</a>
 
       {% for folder_name, papers in folders.items() %}
       <div class="folder-card" id="folder-card-{{ loop.index }}">

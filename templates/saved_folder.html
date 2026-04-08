@@ -494,7 +494,7 @@
 
             <button
               type="button"
-              class="mini-action like-button"
+              class="mini-action like-button {% if paper.liked %}liked{% endif %}"
               data-pubmed-id="{{ paper.pubmed_id }}"
               onclick="addLike('{{ paper.pubmed_id }}', this)"
               aria-label="いいね"
@@ -644,66 +644,34 @@
     </div>
 
     <script>
-      function hasLiked(pubmedId) {
-        const liked = localStorage.getItem("liked_" + pubmedId);
-        return liked === "1";
-      }
-
-      function setLiked(pubmedId) {
-        localStorage.setItem("liked_" + pubmedId, "1");
-      }
-
-      function disableLikedButtons() {
-        const buttons = document.querySelectorAll(".like-button");
-
-        buttons.forEach((button) => {
-          const pubmedId = button.dataset.pubmedId;
-          const countSpan = button.querySelector(".like-count");
-          const likeCount = countSpan ? countSpan.textContent.trim() : "0";
-
-          if (hasLiked(pubmedId)) {
-            button.innerHTML =
-              '<span>👍</span><span class="like-count">' +
-              likeCount +
-              "</span>";
-            button.classList.add("liked");
-            button.classList.add("disabled");
-            button.disabled = true;
-          }
-        });
-      }
-
       async function addLike(pubmedId, button) {
-        if (hasLiked(pubmedId)) {
-          button.classList.add("liked");
-          button.classList.add("disabled");
-          button.disabled = true;
-          return;
-        }
+        const wasLiked = button.classList.contains("liked");
+        const countSpan = button.querySelector(".like-count");
+        const current = parseInt(countSpan?.textContent || "0");
+
+        // Optimistic update
+        button.classList.toggle("liked", !wasLiked);
+        if (countSpan) countSpan.textContent = wasLiked ? current - 1 : current + 1;
+        button.classList.add("animate-pop");
+        setTimeout(() => button.classList.remove("animate-pop"), 250);
+
+        if (!wasLiked && navigator.vibrate) navigator.vibrate(20);
 
         try {
           const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
           const data = await response.json();
-
-          if (data.ok) {
-            button.innerHTML =
-              '<span>👍</span><span class="like-count">' +
-              data.likes +
-              "</span>";
-            setLiked(pubmedId);
-            button.classList.add("liked", "disabled", "animate-pop");
-            button.disabled = true;
-
-            if (navigator.vibrate) navigator.vibrate(20);
-
-            setTimeout(() => {
-              button.classList.remove("animate-pop");
-            }, 250);
+          if (data.ok && countSpan) {
+            countSpan.textContent = data.likes;
+            button.classList.toggle("liked", data.liked);
           }
         } catch (error) {
-          alert("いいねの更新に失敗しました");
+          // revert on failure
+          button.classList.toggle("liked", wasLiked);
+          if (countSpan) countSpan.textContent = current;
         }
       }
+
+      function disableLikedButtons() {} // no-op: state is server-driven
 
       async function toggleFavorite(pubmedId, button) {
         try {

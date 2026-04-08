@@ -75,7 +75,13 @@ from starlette.middleware.sessions import SessionMiddleware
 load_dotenv()
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET"),
+    max_age=60 * 60 * 24 * 30,  # 30日間セッションを維持
+    same_site="lax",
+    https_only=False,
+)
 templates = Jinja2Templates(directory="templates")
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -1976,6 +1982,7 @@ def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
         custom_title = (paper.get("custom_title") or "").strip()
         default_title = (paper.get("jp_title") or paper.get("title") or "").strip()
         paper["display_title"] = custom_title or default_title
+        paper["liked"] = get_paper_liked(paper["pubmed_id"], current_user_id) if current_user_id else False
 
     if sort == "score":
         papers = sorted(
@@ -2432,7 +2439,8 @@ def memo_list(request: Request, tab: str = "quick"):
     limits = get_plan_limits(plan)
     memo_limit = limits["memo_limit"]
 
-    quick_memos = get_user_memos(user_id)
+    # タイトルも本文も空のクイックメモは一覧に表示しない（pagehideで削除されるはずだが念のため除外）
+    quick_memos = [m for m in get_user_memos(user_id) if (m.get("title") or "").strip() or (m.get("body") or "").strip()]
     paper_memos = get_user_paper_memos(user_id)
     total_count = len(quick_memos) + len(paper_memos)
 

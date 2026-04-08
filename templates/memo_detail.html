@@ -607,16 +607,27 @@
 
       renderTagChips();
 
-      // ページを離れるとき、空のメモは自動削除
+      // ページを離れるとき: 空なら削除、内容があれば保存を確定
       window.addEventListener("pagehide", function() {
         const body = bodyInput ? bodyInput.value.trim() : "";
         const title = titleInput ? titleInput.value.trim() : "";
         const isEmpty = memoType === "paper" ? !body : (!body && !title);
+
         if (isEmpty) {
-          const url = memoType === "paper"
+          const deleteUrl = memoType === "paper"
             ? `/memo/paper/${memoId}/delete_if_empty`
             : `/memo/${memoId}/delete_if_empty`;
-          navigator.sendBeacon(url);
+          navigator.sendBeacon(deleteUrl);
+        } else {
+          // 未保存の内容を確実にサーバーへ送信
+          clearTimeout(saveTimer);
+          const saveUrl = memoType === "paper"
+            ? `/memo/paper/${memoId}/update`
+            : `/memo/${memoId}/update`;
+          const fd = new FormData();
+          fd.append("body", bodyInput ? bodyInput.value : "");
+          if (memoType === "quick") fd.append("title", titleInput ? titleInput.value : "");
+          navigator.sendBeacon(saveUrl, fd);
         }
       });
     </script>
