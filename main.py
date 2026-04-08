@@ -2578,6 +2578,10 @@ def root(request: Request):
         }
     )
 
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+
 @app.get("/plans")
 def plans(request: Request):
 
