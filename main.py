@@ -7,6 +7,7 @@ import hashlib
 import threading
 import urllib.request as _urlreq
 import urllib.parse as _urlparse
+from typing import Any
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request, Form
@@ -113,6 +114,40 @@ app.add_middleware(
     https_only=False,
 )
 templates = Jinja2Templates(directory="templates")
+_original_template_response = templates.TemplateResponse
+
+
+def _template_response_compat(*args: Any, **kwargs: Any):
+    """Normalize old-style TemplateResponse calls for newer Starlette/FastAPI builds."""
+    if args and isinstance(args[0], str):
+        name = args[0]
+        context = args[1] if len(args) > 1 else kwargs.get("context", {})
+        status_code = args[2] if len(args) > 2 else kwargs.get("status_code", 200)
+        headers = args[3] if len(args) > 3 else kwargs.get("headers")
+        media_type = args[4] if len(args) > 4 else kwargs.get("media_type")
+        background = args[5] if len(args) > 5 else kwargs.get("background")
+
+        if not isinstance(context, dict):
+            raise TypeError("TemplateResponse context must be a dict.")
+
+        request = kwargs.get("request") or context.get("request")
+        if request is None:
+            raise ValueError('context must include a "request" key')
+
+        return _original_template_response(
+            request=request,
+            name=name,
+            context=context,
+            status_code=status_code,
+            headers=headers,
+            media_type=media_type,
+            background=background,
+        )
+
+    return _original_template_response(*args, **kwargs)
+
+
+templates.TemplateResponse = _template_response_compat
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
