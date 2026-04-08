@@ -510,8 +510,10 @@
         el.addEventListener("input", () => autoResize(el));
       });
 
-      // 自動保存 (1秒デバウンス)
+      // 自動保存
       let saveTimer = null;
+      let isSaving = false;
+      let needsSave = false;
       const indicator = document.getElementById("save-indicator");
       const bodyInput = document.getElementById("body-input");
       const titleInput = document.getElementById("title-input");
@@ -519,11 +521,21 @@
       const memoId = {{ memo.id }};
 
       function scheduleSave() {
+        needsSave = true;
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(doSave, 1000);
+        saveTimer = setTimeout(doSave, 800);
+      }
+
+      function saveNow() {
+        clearTimeout(saveTimer);
+        if (needsSave) doSave();
       }
 
       async function doSave() {
+        if (isSaving) return;
+        isSaving = true;
+        needsSave = false;
+
         const body = bodyInput ? bodyInput.value : "";
         const title = titleInput ? titleInput.value : "";
 
@@ -539,14 +551,38 @@
           const res = await fetch(url, { method: "POST", body: fd });
           const data = await res.json();
           if (data.ok) {
+            indicator.textContent = "✓ 保存しました";
+            indicator.style.color = "";
             indicator.classList.add("show");
             setTimeout(() => indicator.classList.remove("show"), 1800);
+          } else {
+            indicator.textContent = "保存に失敗";
+            indicator.style.color = "#ef4444";
+            indicator.classList.add("show");
           }
-        } catch (e) {}
+        } catch (e) {
+          indicator.textContent = "保存に失敗";
+          indicator.style.color = "#ef4444";
+          indicator.classList.add("show");
+        } finally {
+          isSaving = false;
+          if (needsSave) scheduleSave();
+        }
       }
 
-      if (bodyInput) bodyInput.addEventListener("input", scheduleSave);
-      if (titleInput) titleInput.addEventListener("input", scheduleSave);
+      if (bodyInput) {
+        bodyInput.addEventListener("input", scheduleSave);
+        bodyInput.addEventListener("blur", saveNow);
+      }
+      if (titleInput) {
+        titleInput.addEventListener("input", scheduleSave);
+        titleInput.addEventListener("blur", saveNow);
+      }
+
+      // タブ切り替え・バックグラウンド移動時にも保存
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) saveNow();
+      });
 
       // 削除モーダル
       function showDeleteModal() {
