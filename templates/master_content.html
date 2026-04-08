@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マスター記事管理</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    background: #f4f7fb;
+    color: #0f172a;
+}
+.page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 16px 56px;
+}
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.back-link {
+    text-decoration: none;
+    color: #334155;
+    font-size: 22px;
+    line-height: 1;
+}
+.title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0;
+}
+.subtitle {
+    margin: 8px 0 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.hero {
+    background: linear-gradient(135deg, #fff7d6 0%, #ffffff 100%);
+    border: 1px solid #fcd34d;
+    border-radius: 24px;
+    padding: 20px 22px;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+    margin-bottom: 18px;
+}
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: rgba(180, 83, 9, 0.12);
+    color: #b45309;
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+.hero-note {
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.7;
+    margin-top: 10px;
+}
+.feedback {
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.feedback.success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+.feedback.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+.panel {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+.panel-head {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid #eef2f7;
+}
+.panel-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+}
+.panel-copy {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.panel-body {
+    padding: 16px 18px 18px;
+}
+.candidate-list,
+.draft-list {
+    display: grid;
+    gap: 12px;
+}
+.candidate-card,
+.draft-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 14px;
+    background: #fff;
+}
+.candidate-top,
+.draft-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+}
+.chip.public { background: #eef2ff; color: #4338ca; }
+.chip.global { background: #eff6ff; color: #1d4ed8; }
+.chip.wp { background: #ecfeff; color: #0f766e; }
+.chip.local { background: #f8fafc; color: #475569; }
+.score {
+    font-size: 12px;
+    font-weight: 700;
+    color: #b45309;
+}
+.candidate-title,
+.draft-title {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.6;
+}
+.candidate-meta,
+.draft-meta {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.7;
+    margin-bottom: 10px;
+}
+.candidate-summary {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.75;
+    margin-bottom: 12px;
+}
+.btn,
+.inline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn {
+    width: 100%;
+    padding: 13px 16px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #fff;
+}
+.btn-dark {
+    background: #111827;
+    color: #fff;
+}
+.btn-gold {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: #fff;
+}
+.inline-btn {
+    padding: 9px 12px;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+.editor-grid {
+    display: grid;
+    gap: 16px;
+}
+.field {
+    display: grid;
+    gap: 6px;
+}
+.field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+}
+.field input,
+.field textarea {
+    width: 100%;
+    border: 1.5px solid #dbe3ee;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+}
+.field textarea {
+    min-height: 300px;
+    resize: vertical;
+    line-height: 1.7;
+}
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.source-box {
+    padding: 16px;
+    border-radius: 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+.source-box h3,
+.preview h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 800;
+}
+.source-box p,
+.preview {
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.preview {
+    padding: 18px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+.geo-review-box {
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
+    border: 1px solid #c7d2fe;
+}
+.geo-review-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.geo-review-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.10);
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 800;
+}
+.geo-score {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1d4ed8;
+}
+.geo-review-copy {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+.preview h2,
+.preview h3 {
+    color: #111827;
+}
+.preview ul,
+.preview ol {
+    padding-left: 1.4em;
+}
+.preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-size: 13px;
+}
+.preview th,
+.preview td {
+    border: 1px solid #dbe3ee;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+.preview th {
+    background: #f8fafc;
+    color: #334155;
+}
+.empty {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.7;
+}
+@media (max-width: 960px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="page">
+        <div class="topbar">
+            <a href="/mypage" class="back-link">←</a>
+            <div>
+                <h1 class="title">マスター記事管理</h1>
+                <p class="subtitle">良質な論文から GEO/SEO 記事を生成し、確認後に WordPress の下書きへ送るためのマスター専用画面です。</p>
+            </div>
+        </div>
+
+        <div class="hero">
+            <div class="hero-badge">マスター枠限定</div>
+            <div style="font-size:24px;font-weight:800;">論文から記事下書きまでを最短で回す管理画面</div>
+            <div class="hero-note">候補論文を選ぶ → 記事を自動生成 → その場で微修正 → WordPress下書き投稿、の流れで使えます。</div>
+            <div class="actions" style="margin-top:14px;">
+                <a href="/master/settings" class="inline-btn">WordPress接続設定</a>
+                {% if wordpress_configured %}
+                <span class="inline-btn" style="cursor:default;">
+                    接続先 {{ wordpress_site_url or '設定済み' }}{% if wordpress_username %} / {{ wordpress_username }}{% endif %}
+                </span>
+                {% else %}
+                <span class="inline-btn" style="cursor:default;">未接続</span>
+                {% endif %}
+                <span class="inline-btn" style="cursor:default;">
+                    {% if autopost_summary.is_enabled %}
+                    自動投稿 ON / 毎日 {{ autopost_summary.daily_time }}
+                    {% else %}
+                    自動投稿 OFF
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        {% if notice_message %}
+        <div class="feedback success">{{ notice_message }}</div>
+        {% endif %}
+        {% if error_message %}
+        <div class="feedback error">{{ error_message }}</div>
+        {% endif %}
+
+        <div class="grid">
+            <div style="display:grid; gap:18px;">
+                <div class="panel">
+                    <div class="panel-head">
+                        <p class="panel-title">候補論文</p>
+                        <p class="panel-copy">臨床参考度 4.3 以上の論文だけを、自動で候補にしています。</p>
+                    </div>
+                    <div class="panel-body">
+                        {% if candidate_papers %}
+                        <div class="candidate-list">
+                            {% for paper in candidate_papers %}
+                            <div class="candidate-card">
+                                <div class="candidate-top">
+                                    <span class="chip {{ paper.source_kind }}">{{ '公開論文' if paper.source_kind == 'public' else '内部保存' }}</span>
+                                    <span class="score">臨床参考度 {{ paper.clinical_score or '未評価' }}</span>
+                                </div>
+                                <p class="candidate-title">{{ paper.jp_title or paper.title }}</p>
+                                <div class="candidate-meta">PMID {{ paper.pubmed_id }} ・ いいね {{ paper.likes or 0 }}</div>
+                                <div class="candidate-summary">{{ (paper.summary_jp or paper.abstract or '')[:220] }}{% if (paper.summary_jp or paper.abstract or '')|length > 220 %}...{% endif %}</div>
+                                <form action="/master/content/generate" method="post">
+                                    <input type="hidden" name="pubmed_id" value="{{ paper.pubmed_id }}">
+                                    <button type="submit" class="btn btn-primary">この記事下書きを作る</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty">臨床参考度 4.3 以上の記事候補がまだありません。高評価の論文が増えると、ここに並びます。</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <p class="panel-title">生成済み下書き</p>
+                        <p class="panel-copy">生成時に自動でGEO改善した下書きをここで管理します。</p>
+                    </div>
+                    <div class="panel-body">
+                        {% if drafts %}
+                        <div class="draft-list">
+                            {% for draft in drafts %}
+                            <div class="draft-card">
+                                <div class="draft-top">
+                                    <span class="chip {% if draft.wordpress_post_id %}wp{% else %}local{% endif %}">{% if draft.wordpress_post_id %}WP下書き連携済み{% else %}ローカル下書き{% endif %}</span>
+                                    <a href="/master/content?draft_id={{ draft.id }}" class="inline-btn">開く</a>
+                                </div>
+                                <p class="draft-title">{{ draft.article_title }}</p>
+                                <div class="draft-meta">PMID {{ draft.pubmed_id }} ・ {{ draft.updated_at or draft.created_at }}</div>
+                                {% set marketing = marketing_summary_map.get(draft.id, {}) %}
+                                {% set variant_meta = marketing_variant_meta_map.get(draft.id, {}) %}
+                                <div class="draft-meta">AB {{ draft.marketing_variant or 'A' }} {% if variant_meta.label %}({{ variant_meta.label }}){% endif %} ・ PV {{ marketing.impressions or 0 }} ・ クリック {{ marketing.clicks or 0 }} ・ 登録 {{ marketing.registrations or 0 }} ・ 有料化 {{ marketing.paid_users or 0 }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty">まだ記事下書きはありません。左の候補論文から1本選んで生成してください。</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="panel-title">記事エディタ</p>
+                    <p class="panel-copy">自動生成した内容を整えつつ、投稿時には95点以上を目指して自動で再改善してから WordPress へ下書き投稿します。</p>
+                </div>
+                <div class="panel-body">
+                    {% if selected_draft %}
+                    <div class="editor-grid">
+                        <div class="source-box">
+                            <h3>元論文の情報</h3>
+                            <p><strong>{{ selected_draft.source_jp_title or selected_draft.source_title }}</strong></p>
+                            <p>PMID {{ selected_draft.pubmed_id }} / 臨床参考度 {{ selected_draft.source_clinical_score or '未評価' }}</p>
+                            {% if selected_draft.source_clinical_reason %}
+                            <p>{{ selected_draft.source_clinical_reason }}</p>
+                            {% endif %}
+                            {% if selected_draft.source_summary_jp %}
+                            <p>{{ selected_draft.source_summary_jp[:500] }}{% if selected_draft.source_summary_jp|length > 500 %}...{% endif %}</p>
+                            {% endif %}
+                        </div>
+
+                        <form action="/master/content/{{ selected_draft.id }}/update" method="post" class="editor-grid">
+                            <div class="field">
+                                <label for="article_title">記事タイトル</label>
+                                <input id="article_title" type="text" name="article_title" value="{{ selected_draft.article_title }}">
+                            </div>
+                            <div class="field">
+                                <label for="article_excerpt">抜粋</label>
+                                <textarea id="article_excerpt" name="article_excerpt" style="min-height:110px;">{{ selected_draft.article_excerpt }}</textarea>
+                            </div>
+                            <div class="field">
+                                <label for="article_slug">スラッグ</label>
+                                <input id="article_slug" type="text" name="article_slug" value="{{ selected_draft.article_slug }}">
+                            </div>
+                            <div class="field">
+                                <label for="article_html">本文HTML</label>
+                                <textarea id="article_html" name="article_html">{{ selected_draft.article_html }}</textarea>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" class="btn btn-dark" style="width:auto;">下書きを更新する</button>
+                            </div>
+                        </form>
+
+                        <div class="geo-review-box">
+                            <div class="geo-review-top">
+                                <div>
+                                    <div class="geo-review-badge">GEO診断</div>
+                                    <div class="geo-score">{{ selected_draft.geo_score or 0 }}点</div>
+                                </div>
+                            </div>
+                            <div class="geo-review-copy">
+                                {% if selected_draft.geo_feedback %}
+                                {{ selected_draft.geo_feedback }}
+                                {% else %}
+                                記事生成時に自動でGEO診断を実行します。WordPress投稿時にも、95点以上を目指して再改善してから投稿します。
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% set selected_marketing = marketing_summary_map.get(selected_draft.id, {}) %}
+                        <div class="source-box">
+                            <h3>記事マーケティング実績</h3>
+                            <p><strong>ABバリアント {{ selected_draft.marketing_variant or 'A' }}{% if selected_marketing_assets.variant_label %} / {{ selected_marketing_assets.variant_label }}{% endif %}</strong></p>
+                            <p>PV {{ selected_marketing.impressions or 0 }} / クリック {{ selected_marketing.clicks or 0 }} / 登録 {{ selected_marketing.registrations or 0 }} / 有料化 {{ selected_marketing.paid_users or 0 }}</p>
+                            <p>CTR {{ selected_marketing.ctr or 0 }}% / 登録率 {{ selected_marketing.reg_rate or 0 }}% / 有料化率 {{ selected_marketing.paid_rate or 0 }}%</p>
+                            {% if selected_marketing_assets.headline %}
+                            <p><strong>CTA見出し:</strong> {{ selected_marketing_assets.headline }}</p>
+                            {% endif %}
+                            {% if selected_marketing_assets.button_label %}
+                            <p><strong>CTAボタン:</strong> {{ selected_marketing_assets.button_label }}</p>
+                            {% endif %}
+                        </div>
+
+                        <form action="/master/content/{{ selected_draft.id }}/publish-wordpress" method="post">
+                            <div class="actions">
+                                <button type="submit" class="btn btn-gold" {% if not wordpress_configured %}disabled{% endif %} style="{% if not wordpress_configured %}opacity:.45;cursor:not-allowed;{% endif %}width:auto;">
+                                    完成版をWordPressへ下書き投稿
+                                </button>
+                                <a href="/master/settings" class="inline-btn">接続設定を開く</a>
+                                {% if selected_draft.wordpress_post_id %}
+                                <span class="inline-btn" style="cursor:default;">投稿ID {{ selected_draft.wordpress_post_id }} / {{ selected_draft.wordpress_status or 'draft' }}</span>
+                                {% endif %}
+                            </div>
+                        </form>
+
+                        {% if not wordpress_configured %}
+                        <div class="feedback error" style="margin-bottom:0;">WordPress接続設定を保存すると、完成版をそのまま下書き投稿できます。</div>
+                        {% endif %}
+
+                        <div class="preview">
+                            <h3>プレビュー</h3>
+                            {{ selected_draft.article_html | safe }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty">まだ表示する下書きがありません。左の候補論文から生成すると、ここでそのまま編集できます。</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

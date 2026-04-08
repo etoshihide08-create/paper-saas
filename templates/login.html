@@ -134,6 +134,153 @@
             line-height: 1.5;
         }
 
+        .campaign-focus {
+            background: linear-gradient(135deg, #fff7d6 0%, #fffdf7 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.12);
+        }
+
+        .campaign-focus-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .campaign-focus-badge,
+        .campaign-focus-spots {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .campaign-focus-badge {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+        }
+
+        .campaign-focus-spots {
+            background: rgba(37, 99, 235, 0.10);
+            color: #1d4ed8;
+        }
+
+        .campaign-focus-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0 0 4px;
+        }
+
+        .campaign-focus-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #92400e;
+            margin: 0 0 8px;
+        }
+
+        .campaign-focus-tier {
+            font-size: 12px;
+            font-weight: 800;
+            color: #b45309;
+            margin: 0 0 6px;
+        }
+
+        .campaign-focus-copy {
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #78350f;
+            margin: 0;
+        }
+
+        .campaign-focus-identity,
+        .campaign-focus-savings {
+            margin: 0 0 8px;
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        .campaign-focus-savings {
+            color: #1d4ed8;
+        }
+
+        .promo-offer-focus {
+            background: linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%);
+            border: 1px solid #67e8f9;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 24px rgba(34, 211, 238, 0.10);
+        }
+
+        .promo-offer-focus.is-lifetime {
+            background: linear-gradient(135deg, #fff7d6 0%, #fffdf7 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.12);
+        }
+
+        .promo-offer-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(8, 145, 178, 0.12);
+            color: #0f766e;
+            font-size: 11px;
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-label {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+        }
+
+        .promo-offer-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 6px;
+        }
+
+        .promo-offer-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f766e;
+            margin: 0 0 8px;
+        }
+
+        .promo-offer-copy {
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #155e75;
+            margin: 0;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-price {
+            color: #b45309;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-copy {
+            color: #78350f;
+        }
+
+        .field-note.is-locked {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
 
         .error {
             background: #fef2f2;
@@ -190,6 +337,40 @@
             <p class="context-card-title">📚 保存機能はログイン後に使えます</p>
             <p class="context-card-desc">気になった論文をあとからすぐ見返せます。</p>
         </div>
+        {% elif from_page == "mypage" %}
+        <div class="context-card">
+            <p class="context-card-title">👤 マイページはログイン後に使えます</p>
+            <p class="context-card-desc">保存論文数やメモの蓄積、おすすめの育ち方をまとめて確認できます。</p>
+        </div>
+        {% elif from_page == "master_article" %}
+        <div class="context-card">
+            <p class="context-card-title">📈 記事からの導線です</p>
+            <p class="context-card-desc">この記事経由の流入として計測されます。登録すると論文要約や保存機能もすぐ使えます。</p>
+        </div>
+        {% endif %}
+
+        {% if selected_promo_offer %}
+        <div class="promo-offer-focus {% if selected_promo_offer.kind == 'lifetime' %}is-lifetime{% endif %}">
+            <p class="promo-offer-label">{{ selected_promo_offer.label or '特別招待' }}</p>
+            <p class="promo-offer-title">{{ selected_promo_offer.title }}</p>
+            <p class="promo-offer-price">{{ selected_promo_offer.price_line }}</p>
+            <p class="promo-offer-copy">{{ selected_promo_offer.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if selected_campaign %}
+        <div class="campaign-focus">
+            <div class="campaign-focus-top">
+                <span class="campaign-focus-badge">選択中の特典</span>
+                <span class="campaign-focus-spots">残り {{ selected_campaign.supporter_spots_left }} 名</span>
+            </div>
+            <p class="campaign-focus-title">{{ selected_campaign.title }}</p>
+            <p class="campaign-focus-tier">通常月額1500円 → サポーター価格 月額980円</p>
+            <p class="campaign-focus-price">月額980円</p>
+            <p class="campaign-focus-identity">さらに先着30名だけ、最初の{{ selected_campaign.special_months }}か月は月額{{ selected_campaign.special_price }}円です。</p>
+            <p class="campaign-focus-savings">先着30名特典の残りは {{ selected_campaign.special_spots_left }} 名です。</p>
+            <p class="campaign-focus-copy">ログインすると、この価格を選んだ状態で料金プランへ進みます。契約が完了した時点でサポーター価格が適用され、先着30名に残っていれば6か月500円特典も自動で適用されます。</p>
+        </div>
         {% endif %}
 
         {% if error %}
@@ -197,9 +378,16 @@
         {% endif %}
 
         <form action="/login" method="post">
+            <input type="hidden" name="from_page" value="{{ from_page or '' }}">
+            <input type="hidden" name="campaign_slug" value="{{ campaign_slug or '' }}">
+            <input type="hidden" name="promo_code" value="{{ promo_code or '' }}">
+            <input type="hidden" name="locked_email" value="{{ locked_email or '' }}">
             <div class="field">
                 <label for="email">メールアドレス</label>
-                <input type="email" id="email" name="email" autocomplete="email" required>
+                <input type="email" id="email" name="email" value="{{ locked_email or '' }}" autocomplete="email" {% if locked_email %}readonly{% endif %} required>
+                {% if locked_email %}
+                <div class="field-note is-locked">この特別枠はこのメールアドレスに固定されています。</div>
+                {% endif %}
             </div>
 
             <div class="field">
@@ -211,7 +399,7 @@
         </form>
 
         <div class="footer-link">
-            アカウントをお持ちでない方は <a href="/register">新規登録</a>
+            アカウントをお持ちでない方は <a href="/register?from={{ from_page or 'plans' }}{% if campaign_slug %}&campaign={{ campaign_slug }}{% endif %}{% if promo_code %}&promo_code={{ promo_code }}{% endif %}{% if locked_email %}&locked_email={{ locked_email }}{% endif %}">新規登録</a>
         </div>
     </div>
 </body>

@@ -122,6 +122,294 @@
             border: 1px solid #fecaca;
         }
 
+        .context-card {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .context-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e40af;
+            margin: 0 0 4px;
+        }
+
+        .context-card-desc {
+            font-size: 13px;
+            color: #3b82f6;
+            margin: 0;
+            line-height: 1.6;
+            text-wrap: pretty;
+        }
+
+        .benefit-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .benefit-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #1e40af;
+            margin: 0 0 8px;
+        }
+
+        .benefit-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #1e3a8a;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .benefit-list li,
+        .plan-mini-list li,
+        .field-note {
+            text-wrap: pretty;
+        }
+
+        .field-note {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .field-note.is-locked {
+            color: #92400e;
+        }
+
+        .plan-mini-box {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .campaign-teaser {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid #fde68a;
+            background: linear-gradient(135deg, #fffbeb 0%, #fff7d6 100%);
+        }
+
+        .campaign-teaser-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .campaign-teaser-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #92400e;
+            margin: 0;
+        }
+
+        .campaign-teaser-spots {
+            font-size: 11px;
+            font-weight: 800;
+            color: #b45309;
+            background: rgba(251, 191, 36, 0.16);
+            border-radius: 999px;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+
+        .campaign-teaser-copy {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #78350f;
+            margin: 0;
+        }
+
+        .campaign-teaser-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #b45309;
+            text-decoration: none;
+        }
+
+        .campaign-teaser-link:hover { text-decoration: underline; }
+
+        .campaign-focus {
+            background: linear-gradient(135deg, #fff7d6 0%, #fffdf7 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.12);
+        }
+
+        .campaign-focus-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .campaign-focus-badge,
+        .campaign-focus-spots {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .campaign-focus-badge {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+        }
+
+        .campaign-focus-spots {
+            background: rgba(37, 99, 235, 0.10);
+            color: #1d4ed8;
+        }
+
+        .campaign-focus-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0 0 4px;
+        }
+
+        .campaign-focus-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #92400e;
+            margin: 0 0 8px;
+        }
+
+        .campaign-focus-tier {
+            font-size: 12px;
+            font-weight: 800;
+            color: #b45309;
+            margin: 0 0 6px;
+        }
+
+        .campaign-focus-copy {
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #78350f;
+            margin: 0;
+        }
+
+        .campaign-focus-identity,
+        .campaign-focus-savings {
+            margin: 0 0 8px;
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        .campaign-focus-savings {
+            color: #1d4ed8;
+        }
+
+        .promo-offer-focus {
+            background: linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%);
+            border: 1px solid #67e8f9;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 24px rgba(34, 211, 238, 0.10);
+        }
+
+        .promo-offer-focus.is-lifetime {
+            background: linear-gradient(135deg, #fff7d6 0%, #fffdf7 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.12);
+        }
+
+        .promo-offer-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(8, 145, 178, 0.12);
+            color: #0f766e;
+            font-size: 11px;
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-label {
+            background: rgba(180, 83, 9, 0.12);
+            color: #b45309;
+        }
+
+        .promo-offer-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 6px;
+        }
+
+        .promo-offer-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f766e;
+            margin: 0 0 8px;
+        }
+
+        .promo-offer-copy {
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #155e75;
+            margin: 0;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-price {
+            color: #b45309;
+        }
+
+        .promo-offer-focus.is-lifetime .promo-offer-copy {
+            color: #78350f;
+        }
+
+        .plan-mini-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 8px;
+        }
+
+        .plan-mini-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .plan-mini-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .plan-mini-link:hover { text-decoration: underline; }
+
         .footer-link {
             text-align: center;
             margin-top: 20px;
@@ -143,6 +431,13 @@
                 border-radius: 16px;
             }
             h1 { font-size: 20px; }
+            .context-card-desc,
+            .benefit-list,
+            .plan-mini-list,
+            .field-note {
+                font-size: 11.5px;
+                line-height: 1.7;
+            }
         }
     </style>
 </head>
@@ -161,10 +456,62 @@
         <div class="error">{{ error }}</div>
         {% endif %}
 
+        {% if from_page == "mypage" %}
+        <div class="context-card">
+            <p class="context-card-title">👤 マイページを見るには登録がおすすめです</p>
+            <p class="context-card-desc">保存数やメモ、おすすめの育ち方をまとめて確認できます。</p>
+        </div>
+        {% elif from_page == "master_article" %}
+        <div class="context-card">
+            <p class="context-card-title">📈 記事からの登録導線です</p>
+            <p class="context-card-desc">登録すると、この記事の反応として計測されます。論文要約・保存・メモ機能もすぐ使えます。</p>
+        </div>
+        {% endif %}
+
+        {% if selected_promo_offer %}
+        <div class="promo-offer-focus {% if selected_promo_offer.kind == 'lifetime' %}is-lifetime{% endif %}">
+            <p class="promo-offer-label">{{ selected_promo_offer.label or '特別招待' }}</p>
+            <p class="promo-offer-title">{{ selected_promo_offer.title }}</p>
+            <p class="promo-offer-price">{{ selected_promo_offer.price_line }}</p>
+            <p class="promo-offer-copy">{{ selected_promo_offer.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if selected_campaign %}
+        <div class="campaign-focus">
+            <div class="campaign-focus-top">
+                <span class="campaign-focus-badge">選択中の特典</span>
+                <span class="campaign-focus-spots">残り {{ selected_campaign.supporter_spots_left }} 名</span>
+            </div>
+            <p class="campaign-focus-title">{{ selected_campaign.title }}</p>
+            <p class="campaign-focus-tier">通常月額1500円 → サポーター価格 月額980円</p>
+            <p class="campaign-focus-price">月額980円</p>
+            <p class="campaign-focus-identity">さらに先着30名だけ、最初の{{ selected_campaign.special_months }}か月は月額{{ selected_campaign.special_price }}円です。</p>
+            <p class="campaign-focus-savings">先着30名特典の残りは {{ selected_campaign.special_spots_left }} 名です。</p>
+            <p class="campaign-focus-copy">登録すると、この価格を選んだ状態で料金プランへ進みます。契約が完了した時点でサポーター価格が適用され、先着30名に残っていれば6か月500円特典も自動で適用されます。</p>
+        </div>
+        {% endif %}
+
+        <div class="benefit-box">
+            <p class="benefit-title">登録するとできること</p>
+            <ul class="benefit-list">
+                <li>英語論文の日本語要約を保存して、あとで見返せます</li>
+                <li>興味タグに合わせて、おすすめ論文が育ちます</li>
+                <li>メモ・学習掲示板・保存フォルダが使えます</li>
+            </ul>
+        </div>
+
         <form action="/register" method="post">
+            <input type="hidden" name="from_page" value="{{ from_page or '' }}">
+            <input type="hidden" name="campaign_slug" value="{{ campaign_slug or '' }}">
+            <input type="hidden" name="promo_code" value="{{ promo_code or '' }}">
+            <input type="hidden" name="locked_email" value="{{ locked_email or '' }}">
             <div class="field">
                 <label for="email">メールアドレス</label>
-                <input type="email" id="email" name="email" autocomplete="email" required>
+                <input type="email" id="email" name="email" value="{{ locked_email or '' }}" autocomplete="email" {% if locked_email %}readonly{% endif %} required>
+                {% if locked_email %}
+                <div class="field-note is-locked">この特別枠はこのメールアドレスに固定されています。</div>
+                {% endif %}
             </div>
 
             <div class="field">
@@ -172,11 +519,43 @@
                 <input type="password" id="password" name="password" autocomplete="new-password" required>
             </div>
 
+            <div class="field">
+                <label for="ref_code">紹介コード（任意）</label>
+                <input type="text" id="ref_code" name="ref_code" value="{{ ref_code or '' }}" placeholder="紹介コード" autocomplete="off">
+                <div class="field-note">あとから探す手間を減らしたい場合は、登録時に入力しておくとスムーズです。</div>
+            </div>
+
             <button type="submit" class="btn">登録する</button>
         </form>
 
+        <div class="field-note" style="margin-top:14px;text-align:center;">
+            無料で始めて、あとからプラン変更できます。
+        </div>
+
+        {% if supporter_campaigns %}
+        {% set lead_campaign = supporter_campaigns[0] %}
+        <div class="campaign-teaser">
+            <div class="campaign-teaser-top">
+                <p class="campaign-teaser-title">先着キャンペーン実施中</p>
+                <span class="campaign-teaser-spots">残り {{ lead_campaign.spots_left }} 名</span>
+            </div>
+            <p class="campaign-teaser-copy">{{ lead_campaign.title }}では、{{ lead_campaign.price_line }}。Expert を使いたくなったときも、優待価格（月額1480円）で上げられます。</p>
+            <a href="/plans" class="campaign-teaser-link">料金プランとキャンペーンを見る</a>
+        </div>
+        {% endif %}
+
+        <div class="plan-mini-box">
+            <p class="plan-mini-title">プランの考え方</p>
+            <ul class="plan-mini-list">
+                <li>まずは Free で論文検索・保存・おすすめを試せます</li>
+                <li>たくさん使う方向けに Pro / Expert があります</li>
+                <li>必要になったタイミングであとから変更できます</li>
+            </ul>
+            <a href="/plans" class="plan-mini-link">料金プランを見る</a>
+        </div>
+
         <div class="footer-link">
-            すでにアカウントをお持ちの方は <a href="/login">ログイン</a>
+            すでにアカウントをお持ちの方は <a href="/login?from={{ from_page or 'plans' }}{% if campaign_slug %}&campaign={{ campaign_slug }}{% endif %}{% if promo_code %}&promo_code={{ promo_code }}{% endif %}{% if locked_email %}&locked_email={{ locked_email }}{% endif %}">ログイン</a>
         </div>
     </div>
 </body>

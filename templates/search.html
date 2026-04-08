@@ -214,11 +214,12 @@
       }
 
       .action-row {
-        margin-top: 10px;
+        margin-top: 14px;
         display: flex;
-        gap: 2px;
+        gap: 18px;
         align-items: center;
-        margin-left: -8px;
+        margin-left: 0;
+        justify-content: flex-start;
       }
 
       .action-button,
@@ -226,25 +227,59 @@
         border: none;
         background: transparent;
         color: var(--subtext);
-        padding: 6px 10px;
+        padding: 0;
         border-radius: 999px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 13px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        transition: background 0.15s ease, color 0.15s ease;
+        gap: 8px;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .action-glyph {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.9);
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .action-copy {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .share-label {
+        font-weight: 700;
       }
 
       .action-button:hover {
-        background: var(--gray-btn);
         color: var(--text);
       }
 
+      .action-button:hover .action-glyph {
+        background: #e5e7eb;
+      }
+
       .like-button:hover {
-        background: #eff6ff;
-        color: #2563eb;
+        color: #f91880;
+      }
+
+      .like-button:hover .action-glyph {
+        background: rgba(249, 24, 128, 0.12);
       }
 
       .like-button.disabled {
@@ -253,12 +288,22 @@
       }
 
       .like-button.liked {
-        color: #2563eb;
+        color: #f91880;
+      }
+
+      .like-button.liked .action-glyph {
+        background: rgba(249, 24, 128, 0.14);
+        box-shadow: inset 0 0 0 1px rgba(249, 24, 128, 0.14);
       }
 
       .like-button.animate-pop {
         transform: scale(1.12);
         transition: transform 0.18s ease;
+      }
+
+      .action-button:active,
+      .like-button:active {
+        transform: scale(0.97);
       }
 
       .meta {
@@ -377,8 +422,8 @@
       }
 
       .like-button.liked svg {
-        fill: #2563eb;
-        stroke: #2563eb;
+        fill: #f91880;
+        stroke: #f91880;
       }
       .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); box-shadow: 0 -8px 32px rgba(15,23,42,0.08); display: flex; align-items: stretch; z-index: 150; }
       .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; }
@@ -408,16 +453,45 @@
           font-size: 14px;
         }
 
-        .summary-toggle summary,
-        .action-button,
-        .like-button {
+        .summary-toggle summary {
           width: 100%;
           justify-content: center;
           min-height: 44px;
         }
 
         .action-row {
+          gap: 16px;
+        }
+
+        .action-button,
+        .like-button {
+          width: auto;
+          min-height: 0;
+          padding: 0;
           gap: 8px;
+          background: transparent;
+          font-size: 12px;
+          font-weight: 700;
+          color: #6b7280;
+        }
+
+        .action-glyph {
+          width: 34px;
+          height: 34px;
+        }
+
+        .action-button:active .action-glyph,
+        .like-button:active .action-glyph {
+          transform: scale(0.94);
+        }
+
+        .share-button .share-label {
+          display: none;
+        }
+
+        .action-copy {
+          font-size: 12px;
+          letter-spacing: 0.01em;
         }
 
         .saved-badge {
@@ -507,10 +581,13 @@
               type="button"
               class="like-button"
               data-pubmed-id="{{ paper.id }}"
+              aria-label="いいね"
               onclick="addLike('{{ paper.id }}', this)"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-              <span class="like-count">{{ paper.likes or 0 }}</span>
+              <span class="action-glyph">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              </span>
+              <span class="action-copy like-count">{{ paper.likes or 0 }}</span>
             </button>
 
             <button
@@ -518,9 +595,12 @@
               class="action-button share-button"
               data-title="{{ paper.jp_title or paper.title }}"
               data-url="/paper?id={{ paper.id }}"
+              aria-label="共有"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-              共有
+              <span class="action-glyph">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              </span>
+              <span class="action-copy share-label">共有</span>
             </button>
           </div>
 
@@ -588,14 +668,9 @@
           <p class="tag-ranking-title">関連テーマから探す</p>
 
           <div class="tag-ranking-list">
-            <a href="/search?keyword=中枢" class="tag-ranking-btn">中枢</a>
-            <a href="/search?keyword=歩行・バランス" class="tag-ranking-btn">歩行・バランス</a>
-            <a href="/search?keyword=整形" class="tag-ranking-btn">整形</a>
-            <a href="/search?keyword=高齢者・フレイル" class="tag-ranking-btn">高齢者・フレイル</a>
-            <a href="/search?keyword=呼吸器" class="tag-ranking-btn">呼吸器</a>
-            <a href="/search?keyword=疼痛" class="tag-ranking-btn">疼痛</a>
-            <a href="/search?keyword=ADL・生活機能" class="tag-ranking-btn">ADL・生活機能</a>
-            <a href="/search?keyword=転倒" class="tag-ranking-btn">転倒</a>
+            {% for tag in discovery_tags[:8] %}
+            <a href="/search?keyword={{ tag }}" class="tag-ranking-btn">{{ tag }}</a>
+            {% endfor %}
           </div>
         </div>
       </div>

@@ -34,11 +34,63 @@
     .tab-panel.active { display: block; }
 
     /* ── Recommended papers ── */
-    .rec-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+    .rec-section { margin-bottom: 26px; }
+    .rec-section-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .rec-section-title { font-size: 18px; font-weight: 900; line-height: 1.35; }
+    .rec-section-subtitle { font-size: 13px; color: var(--subtext); line-height: 1.7; margin-top: 4px; }
+    .rec-more-wrap { display: flex; justify-content: center; margin-top: 12px; }
+    .rec-more-wrap.hidden { display: none; }
+    .rec-more-btn { border: none; background: #eef2ff; color: #4338ca; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; }
+    .rec-more-btn:hover { background: #e0e7ff; }
+    .rec-feed { display: grid; gap: 12px; }
+    .rec-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .rec-card.hidden { display: none; }
     .rec-reason { font-size: 11px; font-weight: 700; color: #7c3aed; background: #f5f3ff; padding: 3px 9px; border-radius: 999px; display: inline-block; margin-bottom: 10px; }
     .rec-title { font-size: 15px; font-weight: 800; line-height: 1.5; margin-bottom: 6px; color: var(--text); }
     .rec-meta { font-size: 12px; color: var(--subtext); margin-bottom: 10px; }
     .rec-summary { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .rec-tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rec-tag-chip { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 800; text-decoration: none; }
+    .rec-tag-chip:hover { background: #e0e7ff; }
+    .rec-inline-actions { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+    .rec-inline-btn,
+    .btn-like,
+    .btn-reply-toggle,
+    .btn-like-sm,
+    .btn-attach { border: none; background: transparent; color: #6b7280; border-radius: 999px; padding: 0; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: color 0.15s ease, transform 0.15s ease, opacity 0.15s ease; }
+    .action-chip-glyph { width: 36px; height: 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: #f3f4f6; box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9); transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; flex-shrink: 0; }
+    .action-chip-copy { display: inline-flex; align-items: center; line-height: 1; }
+    .rec-inline-btn:hover,
+    .btn-like:hover,
+    .btn-reply-toggle:hover,
+    .btn-like-sm:hover,
+    .btn-attach:hover { transform: scale(0.98); }
+    .rec-inline-btn:active,
+    .btn-like:active,
+    .btn-reply-toggle:active,
+    .btn-like-sm:active,
+    .btn-attach:active { transform: scale(0.96); }
+    .rec-inline-btn:active .action-chip-glyph,
+    .btn-like:active .action-chip-glyph,
+    .btn-reply-toggle:active .action-chip-glyph,
+    .btn-like-sm:active .action-chip-glyph,
+    .btn-attach:active .action-chip-glyph { transform: scale(0.94); }
+    .rec-inline-btn:hover .action-chip-glyph,
+    .btn-attach:hover .action-chip-glyph { background: #e5e7eb; }
+    .rec-inline-btn.saved { color: #166534; }
+    .rec-inline-btn.saved .action-chip-glyph { background: #dcfce7; box-shadow: inset 0 0 0 1px rgba(34,197,94,0.12); }
+    .rec-inline-btn.liked,
+    .btn-like.liked,
+    .btn-like-sm.liked { color: #f91880; }
+    .rec-inline-btn.liked .action-chip-glyph,
+    .btn-like.liked .action-chip-glyph,
+    .btn-like-sm.liked .action-chip-glyph { background: rgba(249,24,128,0.14); box-shadow: inset 0 0 0 1px rgba(249,24,128,0.14); }
+    .btn-like:hover,
+    .btn-like-sm:hover { color: #f91880; }
+    .btn-like:hover .action-chip-glyph,
+    .btn-like-sm:hover .action-chip-glyph { background: rgba(249,24,128,0.12); }
+    .btn-reply-toggle:hover { color: #2563eb; }
+    .btn-reply-toggle:hover .action-chip-glyph { background: #dbeafe; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.12); }
     .rec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .rec-btn { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; text-decoration: none; display: inline-block; }
     .rec-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
@@ -57,7 +109,7 @@
     .filter-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 
     /* Composer */
-    .composer { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 20px; }
+    .composer { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
     .composer-top { display: flex; gap: 12px; align-items: flex-start; }
     .composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
     .composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -69,7 +121,7 @@
     .tag-open-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
     .tag-open-btn.has-tags { border-color: #6366f1; color: #4338ca; background: #eef2ff; }
     .tag-open-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .tag-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.12); padding: 12px; width: 300px; max-height: 320px; overflow-y: auto; }
+    .tag-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.12); padding: 12px; width: min(360px, calc(100vw - 56px)); max-height: min(420px, calc(100vh - 240px)); overflow-y: auto; }
     .tag-dropdown.open { display: block; }
     .tag-dropdown-grid { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag-toggle { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
@@ -85,17 +137,44 @@
     .paper-attach-box { margin-top: 10px; padding: 10px 12px; background: var(--blue-soft); border-radius: 12px; display: none; position: relative; }
     .paper-attach-box.visible { display: block; }
     .paper-attach-label { font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 6px; }
+    .paper-attach-helper { font-size: 12px; color: var(--subtext); margin-bottom: 10px; line-height: 1.6; }
+    .paper-picker-search { width: 100%; border: 1px solid #bfdbfe; border-radius: 10px; padding: 9px 10px; font-size: 13px; background: #fff; outline: none; margin-bottom: 8px; }
+    .paper-picker-search:focus { border-color: var(--blue); }
+    .paper-picker-list { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; margin-bottom: 10px; }
+    .paper-picker-item { width: 100%; text-align: left; border: 1px solid #dbeafe; background: #fff; border-radius: 12px; padding: 10px 11px; cursor: pointer; }
+    .paper-picker-item:hover { border-color: var(--blue); background: #f8fbff; }
+    .paper-picker-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 3px; }
+    .paper-picker-meta { font-size: 11px; color: var(--subtext); line-height: 1.5; }
+    .paper-picker-empty { font-size: 12px; color: var(--subtext); background: #fff; border: 1px dashed #bfdbfe; border-radius: 12px; padding: 12px; text-align: center; }
+    .paper-manual-toggle { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 8px; }
+    .paper-manual-fields { display: none; margin-top: 4px; }
+    .paper-manual-fields.open { display: block; }
     .paper-attach-input { width: 100%; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 10px; font-size: 13px; background: #fff; outline: none; }
     .paper-attach-input:focus { border-color: var(--blue); }
     .attach-clear { position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--subtext); font-size: 16px; cursor: pointer; }
 
     .composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
-    .btn-attach { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1.5px solid #d1d5db; background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; }
-    .btn-attach:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-attach { font-size: 13px; font-weight: 700; }
+    .btn-attach:hover { color: var(--blue); }
+    .btn-attach:hover .action-chip-glyph { background: #dbeafe; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.12); }
     .btn-post { margin-left: auto; padding: 9px 20px; border-radius: 999px; border: none; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
     .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
     .char-count { font-size: 12px; color: var(--subtext); }
     .char-count.over { color: #dc2626; }
+    .board-fab { position: fixed; right: 18px; bottom: 84px; width: 58px; height: 58px; border: none; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-size: 32px; line-height: 1; box-shadow: 0 16px 30px rgba(37,99,235,0.32); cursor: pointer; z-index: 180; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+    .board-fab:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 18px 34px rgba(37,99,235,0.38); }
+    .board-fab.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+    .composer-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.34); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 190; padding: 20px 16px 88px; overflow-y: auto; }
+    .composer-modal.open { display: flex; }
+    .composer-shell { width: 100%; max-width: 640px; background: transparent; max-height: calc(100vh - 108px); }
+    .composer-sheet { background: #fff; border-radius: 26px 26px 20px 20px; box-shadow: 0 24px 60px rgba(15,23,42,0.22); overflow: visible; max-height: calc(100vh - 108px); display: flex; flex-direction: column; }
+    .composer-sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,0.96); }
+    .composer-sheet-title { font-size: 16px; font-weight: 800; }
+    .composer-sheet-sub { font-size: 12px; color: var(--subtext); margin-top: 2px; }
+    .composer-close { border: none; background: #f3f4f6; color: #374151; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+    .composer-close:hover { background: #e5e7eb; }
+    .composer-sheet .composer { overflow-y: auto; }
+    body.modal-open { overflow: hidden; }
 
     .login-prompt { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; text-align: center; margin-bottom: 20px; font-size: 14px; color: var(--subtext); }
     .login-prompt a { color: var(--blue); font-weight: 700; text-decoration: none; }
@@ -117,12 +196,7 @@
     .paper-cite-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; line-height: 1.4; }
     .paper-cite-link { font-size: 12px; color: var(--blue); text-decoration: none; }
     .paper-cite-link:hover { text-decoration: underline; }
-    .post-footer { display: flex; align-items: center; gap: 8px; }
-    .btn-like { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; transition: all 0.15s; }
-    .btn-like:hover { border-color: #f43f5e; color: #f43f5e; }
-    .btn-like.liked { background: #fff1f2; border-color: #f43f5e; color: #f43f5e; }
-    .btn-reply-toggle { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--subtext); cursor: pointer; }
-    .btn-reply-toggle:hover { border-color: var(--blue); color: var(--blue); }
+    .post-footer { display: flex; align-items: center; gap: 18px; }
     .btn-delete { margin-left: auto; background: none; border: none; color: #9ca3af; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
     .btn-delete:hover { color: #dc2626; background: #fef2f2; }
     .replies-section { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; display: none; }
@@ -135,8 +209,7 @@
     .reply-time { font-size: 11px; color: var(--subtext); }
     .reply-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
     .reply-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-    .btn-like-sm { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 12px; color: var(--subtext); cursor: pointer; }
-    .btn-like-sm.liked { background: #fff1f2; border-color: #f43f5e; color: #f43f5e; }
+    .btn-like-sm .action-chip-glyph { width: 32px; height: 32px; font-size: 13px; }
     .btn-delete-sm { margin-left: auto; background: none; border: none; color: #d1d5db; font-size: 12px; cursor: pointer; }
     .btn-delete-sm:hover { color: #dc2626; }
     .reply-composer { display: flex; gap: 10px; margin-top: 10px; align-items: flex-start; }
@@ -154,6 +227,12 @@
     .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--subtext); text-decoration: none; }
     .mobile-footer-link.is-active { color: var(--blue); }
     .mobile-footer-icon { font-size: 20px; line-height: 1; }
+
+    @media (min-width: 760px) {
+      .composer-modal { align-items: center; padding: 32px; }
+      .composer-sheet { border-radius: 26px; }
+      .board-fab { right: 28px; bottom: 28px; }
+    }
   </style>
 </head>
 <body>
@@ -169,7 +248,78 @@
   <!-- ── Tab: おすすめ論文 ── -->
   <div id="tab-recommend" class="tab-panel {% if tab != 'board' %}active{% endif %}">
     <div class="container">
-      {% if recommended %}
+      {% if recommend_sections %}
+        {% for section in recommend_sections %}
+        <section class="rec-section">
+          <div class="rec-section-header">
+            <div>
+              <div class="rec-section-title">{{ section["title"] }}</div>
+              <div class="rec-section-subtitle">{{ section["subtitle"] }}</div>
+            </div>
+          </div>
+          <div class="rec-feed" id="rec-section-{{ loop.index0 }}" data-batch-size="5" data-auto-batches="0" data-max-auto-batches="3">
+            {% for item in section["items"] %}
+            <div class="rec-card {% if loop.index > 5 %}hidden{% endif %}">
+              <span class="rec-reason">{{ item.reason }}</span>
+              <div class="rec-title">{{ item.paper.display_title or item.paper.jp_title or item.paper.title or "（タイトル不明）" }}</div>
+              {% if item.paper.journal or item.paper.pubdate %}
+              <div class="rec-meta">{{ item.paper.journal }}{% if item.paper.pubdate %} · {{ item.paper.pubdate }}{% endif %}</div>
+              {% endif %}
+              {% if item.paper.summary_jp %}
+              <div class="rec-summary">{{ item.paper.summary_jp }}</div>
+              {% endif %}
+              {% if item.matched_tags %}
+              <div class="rec-tag-row">
+                {% for tag in item.matched_tags %}
+                <a href="/search?keyword={{ tag }}" class="rec-tag-chip">{{ tag }}</a>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <div class="rec-inline-actions">
+                <button type="button"
+                  class="rec-inline-btn {% if item.paper.is_saved %}saved{% endif %}"
+                  onclick='saveRecommendPaper(this, {{ {
+                    "pubmed_id": item.paper.pubmed_id,
+                    "title": item.paper.title or "",
+                    "jp_title": item.paper.jp_title or "",
+                    "authors": item.paper.authors or "",
+                    "journal": item.paper.journal or "",
+                    "pubdate": item.paper.pubdate or "",
+                    "abstract": item.paper.abstract or "",
+                    "jp": item.paper.jp or "",
+                    "summary_jp": item.paper.summary_jp or "",
+                    "folder_name": item.paper.folder_name or "未分類",
+                    "clinical_score": item.paper.clinical_score or "",
+                    "clinical_reason": item.paper.clinical_reason or "",
+                  } | tojson | safe }})'>
+                  <span class="action-chip-glyph"><span>{% if item.paper.is_saved %}✓{% else %}+{% endif %}</span></span>
+                  <span class="action-chip-copy">{% if item.paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+                </button>
+                <button type="button"
+                  class="rec-inline-btn {% if item.paper.liked %}liked{% endif %}"
+                  data-pubmed-id="{{ item.paper.pubmed_id }}"
+                  onclick="toggleRecommendLike('{{ item.paper.pubmed_id }}', this)">
+                  <span class="action-chip-glyph">❤</span>
+                  <span class="action-chip-copy rec-like-count">{{ item.paper.likes or 0 }}</span>
+                </button>
+              </div>
+              <div class="rec-actions">
+                <a href="/paper?id={{ item.paper.pubmed_id }}" class="rec-btn primary">{{ item.cta_label or "詳細を見る" }} →</a>
+                {% if item.matched_tags %}
+                <a href="/search?keyword={{ item.matched_tags[0] }}" class="rec-btn">同じテーマを探す</a>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% if section["items"]|length > 5 %}
+          <div class="rec-more-wrap" id="rec-more-wrap-{{ loop.index0 }}">
+            <button type="button" class="rec-more-btn" data-target="rec-section-{{ loop.index0 }}" onclick="toggleRecommendSection(this)">さらに見る</button>
+          </div>
+          {% endif %}
+        </section>
+        {% endfor %}
+      {% elif recommended %}
         {% for item in recommended %}
         <div class="rec-card">
           <span class="rec-reason">{{ item.reason }}</span>
@@ -200,73 +350,13 @@
     <!-- Tag filter -->
     <div class="tag-filter-bar">
       <a href="/learn?tab=board" class="filter-chip {% if not active_tag %}active{% endif %}">すべて</a>
-      {% for tag in ["整形","骨折","中枢","脳神経","呼吸器","循環器","糖尿病","高齢者・フレイル","歩行・バランス","上肢","ADL・生活機能","嚥下・言語・認知","疼痛","装具","離床","リスク管理","多職種連携","訪問・地域","目標設定・教育","評価・研究デザイン"] %}
+      {% for tag in board_tags %}
       <a href="/learn?tab=board&tag={{ tag }}" class="filter-chip {% if active_tag == tag %}active{% endif %}">{{ tag }}</a>
       {% endfor %}
     </div>
 
     <div class="container">
-      {% if current_user %}
-      <div class="composer">
-        <form method="post" action="/board/post" id="post-form">
-          <input type="hidden" name="parent_id" value="">
-          <input type="hidden" name="redirect_to" value="/learn?tab=board">
-          <div class="composer-top">
-            <div class="composer-avatar">
-              {% if current_user.avatar %}
-                {% if current_user.avatar|length <= 4 %}{{ current_user.avatar }}
-                {% else %}<img src="{{ current_user.avatar }}" alt="avatar">{% endif %}
-              {% else %}{{ (current_user.display_name or current_user.email)[0]|upper }}{% endif %}
-            </div>
-            <div class="composer-body">
-              <textarea class="composer-input" name="content" id="composer-content"
-                placeholder="気づいたこと、論文の感想、臨床知識をシェア…"
-                maxlength="500" oninput="updateComposer()"></textarea>
-            </div>
-          </div>
-          <div class="tag-btn-wrapper" id="tag-btn-wrapper">
-            <button type="button" class="tag-open-btn" id="tag-open-btn" onclick="toggleTagDropdown()">
-              🏷 タグ <span id="tag-open-count"></span>
-            </button>
-            <div class="tag-dropdown" id="tag-dropdown">
-              <div id="user-tags-section" style="display:none;">
-                <div class="tag-section-label">よく使うタグ</div>
-                <div class="tag-dropdown-grid" id="user-tags-grid"></div>
-                <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
-              </div>
-              <div class="tag-section-label">カテゴリ</div>
-              <div class="tag-dropdown-grid">
-                {% for tag in ["整形","骨折","中枢","脳神経","呼吸器","循環器","糖尿病","高齢者・フレイル","歩行・バランス","上肢","ADL・生活機能","嚥下・言語・認知","疼痛","装具","離床","リスク管理","多職種連携","訪問・地域","目標設定・教育","評価・研究デザイン"] %}
-                <button type="button" class="tag-toggle" data-tag="{{ tag }}" onclick="togglePostTag('{{ tag }}', this)">{{ tag }}</button>
-                {% endfor %}
-              </div>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
-              <div class="tag-custom-input-row">
-                <input type="text" id="custom-tag-input" class="tag-custom-input" placeholder="カスタムタグを追加..." maxlength="20"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomTag();}">
-                <button type="button" class="tag-custom-add-btn" onclick="addCustomTag()">追加</button>
-              </div>
-            </div>
-          </div>
-          <div class="tag-selected-preview" id="tag-selected-preview"></div>
-          <input type="hidden" name="tags" id="composer-tags">
-          <div class="paper-attach-box" id="paper-attach-box">
-            <div class="paper-attach-label">📄 論文を引用</div>
-            <input type="text" class="paper-attach-input" name="pubmed_id" id="attach-pmid"
-              placeholder="PMID（例: 12345678）" oninput="fetchPaperTitle(this.value)">
-            <input type="hidden" name="paper_title" id="attach-title">
-            <input type="hidden" name="paper_jp_title" id="attach-jp-title">
-            <div id="attach-preview" style="margin-top:8px;font-size:13px;color:#374151;"></div>
-            <button type="button" class="attach-clear" onclick="clearAttach()">✕</button>
-          </div>
-          <div class="composer-actions">
-            <button type="button" class="btn-attach" onclick="toggleAttach()">📄 論文を引用</button>
-            <span class="char-count" id="char-count">0 / 500</span>
-            <button type="submit" class="btn-post" id="btn-post" disabled>投稿</button>
-          </div>
-        </form>
-      </div>
-      {% else %}
+      {% if not current_user %}
       <div class="login-prompt">
         <a href="/login">ログイン</a>すると投稿・いいねができます
       </div>
@@ -308,10 +398,12 @@
           {% endif %}
           <div class="post-footer">
             <button class="btn-like {% if post.liked %}liked{% endif %}" onclick="toggleLike({{ post.id }}, this)">
-              ❤ <span class="like-num">{{ post.likes or 0 }}</span>
+              <span class="action-chip-glyph">❤</span>
+              <span class="action-chip-copy like-num">{{ post.likes or 0 }}</span>
             </button>
             <button class="btn-reply-toggle" onclick="toggleReplies({{ post.id }}, this)">
-              💬 <span class="reply-num">{{ post.reply_count or 0 }}</span>
+              <span class="action-chip-glyph">💬</span>
+              <span class="action-chip-copy reply-num">{{ post.reply_count or 0 }}</span>
             </button>
             {% if current_user and current_user.id == post.user_id %}
             <form method="post" action="/board/post/{{ post.id }}/delete"
@@ -351,6 +443,90 @@
 
   <div class="toast" id="toast"></div>
 
+  {% if current_user %}
+  <button type="button" class="board-fab {% if tab != 'board' %}hidden{% endif %}" id="board-fab" onclick="openComposerModal()" aria-label="新規投稿">+</button>
+
+  <div class="composer-modal" id="composer-modal" aria-hidden="true">
+    <div class="composer-shell">
+      <div class="composer-sheet">
+        <div class="composer-sheet-header">
+          <div>
+            <div class="composer-sheet-title">新規投稿</div>
+            <div class="composer-sheet-sub">学んだことや論文の気づきをシェア</div>
+          </div>
+          <button type="button" class="composer-close" onclick="closeComposerModal()" aria-label="閉じる">✕</button>
+        </div>
+        <div class="composer">
+          <form method="post" action="/board/post" id="post-form">
+            <input type="hidden" name="parent_id" value="">
+            <input type="hidden" name="redirect_to" value="/learn?tab=board">
+            <div class="composer-top">
+              <div class="composer-avatar">
+                {% if current_user.avatar %}
+                  {% if current_user.avatar|length <= 4 %}{{ current_user.avatar }}
+                  {% else %}<img src="{{ current_user.avatar }}" alt="avatar">{% endif %}
+                {% else %}{{ (current_user.display_name or current_user.email)[0]|upper }}{% endif %}
+              </div>
+              <div class="composer-body">
+                <textarea class="composer-input" name="content" id="composer-content"
+                  placeholder="気づいたこと、論文の感想、臨床知識をシェア…"
+                  maxlength="500" oninput="updateComposer()"></textarea>
+              </div>
+            </div>
+            <div class="tag-btn-wrapper" id="tag-btn-wrapper">
+              <button type="button" class="tag-open-btn" id="tag-open-btn" onclick="toggleTagDropdown()">
+                🏷 タグ <span id="tag-open-count"></span>
+              </button>
+              <div class="tag-dropdown" id="tag-dropdown">
+                <div id="user-tags-section" style="display:none;">
+                  <div class="tag-section-label">よく使うタグ</div>
+                  <div class="tag-dropdown-grid" id="user-tags-grid"></div>
+                  <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
+                </div>
+                <div class="tag-section-label">カテゴリ</div>
+                <div class="tag-dropdown-grid">
+                  {% for tag in board_tags %}
+                  <button type="button" class="tag-toggle" data-tag="{{ tag }}" onclick="togglePostTag('{{ tag }}', this)">{{ tag }}</button>
+                  {% endfor %}
+                </div>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:6px 0;">
+                <div class="tag-custom-input-row">
+                  <input type="text" id="custom-tag-input" class="tag-custom-input" placeholder="カスタムタグを追加..." maxlength="20"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomTag();}">
+                  <button type="button" class="tag-custom-add-btn" onclick="addCustomTag()">追加</button>
+                </div>
+              </div>
+            </div>
+            <div class="tag-selected-preview" id="tag-selected-preview"></div>
+            <input type="hidden" name="tags" id="composer-tags">
+            <div class="paper-attach-box" id="paper-attach-box">
+              <div class="paper-attach-label">📄 論文を引用</div>
+              <div class="paper-attach-helper">保存済み論文から選ぶと、タイトル付きですぐ引用できます。</div>
+              <input type="text" class="paper-picker-search" id="attach-paper-search"
+                placeholder="保存済み論文をタイトル・PMIDで検索..." oninput="loadAttachablePapers(this.value)">
+              <div class="paper-picker-list" id="attach-paper-list"></div>
+              <button type="button" class="paper-manual-toggle" onclick="toggleManualAttach()">PMIDを直接入力する</button>
+              <div class="paper-manual-fields" id="paper-manual-fields">
+                <input type="text" class="paper-attach-input" name="pubmed_id" id="attach-pmid"
+                  placeholder="PMID（例: 12345678）" oninput="fetchPaperTitle(this.value)">
+              </div>
+              <input type="hidden" name="paper_title" id="attach-title">
+              <input type="hidden" name="paper_jp_title" id="attach-jp-title">
+              <div id="attach-preview" style="margin-top:8px;font-size:13px;color:#374151;"></div>
+              <button type="button" class="attach-clear" onclick="clearAttach()">✕</button>
+            </div>
+            <div class="composer-actions">
+              <button type="button" class="btn-attach" onclick="toggleAttach()"><span class="action-chip-glyph">📄</span><span class="action-chip-copy">論文を引用</span></button>
+              <span class="char-count" id="char-count">0 / 500</span>
+              <button type="submit" class="btn-post" id="btn-post" disabled>投稿</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <nav class="mobile-footer">
     <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
     <a href="/learn" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
@@ -372,19 +548,46 @@
       if (tab === "board") url.searchParams.set("tab", "board");
       else url.searchParams.delete("tab");
       history.replaceState({}, "", url);
+      const fab = document.getElementById("board-fab");
+      if (fab) fab.classList.toggle("hidden", tab !== "board");
+      if (tab !== "board") closeComposerModal();
     }
 
     // ── Composer ──
     let selectedTags = [];
+    let attachFetchTimer = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("post-form");
       if (form) {
         form.addEventListener("submit", () => {
           if (selectedTags.length > 0) learnTagsFromPost(selectedTags);
+          closeComposerModal();
         });
       }
     });
+
+    function openComposerModal() {
+      const modal = document.getElementById("composer-modal");
+      if (!modal) return;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      setTimeout(() => {
+        const input = document.getElementById("composer-content");
+        if (input) input.focus();
+      }, 40);
+    }
+
+    function closeComposerModal() {
+      const modal = document.getElementById("composer-modal");
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      const dropdown = document.getElementById("tag-dropdown");
+      if (dropdown) dropdown.classList.remove("open");
+    }
 
     function updateComposer() {
       const ta = document.getElementById("composer-content");
@@ -490,15 +693,88 @@
     function toggleAttach() {
       const box = document.getElementById("paper-attach-box");
       box.classList.toggle("visible");
-      if (!box.classList.contains("visible")) clearAttach();
+      if (box.classList.contains("visible")) {
+        loadAttachablePapers("");
+      } else {
+        clearAttach();
+      }
     }
 
     function clearAttach() {
+      const search = document.getElementById("attach-paper-search");
+      const list = document.getElementById("attach-paper-list");
+      const manual = document.getElementById("paper-manual-fields");
+      if (search) search.value = "";
+      if (list) list.innerHTML = "";
+      if (manual) manual.classList.remove("open");
       document.getElementById("attach-pmid").value = "";
       document.getElementById("attach-title").value = "";
       document.getElementById("attach-jp-title").value = "";
       document.getElementById("attach-preview").textContent = "";
       document.getElementById("paper-attach-box").classList.remove("visible");
+    }
+
+    function toggleManualAttach() {
+      const manual = document.getElementById("paper-manual-fields");
+      if (!manual) return;
+      manual.classList.toggle("open");
+      if (manual.classList.contains("open")) {
+        document.getElementById("attach-pmid").focus();
+      }
+    }
+
+    function selectAttachPaper(paper) {
+      document.getElementById("attach-pmid").value = paper.pubmed_id || "";
+      document.getElementById("attach-title").value = paper.title || "";
+      document.getElementById("attach-jp-title").value = paper.jp_title || "";
+      document.getElementById("attach-preview").textContent = paper.jp_title || paper.title || paper.display_title || "";
+      showToast("引用論文をセットしました");
+    }
+
+    function renderAttachablePapers(items) {
+      const list = document.getElementById("attach-paper-list");
+      if (!list) return;
+      if (!items || items.length === 0) {
+        list.innerHTML = '<div class="paper-picker-empty">該当する保存済み論文がありません</div>';
+        return;
+      }
+      list.innerHTML = "";
+      items.forEach((paper) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "paper-picker-item";
+        button.addEventListener("click", () => selectAttachPaper(paper));
+
+        const title = document.createElement("div");
+        title.className = "paper-picker-title";
+        title.textContent = paper.display_title || "";
+
+        const meta = document.createElement("div");
+        meta.className = "paper-picker-meta";
+        const metaParts = [`PMID: ${paper.pubmed_id || ""}`];
+        if (paper.journal) metaParts.push(paper.journal);
+        if (paper.pubdate) metaParts.push(paper.pubdate);
+        meta.textContent = metaParts.join(" ・ ");
+
+        button.appendChild(title);
+        button.appendChild(meta);
+        list.appendChild(button);
+      });
+    }
+
+    function loadAttachablePapers(query) {
+      clearTimeout(attachFetchTimer);
+      const list = document.getElementById("attach-paper-list");
+      if (!list) return;
+      list.innerHTML = '<div class="paper-picker-empty">読み込み中...</div>';
+      attachFetchTimer = setTimeout(() => {
+        fetch("/board/attachable-papers?q=" + encodeURIComponent((query || "").trim()))
+          .then(r => r.json())
+          .then(data => renderAttachablePapers(data.papers || []))
+          .catch(() => {
+            list.innerHTML = '<div class="paper-picker-empty">保存済み論文の取得に失敗しました</div>';
+          });
+      }, 180);
     }
 
     let fetchTimer = null;
@@ -577,7 +853,7 @@
             <div class="reply-time">${(r.created_at||"").slice(0,16).replace("T"," ")}</div>
             <div class="reply-content">${r.content.replace(/</g,"&lt;")}</div>
             <div class="reply-actions">
-              <button class="btn-like-sm ${likedClass}" onclick="toggleLike(${r.id}, this)">❤ <span class="like-num">${r.likes||0}</span></button>
+              <button class="btn-like-sm ${likedClass}" onclick="toggleLike(${r.id}, this)"><span class="action-chip-glyph">❤</span><span class="action-chip-copy like-num">${r.likes||0}</span></button>
               ${r.is_own ? `<button class="btn-delete-sm" onclick="if(confirm('削除しますか？'))fetch('/board/post/${r.id}/delete',{method:'POST'}).then(()=>this.closest('.reply-card').remove())">削除</button>` : ""}
             </div>
           </div>`;
@@ -606,6 +882,137 @@
       t.classList.add("show");
       setTimeout(() => t.classList.remove("show"), 2200);
     }
+
+    async function saveRecommendPaper(button, paper) {
+      if (!paper || !paper.pubmed_id) return;
+      if (button.classList.contains("saved")) {
+        showToast("すでに保存されています");
+        return;
+      }
+      button.disabled = true;
+      const fd = new FormData();
+      Object.entries(paper).forEach(([key, value]) => fd.append(key, value || ""));
+      try {
+        const response = await fetch("/save", { method: "POST", body: fd });
+        if (!response.ok) {
+          showToast("保存に失敗しました");
+          return;
+        }
+        const data = await response.json();
+        if (!data.ok) {
+          showToast(data.message || "保存に失敗しました");
+          return;
+        }
+        button.classList.add("saved");
+        button.innerHTML = '<span class="action-chip-glyph"><span>✓</span></span><span class="action-chip-copy">保存済み</span>';
+        showToast("保存しました");
+      } catch (error) {
+        showToast("保存に失敗しました");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function toggleRecommendLike(pubmedId, button) {
+      const countEl = button.querySelector(".rec-like-count");
+      const current = parseInt(countEl?.textContent || "0", 10);
+      const wasLiked = button.classList.contains("liked");
+      button.classList.toggle("liked", !wasLiked);
+      if (countEl) countEl.textContent = String(wasLiked ? current - 1 : current + 1);
+      try {
+        const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
+        if (!response.ok) {
+          button.classList.toggle("liked", wasLiked);
+          if (countEl) countEl.textContent = String(current);
+          showToast("いいねに失敗しました");
+          return;
+        }
+        const data = await response.json();
+        button.classList.toggle("liked", !!data.liked);
+        if (countEl && typeof data.likes !== "undefined") countEl.textContent = String(data.likes);
+      } catch (error) {
+        button.classList.toggle("liked", wasLiked);
+        if (countEl) countEl.textContent = String(current);
+        showToast("いいねに失敗しました");
+      }
+    }
+
+    function revealRecommendBatch(section) {
+      if (!section) return false;
+      const hiddenCards = Array.from(section.querySelectorAll(".rec-card.hidden"));
+      if (hiddenCards.length === 0) return false;
+      const batchSize = parseInt(section.dataset.batchSize || "5", 10);
+      hiddenCards.slice(0, batchSize).forEach((card) => card.classList.remove("hidden"));
+      return section.querySelectorAll(".rec-card.hidden").length > 0;
+    }
+
+    function syncRecommendControls(section) {
+      if (!section) return;
+      const wrap = document.getElementById(`rec-more-wrap-${section.id.split("-").pop()}`);
+      const hasHidden = section.querySelectorAll(".rec-card.hidden").length > 0;
+      if (wrap) wrap.classList.toggle("hidden", !hasHidden);
+    }
+
+    function autoRevealRecommendBatch(section) {
+      if (!section) return;
+      const autoBatches = parseInt(section.dataset.autoBatches || "0", 10);
+      const maxAutoBatches = parseInt(section.dataset.maxAutoBatches || "3", 10);
+      if (autoBatches >= maxAutoBatches) {
+        syncRecommendControls(section);
+        return;
+      }
+      const hasMore = revealRecommendBatch(section);
+      section.dataset.autoBatches = String(autoBatches + 1);
+      syncRecommendControls(section);
+      if (!hasMore) return;
+    }
+
+    function toggleRecommendSection(btn) {
+      const targetId = btn.dataset.target;
+      const section = document.getElementById(targetId);
+      if (!section) return;
+      const hasHidden = revealRecommendBatch(section);
+      syncRecommendControls(section);
+      btn.textContent = hasHidden ? "さらに見る" : "すべて表示中";
+      btn.disabled = !hasHidden;
+    }
+
+    function setupRecommendAutoReveal() {
+      const sections = document.querySelectorAll(".rec-feed[id^='rec-section-']");
+      if (!("IntersectionObserver" in window)) {
+        sections.forEach(syncRecommendControls);
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          autoRevealRecommendBatch(entry.target);
+        });
+      }, {
+        root: null,
+        threshold: 1,
+        rootMargin: "0px 0px 120px 0px",
+      });
+
+      sections.forEach((section) => {
+        syncRecommendControls(section);
+        observer.observe(section);
+      });
+    }
+
+    document.addEventListener("click", function(e) {
+      const modal = document.getElementById("composer-modal");
+      if (modal && e.target === modal) closeComposerModal();
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeComposerModal();
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+      setupRecommendAutoReveal();
+    });
   </script>
 </body>
 </html>

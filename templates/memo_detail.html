@@ -77,22 +77,33 @@
 
       .save-indicator.show { opacity: 1; }
 
-      .delete-btn {
+      .save-btn {
         display: flex;
         align-items: center;
         gap: 5px;
         padding: 7px 14px;
-        border-radius: 999px;
-        border: 1px solid #fca5a5;
-        background: #fff;
-        color: #ef4444;
+        border-radius: 10px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background 0.15s, transform 0.1s;
+        white-space: nowrap;
       }
-
-      .delete-btn:hover { background: #fef2f2; }
+      .save-btn:hover { background: #1d4ed8; }
+      .save-btn:active { transform: scale(0.96); }
+      .save-btn.saved {
+        background: #16a34a;
+      }
+      .save-btn.saving {
+        background: #9ca3af;
+        pointer-events: none;
+      }
+      .save-btn.error {
+        background: #ef4444;
+      }
 
       /* ── 論文リンクバナー ── */
       .paper-banner {
@@ -187,6 +198,24 @@
       .tag-text-input { flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; font-size: 13px; outline: none; font-family: inherit; }
       .tag-text-input:focus { border-color: #93c5fd; }
       .tag-add-btn { padding: 7px 14px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+      .editor-actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .delete-link-btn {
+        border: none;
+        background: transparent;
+        color: #ef4444;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 8px 0;
+      }
+
+      .delete-link-btn:hover { color: #dc2626; }
 
       .body-input {
         width: 100%;
@@ -420,7 +449,7 @@
           <a href="/memo?tab={{ memo_type }}" class="back-btn">← メモ</a>
           <div class="top-bar-actions">
             <span class="save-indicator" id="save-indicator">保存しました</span>
-            <button class="delete-btn" onclick="showDeleteModal()">🗑 削除</button>
+            <button class="save-btn" id="save-btn" onclick="manualSave()">💾 保存</button>
           </div>
         </div>
 
@@ -477,6 +506,10 @@
               <button type="button" class="tag-add-btn" onclick="addTagFromInput()">追加</button>
             </div>
           </div>
+
+          <div class="editor-actions">
+            <button type="button" class="delete-link-btn" onclick="showDeleteModal()">このメモを削除</button>
+          </div>
         </div>
 
       </main>
@@ -510,20 +543,34 @@
         el.addEventListener("input", () => autoResize(el));
       });
 
-      // 自動保存
+      // ── 自動保存 + 手動保存 ──
       let saveTimer = null;
       let isSaving = false;
       let needsSave = false;
+      let lastSavedTitle = document.getElementById("title-input") ? document.getElementById("title-input").value : "";
+      let lastSavedBody = document.getElementById("body-input") ? document.getElementById("body-input").value : "";
       const indicator = document.getElementById("save-indicator");
+      const saveBtn = document.getElementById("save-btn");
       const bodyInput = document.getElementById("body-input");
       const titleInput = document.getElementById("title-input");
       const memoType = "{{ memo_type }}";
       const memoId = {{ memo.id }};
 
-      function scheduleSave() {
+      const saveUrl = memoType === "paper"
+        ? `/memo/paper/${memoId}/update`
+        : `/memo/${memoId}/update`;
+
+      function markDirty() {
         needsSave = true;
+        saveBtn.textContent = "💾 保存";
+        saveBtn.className = "save-btn";
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(doSave, 800);
+        saveTimer = setTimeout(doSave, 1500);
+      }
+
+      function manualSave() {
+        clearTimeout(saveTimer);
+        doSave();
       }
 
       function saveNow() {
@@ -532,50 +579,71 @@
       }
 
       async function doSave() {
-        if (isSaving) return;
+        if (isSaving) { needsSave = true; return; }
+        const body = bodyInput ? bodyInput.value : "";
+        const title = titleInput ? titleInput.value : "";
+
+        if (!needsSave && title === lastSavedTitle && body === lastSavedBody) {
+          saveBtn.textContent = "✓ 保存済み";
+          saveBtn.className = "save-btn saved";
+          return;
+        }
+
         isSaving = true;
         needsSave = false;
 
-        const body = bodyInput ? bodyInput.value : "";
-        const title = titleInput ? titleInput.value : "";
+        saveBtn.textContent = "保存中...";
+        saveBtn.className = "save-btn saving";
 
         const fd = new FormData();
         fd.append("body", body);
         if (memoType === "quick") fd.append("title", title);
 
-        const url = memoType === "paper"
-          ? `/memo/paper/${memoId}/update`
-          : `/memo/${memoId}/update`;
-
         try {
-          const res = await fetch(url, { method: "POST", body: fd });
+          console.log("[memo] saving to", saveUrl, "body length:", body.length, "title:", title);
+          const res = await fetch(saveUrl, { method: "POST", body: fd });
+          console.log("[memo] response status:", res.status);
+          if (!res.ok) {
+            const text = await res.text();
+            console.error("[memo] save failed:", res.status, text);
+            saveBtn.textContent = "⚠ 保存失敗";
+            saveBtn.className = "save-btn error";
+            return;
+          }
           const data = await res.json();
+          console.log("[memo] save result:", data);
           if (data.ok) {
+            lastSavedTitle = title;
+            lastSavedBody = body;
+            saveBtn.textContent = "✓ 保存済み";
+            saveBtn.className = "save-btn saved";
             indicator.textContent = "✓ 保存しました";
-            indicator.style.color = "";
             indicator.classList.add("show");
-            setTimeout(() => indicator.classList.remove("show"), 1800);
+            setTimeout(() => indicator.classList.remove("show"), 2000);
           } else {
-            indicator.textContent = "保存に失敗";
-            indicator.style.color = "#ef4444";
-            indicator.classList.add("show");
+            saveBtn.textContent = "⚠ 保存失敗";
+            saveBtn.className = "save-btn error";
+            console.error("[memo] server returned ok:false", data);
           }
         } catch (e) {
-          indicator.textContent = "保存に失敗";
-          indicator.style.color = "#ef4444";
-          indicator.classList.add("show");
+          console.error("[memo] save error:", e);
+          saveBtn.textContent = "⚠ 保存失敗";
+          saveBtn.className = "save-btn error";
         } finally {
           isSaving = false;
-          if (needsSave) scheduleSave();
+          if (needsSave) {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(doSave, 500);
+          }
         }
       }
 
       if (bodyInput) {
-        bodyInput.addEventListener("input", scheduleSave);
+        bodyInput.addEventListener("input", markDirty);
         bodyInput.addEventListener("blur", saveNow);
       }
       if (titleInput) {
-        titleInput.addEventListener("input", scheduleSave);
+        titleInput.addEventListener("input", markDirty);
         titleInput.addEventListener("blur", saveNow);
       }
 
@@ -598,7 +666,7 @@
       });
 
       // ── タグ ──
-      let currentTags = ({{ memo.tags | tojson if memo.tags else '""' }}).split(",").filter(t => t.trim());
+      let currentTags = {{ (memo.tags or "") | tojson | safe }}.split(",").filter(t => t.trim());
 
       function renderTagChips() {
         const container = document.getElementById("tag-chips");
@@ -643,28 +711,53 @@
 
       renderTagChips();
 
-      // ページを離れるとき: 空なら削除、内容があれば保存を確定
-      window.addEventListener("pagehide", function() {
-        const body = bodyInput ? bodyInput.value.trim() : "";
-        const title = titleInput ? titleInput.value.trim() : "";
-        const isEmpty = memoType === "paper" ? !body : (!body && !title);
+      async function flushSaveForExit() {
+        const currentBody = bodyInput ? bodyInput.value : "";
+        const currentTitle = titleInput ? titleInput.value : "";
+        const isEmpty = memoType === "paper"
+          ? !currentBody.trim()
+          : (!currentBody.trim() && !currentTitle.trim());
 
         if (isEmpty) {
           const deleteUrl = memoType === "paper"
             ? `/memo/paper/${memoId}/delete_if_empty`
             : `/memo/${memoId}/delete_if_empty`;
-          navigator.sendBeacon(deleteUrl);
-        } else {
-          // 未保存の内容を確実にサーバーへ送信
-          clearTimeout(saveTimer);
-          const saveUrl = memoType === "paper"
-            ? `/memo/paper/${memoId}/update`
-            : `/memo/${memoId}/update`;
-          const fd = new FormData();
-          fd.append("body", bodyInput ? bodyInput.value : "");
-          if (memoType === "quick") fd.append("title", titleInput ? titleInput.value : "");
-          navigator.sendBeacon(saveUrl, fd);
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(deleteUrl);
+          } else {
+            fetch(deleteUrl, { method: "POST", keepalive: true });
+          }
+          return;
         }
+
+        if (!needsSave && currentTitle === lastSavedTitle && currentBody === lastSavedBody) return;
+
+        const exitFd = new FormData();
+        exitFd.append("body", currentBody);
+        if (memoType === "quick") exitFd.append("title", currentTitle);
+
+        try {
+          await fetch(saveUrl, {
+            method: "POST",
+            body: exitFd,
+            keepalive: true,
+          });
+        } catch (e) {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(saveUrl, exitFd);
+          }
+        }
+      }
+
+      // ページを離れるとき: 空なら削除、内容があれば保存を確定
+      window.addEventListener("pagehide", function() {
+        clearTimeout(saveTimer);
+        flushSaveForExit();
+      });
+
+      window.addEventListener("beforeunload", function() {
+        clearTimeout(saveTimer);
+        flushSaveForExit();
       });
     </script>
   </body>

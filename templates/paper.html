@@ -146,7 +146,7 @@
 
       .mini-action-row {
         display: flex;
-        gap: 10px;
+        gap: 18px;
         flex-wrap: wrap;
         align-items: center;
         margin-top: 14px;
@@ -156,43 +156,106 @@
         border: none;
         background: transparent;
         border-radius: 999px;
-        padding: 7px 11px;
+        padding: 0;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         transition:
-          background 0.15s ease,
+          color 0.15s ease,
           transform 0.15s ease,
           opacity 0.15s ease;
       }
 
-      .mini-action:hover {
-        transform: translateY(-1px);
+      .mini-glyph {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        box-shadow: inset 0 0 0 1px rgba(229, 231, 235, 0.9);
+        transition:
+          background 0.15s ease,
+          box-shadow 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .mini-copy {
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
       }
 
       .favorite-button {
-        background: var(--orange-soft);
         color: var(--orange-text);
       }
 
+      .favorite-button .mini-glyph {
+        background: var(--orange-soft);
+        box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.22);
+      }
+
+      .favorite-button:hover .mini-glyph {
+        background: #ffedd5;
+      }
+
       .favorite-button.active {
-        background: var(--orange-active-bg);
         color: var(--orange-active-text);
       }
 
+      .favorite-button.active .mini-glyph {
+        background: var(--orange-active-bg);
+        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.24);
+      }
+
       .like-button {
-        background: #fff1f2;
-        color: #f43f5e;
-        border: 1.5px solid #fecdd3;
+        color: var(--subtext);
+      }
+
+      .like-button:hover {
+        color: #f91880;
+      }
+
+      .like-button:hover .mini-glyph {
+        background: rgba(249, 24, 128, 0.12);
       }
 
       .like-button.liked {
-        background: #f43f5e;
-        color: #fff;
-        border-color: #f43f5e;
+        color: #f91880;
+      }
+
+      .like-button.liked .mini-glyph {
+        background: rgba(249, 24, 128, 0.14);
+        box-shadow: inset 0 0 0 1px rgba(249, 24, 128, 0.14);
+      }
+
+      .like-button.liked svg {
+        fill: #f91880;
+        stroke: #f91880;
+      }
+
+      .share-button {
+        color: var(--subtext);
+      }
+
+      .share-button:hover {
+        color: var(--text);
+      }
+
+      .share-button:hover .mini-glyph {
+        background: #e5e7eb;
+      }
+
+      .mini-action:active {
+        transform: scale(0.97);
+      }
+
+      .mini-action:active .mini-glyph {
+        transform: scale(0.94);
       }
 
       .save-card-title {
@@ -563,14 +626,21 @@
         }
 
         .mini-action-row {
-          gap: 8px;
+          gap: 16px;
           margin-top: 12px;
         }
 
         .mini-action {
-          min-height: 34px;
-          padding: 6px 10px;
           font-size: 13px;
+        }
+
+        .mini-glyph {
+          width: 34px;
+          height: 34px;
+        }
+
+        .share-button .share-label {
+          display: none;
         }
 
         .folder-input-wrap {
@@ -678,8 +748,12 @@
             onclick="toggleFavorite('{{ paper.id }}', this)"
             aria-label="お気に入り"
           >
-            <span>{% if paper.is_favorite %}★{% else %}☆{% endif %}</span>
-            <span>お気に入り</span>
+            <span class="mini-glyph">
+              <span class="favorite-icon"
+                >{% if paper.is_favorite %}★{% else %}☆{% endif %}</span
+              >
+            </span>
+            <span class="mini-copy">お気に入り</span>
           </button>
 
           <button
@@ -689,11 +763,27 @@
             onclick="addLike('{{ paper.id }}', this)"
             aria-label="いいね"
           >
-            <span>❤️</span>
-            <span class="like-count"
+            <span class="mini-glyph">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </span>
+            <span class="mini-copy like-count"
               >{% if paper.likes is defined %}{{ paper.likes }}{% else %}0{%
               endif %}</span
             >
+          </button>
+
+          <button
+            type="button"
+            class="mini-action share-button"
+            data-title="{{ paper.jp_title or paper.title }}"
+            data-url="/paper?id={{ paper.id }}"
+            onclick="sharePaper(this.dataset.title, this.dataset.url)"
+            aria-label="共有"
+          >
+            <span class="mini-glyph">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </span>
+            <span class="mini-copy share-label">共有</span>
           </button>
         </div>
       </div>
@@ -949,6 +1039,26 @@
         }
       }
 
+      async function sharePaper(title, url) {
+        const shareUrl = url.startsWith("http")
+          ? url
+          : `${window.location.origin}${url}`;
+
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, url: shareUrl });
+            return;
+          }
+
+          await navigator.clipboard.writeText(shareUrl);
+          alert("リンクをコピーしました");
+        } catch (error) {
+          if (error?.name !== "AbortError") {
+            alert("共有に失敗しました");
+          }
+        }
+      }
+
       async function toggleFavorite(pubmedId, button) {
         try {
           const response = await fetch(`/favorite/${pubmedId}`, {
@@ -958,12 +1068,13 @@
           const data = await response.json();
 
           if (data.ok) {
+            const icon = button.querySelector(".favorite-icon");
             if (data.is_favorite) {
-              button.innerHTML = "<span>★</span><span>お気に入り</span>";
               button.classList.add("active");
+              if (icon) icon.textContent = "★";
             } else {
-              button.innerHTML = "<span>☆</span><span>お気に入り</span>";
               button.classList.remove("active");
+              if (icon) icon.textContent = "☆";
             }
 
             button.classList.add("animate-pop");

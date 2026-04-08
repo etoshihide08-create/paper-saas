@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特別ご招待 | リハエビデンスナビ</title>
+    <style>
+        :root {
+            --bg: #f4f8ff;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --line: #dbeafe;
+            --cyan: #0f766e;
+            --gold: #b45309;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+            background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .wrap {
+            width: 100%;
+            max-width: 460px;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+        }
+        .card.is-lifetime {
+            border-color: #f59e0b;
+            background: linear-gradient(180deg, #fff9eb 0%, #ffffff 100%);
+        }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: rgba(8, 145, 178, 0.12);
+            color: var(--cyan);
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .card.is-lifetime .eyebrow {
+            background: rgba(180, 83, 9, 0.12);
+            color: var(--gold);
+        }
+        h1 {
+            font-size: 25px;
+            line-height: 1.35;
+            margin: 0 0 8px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--cyan);
+            margin: 0 0 10px;
+        }
+        .card.is-lifetime .price {
+            color: var(--gold);
+        }
+        .copy {
+            margin: 0 0 18px;
+            color: var(--muted);
+            line-height: 1.75;
+            font-size: 14px;
+        }
+        .steps {
+            margin: 0 0 20px;
+            padding-left: 18px;
+            color: #1e3a8a;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .field input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid #cbd5e1;
+            font-size: 16px;
+            outline: none;
+        }
+        .field input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+        }
+        .field-note {
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #64748b;
+        }
+        .error {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #fecaca;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 13px;
+        }
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .footer {
+            margin-top: 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .footer a {
+            color: #2563eb;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card {% if selected_promo_offer.kind == 'lifetime' %}is-lifetime{% endif %}">
+            <div class="eyebrow">{{ selected_promo_offer.label or '特別招待' }}</div>
+            <h1>{{ selected_promo_offer.title }}</h1>
+            <p class="price">{{ selected_promo_offer.price_line }}</p>
+            <p class="copy">{{ selected_promo_offer.description }}</p>
+
+            <ol class="steps">
+                <li>まずメールアドレスを入力して、この特別枠をあなた専用に固定します。</li>
+                <li>そのまま新規登録へ進みます。</li>
+                <li>登録完了後に、この特別枠がそのアカウントへ適用されます。</li>
+            </ol>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form action="/special-offer/{{ promo_code }}/lock-email" method="post">
+                <div class="field">
+                    <label for="email">この特別枠を受け取るメールアドレス</label>
+                    <input type="email" id="email" name="email" autocomplete="email" required>
+                    <div class="field-note">
+                        {% if locked_email_exists %}
+                        すでに固定済みの招待枠です。案内されたメールアドレスでのみ続けられます。
+                        {% else %}
+                        入力後、この招待枠はそのメールアドレスで固定されます。
+                        {% endif %}
+                    </div>
+                </div>
+                <button type="submit" class="btn">このメールアドレスで続ける</button>
+            </form>
+
+            <div class="footer">
+                すでにアカウントをお持ちの方も、先にメールアドレスを固定してから進めれば大丈夫です。
+            </div>
+        </div>
+    </div>
+</body>
+</html>

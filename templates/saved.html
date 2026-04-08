@@ -57,12 +57,44 @@
       .login-prompt-card-desc { font-size: 13px; color: #3b82f6; line-height: 1.6; margin-bottom: 16px; }
       .login-prompt-card-btns { display: flex; gap: 10px; justify-content: center; }
       .login-prompt-card-btns a {
-        padding: 9px 24px; border-radius: 10px; font-size: 14px; font-weight: 700;
+        padding: 10px 22px; border-radius: 999px; font-size: 14px; font-weight: 700;
         text-decoration: none; transition: opacity 0.15s;
       }
       .login-prompt-card-btns a:active { opacity: 0.75; }
-      .btn-login-primary { background: #2563eb; color: #fff; }
+      .btn-login-primary { background: #2563eb; color: #fff; box-shadow: 0 10px 22px rgba(37,99,235,0.18); }
       .btn-login-secondary { background: #fff; color: #2563eb; border: 1.5px solid #bfdbfe; }
+
+      .utility-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+      }
+
+      .utility-chip:hover { transform: scale(0.98); }
+
+      .utility-chip-neutral {
+        background: #f3f4f6;
+        color: #4b5563;
+        box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9);
+      }
+
+      .utility-chip-neutral:hover {
+        background: #e5e7eb;
+      }
+
+      .utility-chip-primary {
+        background: #111827;
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(17,24,39,0.12);
+      }
 
       .alert-box-old {
         margin: 0 0 16px;
@@ -109,19 +141,21 @@
       }
 
       .rename-btn {
-        border: 1.5px solid #e5e7eb;
-        background: #fff;
-        color: #374151;
-        padding: 6px 12px;
-        border-radius: 8px;
+        border: none;
+        background: #f3f4f6;
+        color: #4b5563;
+        padding: 8px 14px;
+        border-radius: 999px;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
         flex-shrink: 0;
         white-space: nowrap;
+        box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9);
+        transition: background 0.15s ease, transform 0.15s ease;
       }
 
-      .rename-btn:hover { background: #f3f4f6; border-color: #2563eb; }
+      .rename-btn:hover { background: #e5e7eb; transform: scale(0.98); }
 
       .rename-panel {
         display: none;
@@ -158,12 +192,13 @@
         border: none;
         background: #111827;
         color: #fff;
-        padding: 9px 16px;
-        border-radius: 10px;
+        padding: 10px 18px;
+        border-radius: 999px;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         white-space: nowrap;
+        box-shadow: 0 10px 20px rgba(17,24,39,0.12);
       }
 
       .rename-submit:hover { opacity: 0.9; }
@@ -198,7 +233,7 @@
       <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         保存フォルダ
         {% if not is_guest %}
-        <a href="/saved/export" style="font-size:12px;color:#6b7280;text-decoration:none;font-weight:600;padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">📥 エクスポート</a>
+        <a href="/saved/export" class="utility-chip utility-chip-neutral">📥 エクスポート</a>
         {% endif %}
       </h1>
 

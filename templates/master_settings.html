@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordPress接続設定</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    background: #f4f7fb;
+    color: #0f172a;
+}
+.page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 56px;
+}
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.back-link {
+    text-decoration: none;
+    color: #334155;
+    font-size: 22px;
+    line-height: 1;
+}
+.title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0;
+}
+.subtitle {
+    margin: 8px 0 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.hero {
+    background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 24px;
+    padding: 20px 22px;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+    margin-bottom: 18px;
+}
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+.hero-note {
+    font-size: 13px;
+    color: #1e3a8a;
+    line-height: 1.7;
+    margin-top: 10px;
+}
+.feedback {
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.feedback.success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+.feedback.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 18px;
+    align-items: start;
+}
+.panel {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+.panel-head {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid #eef2f7;
+}
+.panel-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+}
+.panel-copy {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.panel-body {
+    padding: 16px 18px 18px;
+}
+.field {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+.field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+}
+.field input {
+    width: 100%;
+    border: 1.5px solid #dbe3ee;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+}
+.field-note {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.7;
+}
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.btn,
+.inline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn {
+    padding: 13px 16px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #fff;
+}
+.btn-dark {
+    background: #111827;
+    color: #fff;
+}
+.inline-btn {
+    padding: 9px 12px;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+.status-list {
+    display: grid;
+    gap: 12px;
+}
+.status-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 14px;
+    background: #fff;
+}
+.status-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1d4ed8;
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.10);
+    margin-bottom: 10px;
+}
+.status-title {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 800;
+}
+.status-copy,
+.status-meta {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #475569;
+}
+.status-meta {
+    margin-top: 8px;
+    color: #64748b;
+}
+@media (max-width: 860px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="page">
+        <div class="topbar">
+            <a href="/master/content" class="back-link">←</a>
+            <div>
+                <h1 class="title">WordPress接続設定</h1>
+                <p class="subtitle">マスター記事管理で作った完成版を、そのまま WordPress の下書きへ送るための接続設定です。</p>
+            </div>
+        </div>
+
+        <div class="hero">
+            <div class="hero-badge">マスター枠限定</div>
+            <div style="font-size:24px;font-weight:800;">投稿先を1回つなげば、そのまま下書き投稿できます</div>
+            <div class="hero-note">アプリパスワードは保存後に画面へ再表示しません。変更したいときだけ再入力してください。</div>
+        </div>
+
+        {% if notice_message %}
+        <div class="feedback success">{{ notice_message }}</div>
+        {% endif %}
+        {% if error_message %}
+        <div class="feedback error">{{ error_message }}</div>
+        {% endif %}
+
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="panel-title">接続情報を保存する</p>
+                    <p class="panel-copy">投稿先が1つなら、ここで保存しておくのがいちばん迷いません。</p>
+                </div>
+                <div class="panel-body">
+                    <form action="/master/settings" method="post">
+                        <div class="field">
+                            <label for="site_url">WordPressサイトURL</label>
+                            <input id="site_url" type="text" name="site_url" value="{{ saved_site_url }}" placeholder="https://example.com">
+                            <div class="field-note">トップURLを入れてください。`/wp-admin` や `/wp-json` は不要です。</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="username">WordPressユーザー名</label>
+                            <input id="username" type="text" name="username" value="{{ saved_username }}" placeholder="wordpress-user">
+                        </div>
+
+                        <div class="field">
+                            <label for="app_base_url">アプリURL（計測リンク用）</label>
+                            <input id="app_base_url" type="text" name="app_base_url" value="{{ saved_app_base_url }}" placeholder="https://app.example.com">
+                            <div class="field-note">WordPress記事からアプリへ戻すCTAリンクとPV計測ピクセルで使います。公開URLを入れてください。</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="app_password">WordPressアプリパスワード</label>
+                            <input id="app_password" type="password" name="app_password" value="" placeholder="{% if has_saved_password %}変更する場合のみ入力{% else %}初回のみ入力が必要です{% endif %}">
+                            <div class="field-note">保存済みのアプリパスワードは再表示しません。空白入りのまま貼り付けても大丈夫です。</div>
+                        </div>
+
+                        <div class="actions">
+                            <button type="submit" class="btn btn-primary">接続設定を保存する</button>
+                            <a href="/master/content" class="inline-btn">記事管理へ戻る</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="panel-title">現在の状態</p>
+                    <p class="panel-copy">保存後はここから接続確認や自動投稿設定ができます。</p>
+                </div>
+                <div class="panel-body">
+                    <div class="status-list">
+                        <div class="status-card">
+                            <div class="status-label">{% if wordpress_configured %}接続準備OK{% else %}未接続{% endif %}</div>
+                            <p class="status-title">
+                                {% if wordpress_configured %}
+                                完成版をそのまま下書き投稿できます
+                                {% else %}
+                                まずは投稿先を保存してください
+                                {% endif %}
+                            </p>
+                            <div class="status-copy">
+                                {% if wordpress_configured %}
+                                記事生成後は [マスター記事管理] から、そのまま WordPress 下書きへ送れます。
+                                {% else %}
+                                URL・ユーザー名・アプリパスワードを保存すると、投稿ボタンが有効になります。
+                                {% endif %}
+                            </div>
+                            {% if effective_site_url or effective_username %}
+                            <div class="status-meta">
+                                接続先: {{ effective_site_url or '未設定' }}{% if effective_username %}<br>ユーザー: {{ effective_username }}{% endif %}
+                            </div>
+                            {% endif %}
+                            {% if effective_app_base_url %}
+                            <div class="status-meta">計測リンクURL: {{ effective_app_base_url }}</div>
+                            {% endif %}
+                            {% if wordpress_config_source == 'env' and not saved_site_url %}
+                            <div class="status-meta">現在は環境変数の接続設定を使っています。この画面で保存すると、こちらの設定が優先されます。</div>
+                            {% endif %}
+                        </div>
+
+                        <form action="/master/settings/test" method="post">
+                            <button type="submit" class="btn btn-dark" style="width:100%;" {% if not wordpress_configured %}disabled{% endif %}>
+                                保存済み設定で接続確認する
+                            </button>
+                        </form>
+
+                        <div class="status-card">
+                            <div class="status-label">{% if autopost_summary.is_enabled %}自動投稿 ON{% else %}自動投稿 OFF{% endif %}</div>
+                            <p class="status-title">毎日1回、未投稿の完成版を WordPress へ自動で下書き投稿</p>
+                            <div class="status-copy">
+                                GEOスコア順で未投稿の下書きを1本選び、毎日指定時刻を過ぎたタイミングで自動投稿します。安全のため、最初は公開ではなく下書き投稿です。
+                            </div>
+                            <div class="status-meta">
+                                実行時刻: 毎日 {{ autopost_summary.daily_time }}<br>
+                                次回予定: {{ autopost_summary.next_run_label }}<br>
+                                {% if autopost_summary.last_attempted_date %}
+                                最終試行日: {{ autopost_summary.last_attempted_date }}<br>
+                                {% endif %}
+                                {% if autopost_summary.last_success_date %}
+                                最終成功日: {{ autopost_summary.last_success_date }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <form action="/master/settings/autopost" method="post">
+                            <div class="field">
+                                <label for="daily_time">毎日の投稿時刻</label>
+                                <input id="daily_time" type="time" name="daily_time" value="{{ autopost_summary.daily_time }}">
+                                <div class="field-note">サーバーが起動している間、この時刻を過ぎたらその日1回だけ自動投稿します。</div>
+                            </div>
+                            <label class="field-note" style="display:flex; align-items:center; gap:8px; margin:0 0 14px;">
+                                <input type="checkbox" name="is_enabled" value="1" {% if autopost_summary.is_enabled %}checked{% endif %} style="width:auto;">
+                                毎日1回の自動投稿を有効にする
+                            </label>
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                自動投稿設定を保存する
+                            </button>
+                        </form>
+
+                        {% if autopost_logs %}
+                        <div class="status-card">
+                            <div class="status-label">最近の自動投稿履歴</div>
+                            {% for log in autopost_logs %}
+                            <div class="status-meta" style="margin-top:{% if loop.first %}0{% else %}12px{% endif %};">
+                                {{ log.created_at }} / {{ log.status }}
+                                {% if log.draft_id %}<br>下書きID: {{ log.draft_id }}{% endif %}
+                                {% if log.wordpress_post_id %}<br>投稿ID: {{ log.wordpress_post_id }}{% endif %}
+                                <br>{{ log.message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,10 +1,11 @@
+import os
 import sqlite3
 import hashlib
 import secrets
 from datetime import datetime
 
 
-DB_NAME = "papers.db"
+DB_NAME = os.getenv("DB_NAME", "papers.db")
 
 
 def get_connection():
@@ -118,6 +119,11 @@ def init_db():
         "ALTER TABLE users ADD COLUMN promo_ends_at TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN promo_code_used TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN promo_code_used_at TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN promo_is_lifetime INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN acquisition_channel TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN acquisition_article_draft_id INTEGER",
+        "ALTER TABLE users ADD COLUMN acquisition_article_variant TEXT DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN acquisition_at TEXT DEFAULT ''",
     ]:
         try:
             cur.execute(sql)
@@ -132,12 +138,142 @@ def init_db():
             code          TEXT UNIQUE NOT NULL,
             plan_to_grant TEXT DEFAULT 'pro',
             free_days     INTEGER DEFAULT 90,
+            grant_lifetime INTEGER DEFAULT 0,
             max_uses      INTEGER DEFAULT 1,
             used_count    INTEGER DEFAULT 0,
             expires_at    TEXT DEFAULT '',
             target_email  TEXT DEFAULT '',
             is_active     INTEGER DEFAULT 1,
             created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    for sql in [
+        "ALTER TABLE friend_promo_codes ADD COLUMN grant_lifetime INTEGER DEFAULT 0",
+    ]:
+        try:
+            cur.execute(sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS supporter_campaign_claims (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            campaign_slug TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'active',
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS master_article_drafts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pubmed_id TEXT NOT NULL,
+            source_title TEXT DEFAULT '',
+            source_jp_title TEXT DEFAULT '',
+            source_summary_jp TEXT DEFAULT '',
+            source_abstract TEXT DEFAULT '',
+            source_clinical_score TEXT DEFAULT '',
+            source_clinical_reason TEXT DEFAULT '',
+            article_title TEXT NOT NULL,
+            article_excerpt TEXT DEFAULT '',
+            article_slug TEXT DEFAULT '',
+            article_html TEXT DEFAULT '',
+            geo_score INTEGER DEFAULT 0,
+            geo_feedback TEXT DEFAULT '',
+            geo_last_reviewed_at TEXT DEFAULT '',
+            wordpress_post_id TEXT DEFAULT '',
+            wordpress_status TEXT DEFAULT '',
+            created_by_user_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (created_by_user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+    for sql in [
+        "ALTER TABLE master_article_drafts ADD COLUMN geo_score INTEGER DEFAULT 0",
+        "ALTER TABLE master_article_drafts ADD COLUMN geo_feedback TEXT DEFAULT ''",
+        "ALTER TABLE master_article_drafts ADD COLUMN geo_last_reviewed_at TEXT DEFAULT ''",
+        "ALTER TABLE master_article_drafts ADD COLUMN marketing_variant TEXT DEFAULT ''",
+        "ALTER TABLE master_article_drafts ADD COLUMN wordpress_published_at TEXT DEFAULT ''",
+    ]:
+        try:
+            cur.execute(sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS master_wordpress_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            site_url TEXT DEFAULT '',
+            username TEXT DEFAULT '',
+            app_password TEXT DEFAULT '',
+            app_base_url TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+    for sql in [
+        "ALTER TABLE master_wordpress_settings ADD COLUMN app_base_url TEXT DEFAULT ''",
+    ]:
+        try:
+            cur.execute(sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS master_wordpress_autopost_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            is_enabled INTEGER DEFAULT 0,
+            daily_time TEXT DEFAULT '09:00',
+            last_attempted_date TEXT DEFAULT '',
+            last_success_date TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS master_wordpress_autopost_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            draft_id INTEGER,
+            status TEXT DEFAULT '',
+            message TEXT DEFAULT '',
+            wordpress_post_id TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (draft_id) REFERENCES master_article_drafts(id)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS master_article_marketing_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            draft_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            variant TEXT DEFAULT '',
+            source TEXT DEFAULT '',
+            user_id INTEGER,
+            ip_hash TEXT DEFAULT '',
+            user_agent TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (draft_id) REFERENCES master_article_drafts(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
     conn.commit()
@@ -242,6 +378,36 @@ def init_db():
     cur.execute("""
         CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ref_code
         ON users (ref_code)
+    """)
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_supporter_campaign_claims_user
+        ON supporter_campaign_claims (user_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_master_article_drafts_created
+        ON master_article_drafts (created_at DESC)
+    """)
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_master_wordpress_settings_user
+        ON master_wordpress_settings (user_id)
+    """)
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_master_wordpress_autopost_settings_user
+        ON master_wordpress_autopost_settings (user_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_master_wordpress_autopost_logs_user_created
+        ON master_wordpress_autopost_logs (user_id, created_at DESC)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_master_article_marketing_events_draft_type_created
+        ON master_article_marketing_events (draft_id, event_type, created_at DESC)
     """)
 
     conn.commit()
@@ -403,6 +569,19 @@ def get_saved_papers(user_id=None):
     rows = cur.fetchall()
     conn.close()
 
+    return [dict(row) for row in rows]
+
+
+def get_all_saved_papers():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT *
+        FROM saved_papers
+        ORDER BY created_at DESC
+    """)
+    rows = cur.fetchall()
+    conn.close()
     return [dict(row) for row in rows]
 
 
@@ -1529,6 +1708,24 @@ def use_friend_promo_code(code_id: int) -> None:
     conn.close()
 
 
+def set_friend_promo_target_email(code_id: int, email: str) -> bool:
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE friend_promo_codes
+        SET target_email = ?
+        WHERE id = ?
+          AND (target_email = '' OR lower(target_email) = ?)
+        """,
+        ((email or "").strip().lower(), code_id, (email or "").strip().lower())
+    )
+    updated = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
 def apply_promo_to_user(user_id: int, plan: str, ends_at: str, code: str) -> None:
     """ユーザーの promo フィールドを更新する。"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1540,10 +1737,666 @@ def apply_promo_to_user(user_id: int, plan: str, ends_at: str, code: str) -> Non
         SET promo_plan        = ?,
             promo_ends_at     = ?,
             promo_code_used   = ?,
-            promo_code_used_at = ?
+            promo_code_used_at = ?,
+            promo_is_lifetime = 0
         WHERE id = ?
         """,
         (plan, ends_at, code.strip().upper(), now, user_id)
     )
     conn.commit()
     conn.close()
+
+
+def apply_lifetime_promo_to_user(user_id: int, plan: str, code: str) -> None:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE users
+        SET promo_plan        = ?,
+            promo_ends_at     = '',
+            promo_code_used   = ?,
+            promo_code_used_at = ?,
+            promo_is_lifetime = 1
+        WHERE id = ?
+        """,
+        (plan, code.strip().upper(), now, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_supporter_campaign_claim_counts():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT campaign_slug, COUNT(*) AS claim_count
+        FROM supporter_campaign_claims
+        WHERE status = 'active'
+        GROUP BY campaign_slug
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return {row["campaign_slug"]: int(row["claim_count"] or 0) for row in rows}
+
+
+def get_user_supporter_campaign_claim(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT *
+        FROM supporter_campaign_claims
+        WHERE user_id = ?
+          AND status = 'active'
+        LIMIT 1
+    """, (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def claim_supporter_campaign(user_id: int, campaign_slug: str, campaign_limit: int):
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    try:
+        cur.execute("BEGIN IMMEDIATE")
+
+        cur.execute("""
+            SELECT *
+            FROM supporter_campaign_claims
+            WHERE user_id = ?
+              AND status = 'active'
+            LIMIT 1
+        """, (user_id,))
+        existing = cur.fetchone()
+        if existing:
+            conn.rollback()
+            return False, "already_claimed", dict(existing)
+
+        cur.execute("""
+            SELECT COUNT(*) AS claim_count
+            FROM supporter_campaign_claims
+            WHERE campaign_slug = ?
+              AND status = 'active'
+        """, (campaign_slug,))
+        current_count = int(cur.fetchone()["claim_count"] or 0)
+        if current_count >= int(campaign_limit or 0):
+            conn.rollback()
+            return False, "sold_out", None
+
+        cur.execute("""
+            INSERT INTO supporter_campaign_claims (user_id, campaign_slug, status)
+            VALUES (?, ?, 'active')
+        """, (user_id, campaign_slug))
+        conn.commit()
+        return True, "ok", {
+            "user_id": user_id,
+            "campaign_slug": campaign_slug,
+            "status": "active",
+        }
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return False, "already_claimed", None
+    finally:
+        conn.close()
+
+
+def create_master_article_draft(
+    *,
+    pubmed_id: str,
+    source_title: str,
+    source_jp_title: str,
+    source_summary_jp: str,
+    source_abstract: str,
+    source_clinical_score: str,
+    source_clinical_reason: str,
+    article_title: str,
+    article_excerpt: str,
+    article_slug: str,
+    article_html: str,
+    created_by_user_id: int | None = None,
+):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO master_article_drafts (
+            pubmed_id,
+            source_title,
+            source_jp_title,
+            source_summary_jp,
+            source_abstract,
+            source_clinical_score,
+            source_clinical_reason,
+            article_title,
+            article_excerpt,
+            article_slug,
+            article_html,
+            created_by_user_id,
+            updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            pubmed_id,
+            source_title,
+            source_jp_title,
+            source_summary_jp,
+            source_abstract,
+            source_clinical_score,
+            source_clinical_reason,
+            article_title,
+            article_excerpt,
+            article_slug,
+            article_html,
+            created_by_user_id,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
+    )
+    draft_id = cur.lastrowid
+    variant_cycle = ["A", "B", "C"]
+    marketing_variant = variant_cycle[(max(int(draft_id or 1), 1) - 1) % len(variant_cycle)]
+    cur.execute(
+        """
+        UPDATE master_article_drafts
+        SET marketing_variant = ?
+        WHERE id = ?
+        """,
+        (marketing_variant, draft_id)
+    )
+    conn.commit()
+    conn.close()
+    return draft_id
+
+
+def get_master_article_drafts(limit: int = 30):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_article_drafts
+        ORDER BY updated_at DESC, created_at DESC
+        LIMIT ?
+        """,
+        (limit,)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_master_article_draft(draft_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_article_drafts
+        WHERE id = ?
+        LIMIT 1
+        """,
+        (draft_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def update_master_article_draft_content(draft_id: int, article_title: str, article_excerpt: str, article_slug: str, article_html: str):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE master_article_drafts
+        SET article_title = ?,
+            article_excerpt = ?,
+            article_slug = ?,
+            article_html = ?,
+            updated_at = ?
+        WHERE id = ?
+        """,
+        (
+            article_title,
+            article_excerpt,
+            article_slug,
+            article_html,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            draft_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_master_article_draft_geo_review(
+    draft_id: int,
+    geo_score: int,
+    geo_feedback: str,
+    article_title: str,
+    article_excerpt: str,
+    article_slug: str,
+    article_html: str,
+):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE master_article_drafts
+        SET geo_score = ?,
+            geo_feedback = ?,
+            geo_last_reviewed_at = ?,
+            article_title = ?,
+            article_excerpt = ?,
+            article_slug = ?,
+            article_html = ?,
+            updated_at = ?
+        WHERE id = ?
+        """,
+        (
+            int(geo_score or 0),
+            geo_feedback,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            article_title,
+            article_excerpt,
+            article_slug,
+            article_html,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            draft_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def mark_master_article_wordpress_posted(draft_id: int, wordpress_post_id: str, wordpress_status: str):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE master_article_drafts
+        SET wordpress_post_id = ?,
+            wordpress_status = ?,
+            wordpress_published_at = ?,
+            updated_at = ?
+        WHERE id = ?
+        """,
+        (
+            wordpress_post_id,
+            wordpress_status,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            draft_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_master_wordpress_settings(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_wordpress_settings
+        WHERE user_id = ?
+        LIMIT 1
+        """,
+        (user_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def upsert_master_wordpress_settings(
+    user_id: int,
+    site_url: str,
+    username: str,
+    app_password: str | None = None,
+    app_base_url: str | None = None,
+):
+    existing = get_master_wordpress_settings(user_id)
+    normalized_password = (app_password or "").strip()
+    if existing and not normalized_password:
+        normalized_password = existing.get("app_password") or ""
+    normalized_app_base_url = (app_base_url or "").strip()
+    if existing and not normalized_app_base_url:
+        normalized_app_base_url = existing.get("app_base_url") or ""
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if existing:
+        cur.execute(
+            """
+            UPDATE master_wordpress_settings
+            SET site_url = ?,
+                username = ?,
+                app_password = ?,
+                app_base_url = ?,
+                updated_at = ?
+            WHERE user_id = ?
+            """,
+            (
+                site_url,
+                username,
+                normalized_password,
+                normalized_app_base_url,
+                now,
+                user_id,
+            )
+        )
+    else:
+        cur.execute(
+            """
+            INSERT INTO master_wordpress_settings (
+                user_id,
+                site_url,
+                username,
+                app_password,
+                app_base_url,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                site_url,
+                username,
+                normalized_password,
+                normalized_app_base_url,
+                now,
+                now,
+            )
+        )
+    conn.commit()
+    conn.close()
+
+
+def record_master_article_marketing_event(
+    draft_id: int,
+    event_type: str,
+    variant: str = "",
+    source: str = "",
+    user_id: int | None = None,
+    ip_hash: str = "",
+    user_agent: str = "",
+):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO master_article_marketing_events (
+            draft_id,
+            event_type,
+            variant,
+            source,
+            user_id,
+            ip_hash,
+            user_agent
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            draft_id,
+            event_type,
+            variant,
+            source,
+            user_id,
+            ip_hash,
+            user_agent,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def set_user_article_attribution(user_id: int, channel: str, draft_id: int, variant: str):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE users
+        SET acquisition_channel = ?,
+            acquisition_article_draft_id = ?,
+            acquisition_article_variant = ?,
+            acquisition_at = ?
+        WHERE id = ?
+        """,
+        (
+            channel,
+            draft_id,
+            variant,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            user_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_master_article_marketing_summary(created_by_user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            d.id AS draft_id,
+            COALESCE(e.impressions, 0) AS impressions,
+            COALESCE(e.clicks, 0) AS clicks,
+            COALESCE(u.registrations, 0) AS registrations,
+            COALESCE(u.paid_users, 0) AS paid_users
+        FROM master_article_drafts d
+        LEFT JOIN (
+            SELECT
+                draft_id,
+                SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) AS impressions,
+                SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS clicks
+            FROM master_article_marketing_events
+            GROUP BY draft_id
+        ) e
+          ON e.draft_id = d.id
+        LEFT JOIN (
+            SELECT
+                acquisition_article_draft_id AS draft_id,
+                COUNT(*) AS registrations,
+                SUM(
+                    CASE
+                        WHEN LOWER(COALESCE(plan, '')) IN ('pro', 'expert')
+                          OR LOWER(COALESCE(promo_plan, '')) IN ('pro', 'expert')
+                        THEN 1 ELSE 0
+                    END
+                ) AS paid_users
+            FROM users
+            WHERE acquisition_article_draft_id IS NOT NULL
+            GROUP BY acquisition_article_draft_id
+        ) u
+          ON u.draft_id = d.id
+        WHERE d.created_by_user_id = ?
+        ORDER BY d.updated_at DESC, d.created_at DESC
+        """,
+        (created_by_user_id,)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_master_wordpress_autopost_settings(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_wordpress_autopost_settings
+        WHERE user_id = ?
+        LIMIT 1
+        """,
+        (user_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def upsert_master_wordpress_autopost_settings(user_id: int, is_enabled: int, daily_time: str):
+    existing = get_master_wordpress_autopost_settings(user_id)
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if existing:
+        cur.execute(
+            """
+            UPDATE master_wordpress_autopost_settings
+            SET is_enabled = ?,
+                daily_time = ?,
+                updated_at = ?
+            WHERE user_id = ?
+            """,
+            (
+                int(is_enabled or 0),
+                daily_time,
+                now,
+                user_id,
+            )
+        )
+    else:
+        cur.execute(
+            """
+            INSERT INTO master_wordpress_autopost_settings (
+                user_id,
+                is_enabled,
+                daily_time,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                int(is_enabled or 0),
+                daily_time,
+                now,
+                now,
+            )
+        )
+    conn.commit()
+    conn.close()
+
+
+def update_master_wordpress_autopost_run_state(user_id: int, attempted_date: str, success_date: str | None = None):
+    existing = get_master_wordpress_autopost_settings(user_id)
+    if not existing:
+        upsert_master_wordpress_autopost_settings(user_id, 0, "09:00")
+        existing = get_master_wordpress_autopost_settings(user_id) or {}
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE master_wordpress_autopost_settings
+        SET last_attempted_date = ?,
+            last_success_date = ?,
+            updated_at = ?
+        WHERE user_id = ?
+        """,
+        (
+            attempted_date or "",
+            success_date if success_date is not None else (existing.get("last_success_date") or ""),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            user_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_master_wordpress_autopost_log(
+    user_id: int,
+    status: str,
+    message: str,
+    draft_id: int | None = None,
+    wordpress_post_id: str = "",
+):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO master_wordpress_autopost_logs (
+            user_id,
+            draft_id,
+            status,
+            message,
+            wordpress_post_id
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            user_id,
+            draft_id,
+            status,
+            message,
+            wordpress_post_id,
+        )
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_master_wordpress_autopost_logs(user_id: int, limit: int = 20):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_wordpress_autopost_logs
+        WHERE user_id = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+        """,
+        (user_id, limit)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_master_wordpress_autopost_enabled_settings():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_wordpress_autopost_settings
+        WHERE is_enabled = 1
+        ORDER BY user_id ASC
+        """
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_next_master_article_draft_for_autopost(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM master_article_drafts
+        WHERE created_by_user_id = ?
+          AND COALESCE(wordpress_post_id, '') = ''
+        ORDER BY geo_score DESC, updated_at DESC, created_at DESC
+        LIMIT 1
+        """,
+        (user_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None

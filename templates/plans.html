@@ -86,6 +86,301 @@
         /* ── Layout ───────────────────────────── */
         .page-body { max-width: 1100px; margin: -40px auto 0; padding: 0 16px 80px; position: relative; z-index: 2; }
 
+        .campaign-strip {
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .campaign-card {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .campaign-card.is-highlight {
+            background: linear-gradient(135deg, #fff7d6 0%, #ffffff 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 16px 40px rgba(245, 158, 11, 0.16);
+        }
+
+        .campaign-card::before {
+            content: "";
+            position: absolute;
+            inset: auto -40px -60px auto;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .campaign-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .campaign-badge,
+        .campaign-limit {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .campaign-badge { background: rgba(99,102,241,0.10); color: #4f46e5; }
+        .campaign-limit { background: rgba(245,158,11,0.14); color: #b45309; }
+        .campaign-title { font-size: 24px; font-weight: 800; color: #111827; margin-bottom: 6px; }
+        .campaign-tier {
+            font-size: 12px;
+            font-weight: 800;
+            color: #92400e;
+            margin-bottom: 10px;
+            letter-spacing: 0.02em;
+        }
+        .offer-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .offer-price-old {
+            font-size: 20px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+        .campaign-price { font-size: 40px; font-weight: 800; color: #92400e; line-height: 1; }
+        .offer-price-caption {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+        .supporter-bonus {
+            border-radius: 16px;
+            background: #fff;
+            border: 1px solid rgba(245, 158, 11, 0.18);
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .supporter-bonus-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #b45309;
+            background: rgba(245, 158, 11, 0.12);
+            margin-bottom: 10px;
+        }
+        .supporter-bonus-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+        .supporter-bonus-copy {
+            font-size: 13.5px;
+            line-height: 1.75;
+            color: #4b5563;
+        }
+
+        .campaign-upgrade-note {
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(37, 99, 235, 0.06);
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .price-strike {
+            font-size: 16px;
+            font-weight: 700;
+            color: #9ca3af;
+            text-decoration: line-through;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .expert-discount-note {
+            margin-top: 8px;
+            padding: 11px 13px;
+            border-radius: 14px;
+            background: rgba(245, 158, 11, 0.10);
+            border: 1px solid rgba(245, 158, 11, 0.18);
+            font-size: 12.5px;
+            line-height: 1.7;
+            color: #9a3412;
+            font-weight: 700;
+        }
+
+        .campaign-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .campaign-spots {
+            font-size: 13px;
+            font-weight: 700;
+            color: #92400e;
+        }
+
+        .campaign-note {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #6b7280;
+        }
+
+        .campaign-feedback {
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .campaign-feedback.success {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .campaign-feedback.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        .special-invite-banner {
+            background: linear-gradient(135deg, #ecfeff 0%, #f8fafc 100%);
+            border: 1px solid #67e8f9;
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+        }
+
+        .special-invite-banner.is-lifetime {
+            background: linear-gradient(135deg, #fff7d6 0%, #fff1b8 100%);
+            border: 1px solid #f59e0b;
+            box-shadow: 0 14px 32px rgba(245, 158, 11, 0.18);
+        }
+
+        .special-invite-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(8, 145, 178, 0.12);
+            color: #0f766e;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .special-invite-banner.is-lifetime .special-invite-label {
+            background: rgba(180, 83, 9, 0.12);
+            color: #92400e;
+        }
+
+        .special-invite-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .special-invite-price {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f766e;
+            margin-bottom: 8px;
+        }
+
+        .special-invite-banner.is-lifetime .special-invite-price {
+            color: #b45309;
+        }
+
+        .special-invite-copy {
+            font-size: 13px;
+            line-height: 1.75;
+            color: #155e75;
+        }
+
+        .special-invite-banner.is-lifetime .special-invite-copy {
+            color: #78350f;
+        }
+
+        .offer-preview-note {
+            background: #ffffff;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .offer-preview-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .offer-preview-note.is-lifetime {
+            border-color: #fcd34d;
+            background: linear-gradient(135deg, #fffdf4 0%, #ffffff 100%);
+        }
+
+        .offer-preview-note.is-lifetime .offer-preview-label {
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+        }
+
+        .offer-preview-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .offer-preview-copy {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
         /* ── Plan cards ───────────────────────── */
         .plans-grid {
             display: grid;
@@ -163,33 +458,6 @@
         .feat-highlight { font-weight: 700; color: var(--pro-from); }
         .feat-expert-highlight { font-weight: 700; color: var(--expert-from); }
 
-        /* ── Promo ────────────────────────────── */
-        .promo-section {
-            background: #fff; border-radius: var(--radius);
-            padding: 20px 24px; box-shadow: var(--shadow);
-            margin-bottom: 16px;
-        }
-        .promo-header {
-            display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer;
-        }
-        .promo-header h3 { font-size: 16px; font-weight: 700; }
-        .promo-body { display: none; margin-top: 16px; }
-        .promo-body.open { display: block; }
-        .promo-desc { font-size: 13px; color: #555; margin: 0 0 12px; }
-        .promo-form { display: flex; gap: 8px; }
-        .promo-input {
-            flex: 1; padding: 11px 14px; border: 1.5px solid #e5e7eb;
-            border-radius: 10px; font-size: 14px; outline: none;
-        }
-        .promo-input:focus { border-color: #2563eb; }
-        .promo-button {
-            border: none; background: #2563eb; color: #fff;
-            padding: 11px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px;
-        }
-        .promo-button:hover { background: #1d4ed8; }
-        .promo-success { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #dcfce7; color: #166534; font-size: 13px; }
-        .promo-error   { margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
         .promo-active-banner {
             background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius);
             padding: 16px 20px; font-size: 14px; color: #1e40af;
@@ -275,6 +543,7 @@
         @media (max-width: 860px) {
             .plans-grid { grid-template-columns: 1fr; }
             .referral-cols { grid-template-columns: 1fr; }
+            .campaign-strip { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .hero { padding: 40px 16px 64px; }
@@ -319,8 +588,92 @@
     </div>
 
     <div class="page-body">
+        {% if supporter_message %}
+        <div class="campaign-feedback {% if supporter_is_success %}success{% else %}error{% endif %}">
+            {{ supporter_message }}
+        </div>
+        {% endif %}
+
+        {% if offer_preview %}
+        <div class="special-invite-banner {% if offer_preview.kind == 'lifetime' %}is-lifetime{% endif %}">
+            <div class="special-invite-label">{{ offer_preview.label or '特別招待' }}</div>
+            <div class="special-invite-title">{{ offer_preview.title }}</div>
+            <div class="special-invite-price">{{ offer_preview.price_line }}</div>
+            <div class="special-invite-copy">このURLに紐づく招待内容です。メールアドレスを固定して登録すると、この特別枠がそのアカウントに適用されます。</div>
+        </div>
+        {% elif active_promo_offer %}
+        <div class="special-invite-banner {% if active_promo_offer.kind == 'lifetime' %}is-lifetime{% endif %}">
+            <div class="special-invite-label">{{ active_promo_offer.label or '特別招待' }}</div>
+            <div class="special-invite-title">{{ active_promo_offer.title }}</div>
+            <div class="special-invite-price">{{ active_promo_offer.price_line }}</div>
+            <div class="special-invite-copy">{{ active_promo_offer.description }}</div>
+        </div>
+        {% endif %}
+
+        {% if selected_campaign and not supporter_claim %}
+        <div class="campaign-note">
+            <strong>選択中の特典：</strong>応援サポーター枠。まだ適用前です。下の `Pro` を開始して契約が完了した時点で、サポーター価格980円が適用されます。先着30名に残っていれば、最初の6か月は500円特典も自動で適用されます。
+        </div>
+        {% endif %}
+
+        {% if supporter_claim and not active_promo_offer and not offer_preview %}
+        <div class="campaign-note">
+            <strong>応援サポーター枠を利用中です。</strong>
+            {% if supporter_offer.has_special_applied %}
+            先着30名限定特典として、最初の6か月は月額500円、その後は月額980円で継続できます。
+            {% else %}
+            月額980円で継続できます。
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if supporter_offer %}
+        <div class="campaign-strip">
+            <div class="campaign-card is-highlight">
+                <div class="campaign-badge-row">
+                    <span class="campaign-badge">継続しやすい定番</span>
+                    <span class="campaign-limit">先着100名限定</span>
+                </div>
+                <div class="campaign-title">{{ supporter_offer.title }}</div>
+                <div class="campaign-tier">通常 Pro 月額1,500円 → サポーター価格 月額980円</div>
+                <div class="offer-price-row">
+                    <span class="offer-price-old">¥1,500</span>
+                    <span class="campaign-price">¥980</span>
+                    <span class="plan-period">/ 月</span>
+                </div>
+                <p class="offer-price-caption">本格的に使い続けたい方向けの特別価格です。契約中はずっと月額980円で使えます。</p>
+                <div class="supporter-bonus">
+                    <div class="supporter-bonus-label">さらに先着30名限定特典</div>
+                    <div class="supporter-bonus-title">最初の6か月は月額500円</div>
+                    <div class="supporter-bonus-copy">
+                        980円の応援サポーター枠の中から、先着30名だけに自動で適用される追加特典です。
+                        いまは残り {{ supporter_offer.special_spots_left }} 名です。
+                    </div>
+                </div>
+                <div class="campaign-upgrade-note">サポーター価格でご利用中の方は、必要になったタイミングで Expert を優待価格（月額1480円）でご利用いただけます。</div>
+                <div class="campaign-footer">
+                    <div class="campaign-spots">残り {{ supporter_offer.supporter_spots_left }} 名</div>
+                    {% if not current_user %}
+                    <a href="/register?from=plans&campaign=supporter" class="btn btn-pro" style="width:auto; padding:12px 18px;">この価格を選ぶ</a>
+                    {% elif supporter_offer.is_claimed %}
+                    <button class="btn btn-muted" type="button" style="width:auto; padding:12px 18px;">申込済み</button>
+                    {% elif supporter_offer.supporter_is_full %}
+                    <button class="btn btn-muted" type="button" style="width:auto; padding:12px 18px;">受付終了</button>
+                    {% elif current_plan == "free" %}
+                    <a href="/plans?campaign=supporter" class="btn btn-pro" style="width:auto; padding:12px 18px;">この価格を選ぶ</a>
+                    {% else %}
+                    <a href="#plans-grid" class="btn btn-muted" style="width:auto; padding:12px 18px;">現在のプランを確認</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="campaign-note">
+            応援サポーター枠は先着100名です。その中から先着30名だけ、最初の6か月が月額500円になります。どちらも契約完了時点で適用されます。
+        </div>
+        {% endif %}
+
         <!-- Plans grid -->
-        <div class="plans-grid">
+        <div class="plans-grid" id="plans-grid">
             <!-- Free -->
             <div class="plan-card plan-free {% if current_plan == 'free' or not current_user %}current{% endif %}">
                 <div class="badge-row">
@@ -389,8 +742,15 @@
                     {% else %}
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="pro">
+                            <input type="hidden" name="campaign_slug" value="{{ selected_campaign_slug or '' }}">
                             <button class="btn btn-pro" type="submit">
-                                <span class="monthly-only">Proを始める（7日無料）</span>
+                                <span class="monthly-only">
+                                    {% if selected_campaign %}
+                                        {{ selected_campaign.title }}でProを始める
+                                    {% else %}
+                                        Proを始める（7日無料）
+                                    {% endif %}
+                                </span>
                                 <span class="annual-only">Pro年額を始める</span>
                             </button>
                         </form>
@@ -416,19 +776,36 @@
                     {% if current_plan == 'expert' %}
                         <span class="badge badge-current">現在のプラン</span>
                     {% endif %}
+                    {% if supporter_benefits.expert_upgrade_eligible %}
+                        <span class="badge badge-rec">サポーター優待</span>
+                    {% endif %}
                     <span class="badge badge-trial">7日無料体験</span>
                 </div>
                 <div class="plan-icon">🎓</div>
                 <div class="plan-name">Expert</div>
                 <div class="plan-tagline">大学院生・研究者・施設での本格運用向け。すべて無制限。</div>
                 <div class="price-block">
-                    <span class="plan-price monthly-only">¥4,980</span>
+                    <span class="monthly-only">
+                        {% if supporter_benefits.expert_upgrade_eligible %}
+                            <span class="price-strike">¥4,980</span>
+                        {% endif %}
+                        <span class="plan-price">¥{{ "{:,}".format(supporter_benefits.expert_monthly_price) }}</span>
+                    </span>
                     <span class="plan-price annual-only">¥49,800</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
                     <div class="price-note">
-                        <span class="monthly-only">7日間の無料体験あり</span>
+                        <span class="monthly-only">
+                            {% if supporter_benefits.expert_upgrade_eligible %}
+                                サポーター申込者は月額1480円で利用できます
+                            {% else %}
+                                7日間の無料体験あり
+                            {% endif %}
+                        </span>
                         <span class="annual-only">月あたり ¥4,150（2ヶ月分お得）</span>
                     </div>
+                    {% if supporter_benefits.expert_upgrade_eligible %}
+                    <div class="expert-discount-note">サポーター価格を確保している方は、Expert も永年優待価格の月額1480円でアップグレードできます。</div>
+                    {% endif %}
                 </div>
                 <div class="plan-cta">
                     {% if not current_user %}
@@ -439,7 +816,13 @@
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="expert">
                             <button class="btn btn-expert" type="submit">
-                                <span class="monthly-only">Expertを始める（7日無料）</span>
+                                <span class="monthly-only">
+                                    {% if supporter_benefits.expert_upgrade_eligible %}
+                                        Expertを優待価格で始める
+                                    {% else %}
+                                        Expertを始める（7日無料）
+                                    {% endif %}
+                                </span>
                                 <span class="annual-only">Expert年額を始める</span>
                             </button>
                         </form>
@@ -461,7 +844,7 @@
         </div>
 
         <!-- Referral -->
-        {% if current_user %}
+        {% if current_user and not offer_preview %}
         <div class="referral-section">
             <div class="referral-header" onclick="toggleReferral()">
                 <h3>🎁 特典・紹介コード</h3>
@@ -493,28 +876,23 @@
         </div>
         {% endif %}
 
-        {% if current_user and current_plan == "free" and not promo_days_left %}
-        <div class="promo-section">
-            <div class="promo-header" onclick="togglePromo()">
-                <h3>🎟️ 招待コードをお持ちの方</h3>
-                <span id="promo-arrow" style="color:#aaa; font-size:20px;">▾</span>
-            </div>
-            <div class="promo-body" id="promo-body">
-                <p class="promo-desc">招待コードを入力すると、Pro プランを一定期間無料でご利用いただけます。</p>
-                <form action="/apply-promo" method="post" class="promo-form">
-                    <input type="text" name="promo_code" class="promo-input" placeholder="招待コードを入力…" autocomplete="off" spellcheck="false">
-                    <button type="submit" class="promo-button">適用</button>
-                </form>
-                {% if promo_message %}
-                <div class="{% if promo_is_success %}promo-success{% else %}promo-error{% endif %}">{{ promo_message }}</div>
-                {% endif %}
-            </div>
+        {% if promo_is_success and promo_message and not offer_preview %}
+        <div class="campaign-feedback success">
+            {{ promo_message }}
+        </div>
+        {% elif promo_message and not active_promo_offer and not offer_preview %}
+        <div class="campaign-feedback error">
+            {{ promo_message }}
         </div>
         {% endif %}
 
-        {% if promo_days_left is not none and promo_days_left >= 0 %}
+        {% if promo_is_lifetime and not offer_preview %}
         <div class="promo-active-banner">
-            🎉 招待コードが適用中です。Pro プランをあと <strong>{{ promo_days_left }}</strong> 日間ご利用いただけます。
+            🎉 招待コードが適用中です。{{ promo_plan_label }} プランを <strong>永年無料</strong> でご利用いただけます。
+        </div>
+        {% elif promo_days_left is not none and promo_days_left >= 0 and not offer_preview %}
+        <div class="promo-active-banner">
+            🎉 招待コードが適用中です。{{ promo_plan_label }} プランをあと <strong>{{ promo_days_left }}</strong> 日間ご利用いただけます。
         </div>
         {% endif %}
 
@@ -653,25 +1031,6 @@
             const open = body.classList.toggle("open");
             if (arrow) arrow.textContent = open ? "▴" : "▾";
         }
-
-        function togglePromo() {
-            const body = document.getElementById("promo-body");
-            const arrow = document.getElementById("promo-arrow");
-            if (!body) return;
-            const open = body.classList.toggle("open");
-            if (arrow) arrow.textContent = open ? "▴" : "▾";
-        }
-
-        // promo エラー・成功時は自動展開
-        (function() {
-            const url = new URL(window.location.href);
-            if (url.searchParams.get("promo_error") || url.searchParams.get("promo_success")) {
-                const body = document.getElementById("promo-body");
-                const arrow = document.getElementById("promo-arrow");
-                if (body) { body.classList.add("open"); }
-                if (arrow) { arrow.textContent = "▴"; }
-            }
-        })();
 
         function copyRefCode() {
             const input = document.getElementById("refCode");

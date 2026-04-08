@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: rehaevidence
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    disk:
+      name: rehaevidence-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DB_NAME
+        value: /var/data/papers.db
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ENTREZ_EMAIL
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
