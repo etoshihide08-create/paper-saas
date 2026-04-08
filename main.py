@@ -526,10 +526,12 @@ def reserve_friend_promo_for_email(promo_code: str, email: str):
         return False, "not_found"
     if not int(code_row.get("is_active") or 0):
         return False, "inactive"
-    if int(code_row.get("used_count") or 0) >= int(code_row.get("max_uses") or 1):
-        return False, "limit_reached"
 
     target_email = (code_row.get("target_email") or "").strip().lower()
+    if int(code_row.get("used_count") or 0) >= int(code_row.get("max_uses") or 1):
+        if target_email and target_email == user_email:
+            return True, "ok"
+        return False, "limit_reached"
     if target_email and target_email != user_email:
         return False, "email_mismatch"
     if not target_email:
@@ -1557,7 +1559,11 @@ def redeem_friend_promo_for_user(user_id: int, promo_code: str):
     if not user:
         return False, "login_required"
 
-    if (user.get("promo_code_used") or "").strip():
+    current_promo_code = (user.get("promo_code_used") or "").strip().upper()
+    if current_promo_code == promo_code:
+        return True, "already_applied"
+
+    if current_promo_code:
         return False, "already_used"
 
     effective_plan = get_user_plan(user)
