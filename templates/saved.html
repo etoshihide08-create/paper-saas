@@ -3,338 +3,776 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>保存フォルダ</title>
-
+    <title>保存した論文</title>
     <style>
+      :root {
+        --bg: #f5f7fb;
+        --text: #0f172a;
+        --subtext: #64748b;
+        --line: #dbe4ef;
+        --primary: #2563eb;
+        --primary-soft: #eaf2ff;
+        --secondary: #16324f;
+        --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+      }
+
       * { box-sizing: border-box; }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #f7f8fb;
         margin: 0;
-        padding: 24px 16px 60px;
-        color: #111827;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 28%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 46%, #eef3f8 100%);
+      }
+
+      a { color: inherit; }
+      button, input { font: inherit; }
+
+      .app-layout { min-height: 100vh; }
+      .sidebar { display: none; }
+
+      .main-area {
+        min-height: 100vh;
+        padding: 18px 12px 100px;
       }
 
       .container {
-        max-width: 640px;
-        margin: auto;
-        padding-bottom: 80px;
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+
+      .page-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        margin-bottom: 12px;
+        padding: 10px 14px 8px;
+        border-bottom: 1px solid rgba(22, 50, 79, 0.08);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.94));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 10px 28px rgba(15,23,42,0.04);
+      }
+
+      .page-header-top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .page-header-title {
+        margin: 2px 0 0;
+        font-size: 18px;
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+        color: var(--secondary);
+        font-weight: 900;
+      }
+
+      .page-header-action {
+        min-height: 32px;
+        padding: 6px 11px;
+        font-size: 12px;
+      }
+
+      .section,
+      .login-prompt {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        box-shadow: var(--shadow);
+      }
+
+      .section {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: var(--radius-lg);
       }
 
       .top-link {
-        display: inline-block;
-        margin-bottom: 18px;
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14px;
-      }
-
-      .top-link:hover { text-decoration: underline; }
-
-      h1 {
-        margin: 0 0 18px;
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-
-      .alert-box {
-        display: none; /* replaced by login-prompt-card */
-      }
-
-      .login-prompt-card {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 16px;
-        padding: 20px 20px 18px;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-      .login-prompt-card-icon { font-size: 28px; margin-bottom: 8px; line-height: 1; }
-      .login-prompt-card-title { font-size: 15px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
-      .login-prompt-card-desc { font-size: 13px; color: #3b82f6; line-height: 1.6; margin-bottom: 16px; }
-      .login-prompt-card-btns { display: flex; gap: 10px; justify-content: center; }
-      .login-prompt-card-btns a {
-        padding: 10px 22px; border-radius: 999px; font-size: 14px; font-weight: 700;
-        text-decoration: none; transition: opacity 0.15s;
-      }
-      .login-prompt-card-btns a:active { opacity: 0.75; }
-      .btn-login-primary { background: #2563eb; color: #fff; box-shadow: 0 10px 22px rgba(37,99,235,0.18); }
-      .btn-login-secondary { background: #fff; color: #2563eb; border: 1.5px solid #bfdbfe; }
-
-      .utility-chip {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
+        margin-bottom: 12px;
         text-decoration: none;
-        border: none;
-        cursor: pointer;
-        transition: color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+        color: var(--primary);
+        font-size: 13px;
+        font-weight: 800;
       }
 
-      .utility-chip:hover { transform: scale(0.98); }
-
-      .utility-chip-neutral {
-        background: #f3f4f6;
-        color: #4b5563;
-        box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9);
+      .section-subtext,
+      .history-summary,
+      .history-preview,
+      .folder-sub,
+      .login-prompt p {
+        color: var(--subtext);
       }
 
-      .utility-chip-neutral:hover {
-        background: #e5e7eb;
-      }
-
-      .utility-chip-primary {
-        background: #111827;
-        color: #fff;
-        box-shadow: 0 10px 20px rgba(17,24,39,0.12);
-      }
-
-      .alert-box-old {
-        margin: 0 0 16px;
-        padding: 12px 14px;
-        background: #fef3c7;
-        border-radius: 10px;
+      .login-prompt p {
+        margin: 0;
         font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .login-prompt-actions,
+      .folder-filter-row,
+      .saved-paper-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .ghost-btn,
+      .primary-btn,
+      .secondary-btn,
+      .saved-paper-link,
+      .history-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .ghost-btn,
+      .secondary-btn {
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid rgba(37, 99, 235, 0.14);
+      }
+
+      .primary-btn,
+      .saved-paper-link.primary,
+      .history-link {
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+        color: #fff;
+      }
+
+      .saved-paper-link.secondary {
+        background: #fff;
+        color: var(--secondary);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+      }
+
+      .login-prompt {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f8fbff 0%, var(--primary-soft) 100%);
+        border: 1px solid rgba(37, 99, 235, 0.14);
+      }
+
+      .saved-tab-bar {
+        display: flex;
+        gap: 0;
+        margin-top: 8px;
+      }
+
+      .saved-tab-btn {
+        flex: 1;
+        padding: 7px 0;
+        font-size: 13px;
+        font-weight: 800;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: var(--subtext);
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .saved-tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+      }
+
+      .view-panel { display: none; }
+      .view-panel.active { display: block; }
+
+      .section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .section-title {
+        margin: 0;
+        color: var(--secondary);
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .section-subtext {
+        margin: 4px 0 0;
+        font-size: 13px;
         line-height: 1.7;
       }
 
-      .folder-card {
-        background: white;
+      .search-box {
+        width: 100%;
+        min-height: 50px;
+        padding: 14px 16px;
         border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(15,23,42,0.08);
-        margin-bottom: 10px;
-        overflow: hidden;
-      }
-
-      .folder-main {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 16px 16px 16px 18px;
-      }
-
-      .folder-link {
-        flex: 1;
-        font-size: 17px;
-        font-weight: 700;
-        text-decoration: none;
-        color: #111827;
-        word-break: break-word;
-        line-height: 1.4;
-      }
-
-      .folder-link:hover { color: #2563eb; }
-      .folder-card:hover { border-left: 3px solid #2563eb; }
-
-      .folder-count {
-        font-size: 13px;
-        color: #9ca3af;
-        font-weight: 600;
-        flex-shrink: 0;
-      }
-
-      .rename-btn {
-        border: none;
-        background: #f3f4f6;
-        color: #4b5563;
-        padding: 8px 14px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        flex-shrink: 0;
-        white-space: nowrap;
-        box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9);
-        transition: background 0.15s ease, transform 0.15s ease;
-      }
-
-      .rename-btn:hover { background: #e5e7eb; transform: scale(0.98); }
-
-      .rename-panel {
-        display: none;
-        padding: 0 16px 14px 18px;
-        border-top: 1px solid #f3f4f6;
-      }
-
-      .rename-panel.open { display: block; }
-
-      .rename-form {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin-top: 12px;
-      }
-
-      .rename-input {
-        flex: 1;
-        padding: 9px 12px;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 10px;
-        font-size: 14px;
-        background: #f9fafb;
-        color: #111827;
+        border: 1.5px solid rgba(37, 99, 235, 0.16);
+        background: #fff;
+        color: var(--text);
         outline: none;
       }
 
-      .rename-input:focus {
-        border-color: #2563eb;
+      .search-box:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+      }
+
+      .folder-filter-row { margin-top: 14px; }
+
+      .folder-filter-chip {
+        border: 1px solid rgba(148, 163, 184, 0.18);
         background: #fff;
-      }
-
-      .rename-submit {
-        border: none;
-        background: #111827;
-        color: #fff;
-        padding: 10px 18px;
+        color: var(--subtext);
+        min-height: 36px;
+        padding: 8px 12px;
         border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 800;
         cursor: pointer;
+      }
+
+      .folder-filter-chip.active {
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .saved-paper-list,
+      .history-list,
+      .folder-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .saved-paper-card,
+      .history-card,
+      .folder-item {
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,255,0.92));
+      }
+
+      .saved-paper-top,
+      .history-top,
+      .folder-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .saved-folder-badge,
+      .history-date,
+      .folder-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--secondary);
+        font-size: 11px;
+        font-weight: 800;
         white-space: nowrap;
-        box-shadow: 0 10px 20px rgba(17,24,39,0.12);
       }
 
-      .rename-submit:hover { opacity: 0.9; }
+      .saved-folder-badge {
+        background: var(--primary-soft);
+        color: var(--primary);
+        text-decoration: none;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+      }
 
-      .rename-msg {
-        margin-top: 8px;
+      a.saved-folder-badge:hover {
+        background: #dfeafe;
+      }
+
+      .saved-date {
+        font-size: 12px;
+        color: var(--subtext);
+        font-weight: 700;
+      }
+
+      .saved-paper-title,
+      .history-title {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.55;
+        font-weight: 900;
+        color: var(--text);
+      }
+
+      .saved-paper-meta,
+      .history-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .saved-paper-tag,
+      .history-score {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--subtext);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .saved-paper-note {
+        margin-top: 10px;
+        color: var(--subtext);
         font-size: 13px;
-        font-weight: 600;
-        display: none;
-        padding: 7px 10px;
-        border-radius: 8px;
+        line-height: 1.7;
       }
 
-      .rename-msg.success { display: block; background: #dcfce7; color: #166534; }
-      .rename-msg.error   { display: block; background: #fef2f2; color: #b91c1c; }
+      .history-summary {
+        margin-top: 10px;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .folder-name {
+        color: var(--secondary);
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .folder-sub {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .empty-state {
+        display: none;
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px dashed rgba(148, 163, 184, 0.28);
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--subtext);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .empty-state.show { display: block; }
+
+      .mobile-footer { display: none; }
+
+      @media (min-width: 980px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 18px 16px;
+          background: #fff;
+          border-right: 1px solid var(--line);
+        }
+
+        .sidebar-brand { padding: 8px 10px 20px; }
+        .sidebar-title {
+          font-size: 20px;
+          font-weight: 800;
+          color: var(--secondary);
+          line-height: 1.4;
+        }
+
+        .sidebar-subtext {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--subtext);
+        }
+
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 14px;
+          text-decoration: none;
+          color: #374151;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .sidebar-link:hover { background: #f8fafc; color: #111827; }
+        .sidebar-link.is-active { background: var(--primary-soft); color: var(--primary); }
+        .sidebar-icon { width: 20px; text-align: center; font-size: 16px; }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 14px 10px 8px;
+          border-top: 1px solid var(--line);
+        }
+
+        .sidebar-plan {
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--subtext);
+          margin-bottom: 10px;
+        }
+
+        .sidebar-auth-text {
+          font-size: 12px;
+          color: #6b7280;
+          word-break: break-word;
+          margin-bottom: 8px;
+        }
+
+        .sidebar-auth-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--secondary), var(--primary));
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 13px;
+          width: 100%;
+        }
+
+        .main-area { padding: 28px 32px 60px; }
+      }
+
+      @media (max-width: 979px) {
+        .mobile-footer {
+          position: fixed;
+          inset: auto 0 0 0;
+          height: 64px;
+          display: flex;
+          align-items: stretch;
+          background: rgba(255,255,255,0.94);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-top: 1px solid rgba(226,232,240,0.82);
+          box-shadow: 0 -8px 32px rgba(15,23,42,0.08);
+          z-index: 150;
+        }
+
+        .mobile-footer-link {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          font-size: 10px;
+          font-weight: 700;
+          color: #6b7280;
+          text-decoration: none;
+        }
+
+        .mobile-footer-link.is-active { color: var(--primary); }
+        .mobile-footer-icon { font-size: 20px; line-height: 1; }
+      }
 
       @media (max-width: 640px) {
-        body { padding: 16px 12px 60px; }
-        h1 { font-size: 22px; }
-        .folder-link { font-size: 16px; }
-        .rename-form { flex-direction: column; align-items: stretch; }
-        .rename-submit { width: 100%; }
+        .page-header { padding: 9px 12px 7px; }
+        .page-header-title { font-size: 17px; }
+        .section-title { font-size: 20px; }
       }
-      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
-      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: #6b7280; text-decoration: none; transition: color 0.15s; }
-      .mobile-footer-link.is-active { color: #2563eb; }
-      .mobile-footer-icon { font-size: 20px; line-height: 1; }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        保存フォルダ
-        {% if not is_guest %}
-        <a href="/saved/export" class="utility-chip utility-chip-neutral">📥 エクスポート</a>
-        {% endif %}
-      </h1>
-
-      <a href="/" class="top-link">← トップへ</a>
-
-      {% if is_guest %}
-      <div class="login-prompt-card">
-        <div class="login-prompt-card-icon">📚</div>
-        <div class="login-prompt-card-title">保存機能はログイン後に使えます</div>
-        <div class="login-prompt-card-desc">気になった論文をフォルダに整理して、<br>あとからすぐ見返せます。</div>
-        <div class="login-prompt-card-btns">
-          <a href="/login?from=saved" class="btn-login-primary">ログイン</a>
-          <a href="/register" class="btn-login-secondary">新規登録</a>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-title">リハエビデンスナビ</div>
+          <div class="sidebar-subtext">保存した論文と、要約を見た履歴を分けて整理できます。</div>
         </div>
-      </div>
-      {% endif %}
 
-      {% for folder_name, papers in folders.items() %}
-      <div class="folder-card" id="folder-card-{{ loop.index }}">
-        <div class="folder-main">
-          <span style="font-size:20px; flex-shrink:0;">📁</span>
-          <a href="/saved/{{ folder_name }}" class="folder-link" id="folder-link-{{ loop.index }}">
-            {{ folder_name }}
-          </a>
-          <span class="folder-count">{{ papers|length }}件</span>
-          {% if not is_guest %}
-          <button type="button" class="rename-btn"
-                  onclick="toggleRename({{ loop.index }})">変更</button>
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link"><span class="sidebar-icon">🏠</span><span>検索</span></a>
+          <a href="/learn" class="sidebar-link"><span class="sidebar-icon">📖</span><span>学ぶ</span></a>
+          <a href="/memo" class="sidebar-link"><span class="sidebar-icon">📝</span><span>メモ</span></a>
+          <a href="/saved" class="sidebar-link is-active"><span class="sidebar-icon">📚</span><span>保存</span></a>
+          <a href="/mypage" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+          {% if current_user %}
+          <div class="sidebar-plan">現在のプラン：<b>{{ current_plan | upper }}</b></div>
+          <div class="sidebar-auth-text">{{ current_user.email }}</div>
+          <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+          {% else %}
+          <div class="sidebar-plan">ログインすると、保存した論文と要約履歴を自分用に分けて見返せます。</div>
+          <a href="/login?from=saved" class="sidebar-auth-link">ログイン</a>
           {% endif %}
         </div>
+      </aside>
 
-        {% if not is_guest %}
-        <div class="rename-panel" id="rename-panel-{{ loop.index }}">
-          <form class="rename-form"
-                onsubmit="submitRename(event, {{ loop.index }}, '{{ folder_name }}')">
-            <input type="text" class="rename-input" value="{{ folder_name }}"
-                   placeholder="新しいフォルダ名" required
-                   id="rename-input-{{ loop.index }}" />
-            <button type="submit" class="rename-submit">変更する</button>
-          </form>
-          <div class="rename-msg" id="rename-msg-{{ loop.index }}"></div>
+      <main class="main-area">
+        <div class="container">
+          <section class="page-header">
+            <div class="page-header-top">
+              <div>
+                <a href="/" class="top-link">← 検索へ戻る</a>
+                <h1 class="page-header-title">保存</h1>
+              </div>
+              {% if not is_guest %}
+              <a href="/saved/export" class="ghost-btn page-header-action">エクスポート</a>
+              {% endif %}
+            </div>
+
+            <div class="saved-tab-bar">
+              <button type="button" class="saved-tab-btn active" data-view-target="folders">保存フォルダ</button>
+              {% if current_user %}
+              <button type="button" class="saved-tab-btn" data-view-target="history">要約履歴</button>
+              {% endif %}
+            </div>
+          </section>
+
+          {% if is_guest %}
+          <section class="login-prompt">
+            <p>ログインすると、手動保存した論文と要約履歴を分けて見返せます。</p>
+            <div class="login-prompt-actions">
+              <a href="/login?from=saved" class="primary-btn">ログイン</a>
+              <a href="/register" class="secondary-btn">新規登録</a>
+            </div>
+          </section>
+          {% endif %}
+
+          <section class="section view-panel active" id="view-folders">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">保存フォルダ</h2>
+              </div>
+            </div>
+
+            {% if saved_papers %}
+            <input id="saved-paper-search" class="search-box" type="text" placeholder="日本語タイトルやフォルダ名で探す" />
+
+            <div class="folder-filter-row">
+              {% for folder in folder_filters %}
+              <button type="button" class="folder-filter-chip {% if loop.first %}active{% endif %}" data-folder-filter="{{ folder.slug }}">
+                {{ folder.name }}{% if folder.count %} {{ folder.count }}{% endif %}
+              </button>
+              {% endfor %}
+            </div>
+
+            <div class="saved-paper-list" id="saved-paper-list">
+              {% for paper in saved_papers %}
+              <article class="saved-paper-card" data-title="{{ (paper.display_title or '') | lower }}" data-folder="{{ (paper.display_folder_name or '') | lower }}">
+                <div class="saved-paper-top">
+                  <a href="/saved/{{ paper.display_folder_name }}" class="saved-folder-badge">📁 {{ paper.display_folder_name }}</a>
+                  <div class="saved-date">{{ paper.created_at_label or '日付なし' }}</div>
+                </div>
+
+                <h3 class="saved-paper-title">{{ paper.display_title }}</h3>
+
+                <div class="saved-paper-meta">
+                  {% if paper.score_value %}
+                  <div class="saved-paper-tag">参考度 {{ "%.1f"|format(paper.score_value) }}</div>
+                  {% endif %}
+                  {% if paper.is_favorite %}
+                  <div class="saved-paper-tag">★ お気に入り</div>
+                  {% endif %}
+                  {% if paper.has_note %}
+                  <div class="saved-paper-tag">✍ メモあり</div>
+                  {% endif %}
+                </div>
+
+                <div class="saved-paper-actions">
+                  <a href="/paper?id={{ paper.pubmed_id }}" class="saved-paper-link primary">論文を見る</a>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+
+            <div class="empty-state" id="saved-empty-state">該当する論文が見つかりません。検索語を変えるか、フォルダを切り替えてみてください。</div>
+            {% else %}
+            <div class="empty-state show">まだ手動で保存した論文がありません。気になる論文を保存すると、ここに並びます。</div>
+            {% endif %}
+
+            {% if folder_cards %}
+            <div class="folder-list">
+              {% for folder in folder_cards %}
+              <div class="folder-item">
+                <div class="folder-top">
+                  <div>
+                    <a href="/saved/{{ folder.name }}" class="folder-name">{{ folder.name }}</a>
+                    <div class="folder-sub">最近更新 {{ folder.updated_at_label }} ・ {{ folder.latest_title }}</div>
+                  </div>
+                  <div class="folder-count">{{ folder.count }}件</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </section>
+
+          {% if current_user %}
+          <section class="section view-panel" id="view-history">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">要約履歴</h2>
+                <p class="section-subtext">abstract を要約して見た論文の履歴です。時系列で振り返れます。</p>
+              </div>
+            </div>
+
+            {% if history_entries %}
+            <input id="history-search" class="search-box" type="text" placeholder="日本語タイトルで要約履歴を探す" />
+
+            <div class="history-list" id="history-list">
+              {% for item in history_entries %}
+              <article class="history-card" data-title="{{ (item.display_title or '') | lower }}">
+                <div class="history-top">
+                  <div class="history-date">要約日 {{ item.viewed_at_label }}</div>
+                  {% if item.score_value %}
+                  <div class="history-score">参考度 {{ "%.1f"|format(item.score_value) }}</div>
+                  {% endif %}
+                </div>
+
+                <h3 class="history-title">{{ item.display_title }}</h3>
+                {% if item.summary_preview %}
+                <div class="history-summary">{{ item.summary_preview }}</div>
+                {% endif %}
+
+                <div class="saved-paper-actions" style="margin-top:14px;">
+                  <a href="/paper?id={{ item.pubmed_id }}" class="history-link">論文を開く</a>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+
+            <div class="empty-state" id="history-empty-state">該当する要約履歴が見つかりません。別の言葉で探してみてください。</div>
+            {% else %}
+            <div class="empty-state show">まだ要約履歴がありません。論文詳細で要約を表示すると、ここに残ります。</div>
+            {% endif %}
+          </section>
+          {% endif %}
         </div>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
+      </main>
 
-    <script>
-      function toggleRename(idx) {
-        const panel = document.getElementById("rename-panel-" + idx);
-        if (!panel) return;
-        const isOpen = panel.classList.contains("open");
-        // Close all panels first
-        document.querySelectorAll(".rename-panel").forEach(p => p.classList.remove("open"));
-        if (!isOpen) panel.classList.add("open");
-      }
+      <script>
+        const viewButtons = Array.from(document.querySelectorAll("[data-view-target]"));
+        const viewPanels = Array.from(document.querySelectorAll(".view-panel"));
+        const savedSearchInput = document.getElementById("saved-paper-search");
+        const savedPaperCards = Array.from(document.querySelectorAll(".saved-paper-card"));
+        const folderFilterButtons = Array.from(document.querySelectorAll("[data-folder-filter]"));
+        const savedEmptyState = document.getElementById("saved-empty-state");
+        const historySearchInput = document.getElementById("history-search");
+        const historyCards = Array.from(document.querySelectorAll(".history-card"));
+        const historyEmptyState = document.getElementById("history-empty-state");
+        let currentFolderFilter = "all";
 
-      async function submitRename(event, idx, oldName) {
-        event.preventDefault();
-        const input = document.getElementById("rename-input-" + idx);
-        const msg   = document.getElementById("rename-msg-"   + idx);
-        const newName = input.value.trim();
-        if (!newName) return;
-
-        const fd = new FormData();
-        fd.append("old_name", oldName);
-        fd.append("new_name", newName);
-
-        try {
-          const res  = await fetch("/saved/folder/rename", { method: "POST", body: fd });
-          const data = await res.json();
-
-          if (data.ok) {
-            // Update the visible link text and href
-            const link = document.getElementById("folder-link-" + idx);
-            if (link) {
-              link.textContent = data.new_name;
-              link.href = "/saved/" + encodeURIComponent(data.new_name);
-            }
-            msg.textContent = "フォルダ名を変更しました";
-            msg.className = "rename-msg success";
-            setTimeout(() => {
-              document.getElementById("rename-panel-" + idx).classList.remove("open");
-              msg.className = "rename-msg";
-            }, 1800);
-          } else {
-            msg.textContent = data.message || "変更に失敗しました";
-            msg.className = "rename-msg error";
-          }
-        } catch (e) {
-          msg.textContent = "変更に失敗しました";
-          msg.className = "rename-msg error";
+        function switchSavedView(target) {
+          viewButtons.forEach((button) => button.classList.toggle("active", button.dataset.viewTarget === target));
+          viewPanels.forEach((panel) => panel.classList.toggle("active", panel.id === "view-" + target));
         }
-      }
-    </script>
-    <nav class="mobile-footer">
-      <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
-      <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
-      <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
-      <a href="/saved" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
-      <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
-    </nav>
+
+        function filterSavedPapers() {
+          const query = savedSearchInput ? savedSearchInput.value.trim().toLowerCase() : "";
+          let visibleCount = 0;
+
+          savedPaperCards.forEach((card) => {
+            const title = card.dataset.title || "";
+            const folder = card.dataset.folder || "";
+            const matchesQuery = !query || title.includes(query) || folder.includes(query);
+            const matchesFolder = currentFolderFilter === "all" || folder === currentFolderFilter.toLowerCase();
+            const visible = matchesQuery && matchesFolder;
+            card.style.display = visible ? "" : "none";
+            if (visible) visibleCount += 1;
+          });
+
+          if (savedEmptyState) {
+            savedEmptyState.classList.toggle("show", visibleCount === 0);
+          }
+        }
+
+        function filterHistoryPapers() {
+          if (!historySearchInput) return;
+          const query = historySearchInput.value.trim().toLowerCase();
+          let visibleCount = 0;
+
+          historyCards.forEach((card) => {
+            const title = card.dataset.title || "";
+            const visible = !query || title.includes(query);
+            card.style.display = visible ? "" : "none";
+            if (visible) visibleCount += 1;
+          });
+
+          if (historyEmptyState) {
+            historyEmptyState.classList.toggle("show", visibleCount === 0);
+          }
+        }
+
+        viewButtons.forEach((button) => {
+          button.addEventListener("click", () => switchSavedView(button.dataset.viewTarget));
+        });
+
+        if (savedSearchInput) {
+          savedSearchInput.addEventListener("input", filterSavedPapers);
+        }
+
+        folderFilterButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            currentFolderFilter = button.dataset.folderFilter || "all";
+            folderFilterButtons.forEach((item) => item.classList.toggle("active", item === button));
+            filterSavedPapers();
+          });
+        });
+
+        if (historySearchInput) {
+          historySearchInput.addEventListener("input", filterHistoryPapers);
+        }
+      </script>
+
+      <nav class="mobile-footer">
+        <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
+        <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>
+        <a href="/memo" class="mobile-footer-link"><span class="mobile-footer-icon">📝</span><span>メモ</span></a>
+        <a href="/saved" class="mobile-footer-link is-active"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
+        <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
+      </nav>
+    </div>
   </body>
 </html>

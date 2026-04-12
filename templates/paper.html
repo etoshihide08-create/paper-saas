@@ -42,6 +42,13 @@
         background: var(--bg);
         color: var(--text);
         margin: 0;
+      }
+
+      .app-layout { min-height: 100vh; }
+      .sidebar { display: none; }
+
+      .main-area {
+        min-height: 100vh;
         padding: 20px 14px 40px;
       }
 
@@ -49,6 +56,103 @@
         max-width: 860px;
         margin: 0 auto;
         padding-bottom: 80px;
+      }
+
+      .sidebar-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: #0f172a;
+        margin-bottom: 10px;
+      }
+
+      .sidebar-subtext {
+        font-size: 13px;
+        line-height: 1.8;
+        color: var(--subtext);
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 26px;
+      }
+
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 46px;
+        padding: 0 14px;
+        border-radius: 16px;
+        text-decoration: none;
+        color: #334155;
+        font-size: 15px;
+        font-weight: 700;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .sidebar-link:hover {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+
+      .sidebar-link.is-active {
+        background: #eaf2ff;
+        color: #1d4ed8;
+      }
+
+      .sidebar-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding-top: 18px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .sidebar-plan {
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+        margin-bottom: 10px;
+      }
+
+      .sidebar-auth {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sidebar-auth-text {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .sidebar-auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #16324f, #2563eb);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .sidebar-auth-link.secondary {
+        background: #fff;
+        color: #2563eb;
+        border: 1px solid rgba(37, 99, 235, 0.16);
       }
 
       .back-link {
@@ -242,6 +346,40 @@
         color: var(--subtext);
       }
 
+      .comment-button {
+        color: var(--subtext);
+      }
+
+      .comment-button:hover {
+        color: var(--blue);
+      }
+
+      .comment-button:hover .mini-glyph {
+        background: var(--blue-soft);
+      }
+
+      .save-trigger-button {
+        color: #0f766e;
+      }
+
+      .save-trigger-button .mini-glyph {
+        background: var(--green-soft);
+        box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.18);
+      }
+
+      .save-trigger-button:hover .mini-glyph {
+        background: #dcfce7;
+      }
+
+      .save-trigger-button.saved {
+        color: #166534;
+      }
+
+      .save-trigger-button.saved .mini-glyph {
+        background: #d1fae5;
+        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
+      }
+
       .share-button:hover {
         color: var(--text);
       }
@@ -390,6 +528,445 @@
         background: var(--danger-soft);
         color: var(--danger-text);
         border: 1px solid var(--danger-border);
+      }
+
+      .comments-card {
+        display: grid;
+        gap: 14px;
+      }
+
+      .comments-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .comments-meta {
+        font-size: 12px;
+        color: var(--subtext);
+      }
+
+      .comments-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .comment-item {
+        padding: 13px 14px;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        border-radius: 16px;
+        background: #fcfdff;
+      }
+
+      .comment-item-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .comment-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .comment-meta {
+        min-width: 0;
+      }
+
+      .comment-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: #111827;
+      }
+
+      .comment-time {
+        font-size: 11px;
+        color: var(--subtext);
+        margin-top: 2px;
+      }
+
+      .comment-body {
+        font-size: 14px;
+        line-height: 1.8;
+        color: #374151;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .comments-empty {
+        border: 1px dashed #dbe3ee;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: var(--subtext);
+        font-size: 13px;
+        line-height: 1.8;
+        padding: 15px 14px;
+        text-align: center;
+      }
+
+      .comment-form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .comment-textarea {
+        width: 100%;
+        min-height: 96px;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.8;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      .comment-textarea:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      }
+
+      .comment-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .memo-cta-row {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(229, 231, 235, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .memo-cta-copy {
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .memo-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        border: none;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.14);
+      }
+
+      .memo-cta-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .save-sheet-backdrop,
+      .comment-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 20px 14px;
+        z-index: 260;
+      }
+
+      .save-sheet-backdrop.open,
+      .comment-sheet-backdrop.open {
+        display: flex;
+      }
+
+      .save-sheet,
+      .comment-sheet {
+        width: min(560px, 100%);
+        background: #fff;
+        border-radius: 26px;
+        box-shadow: 0 32px 80px rgba(15, 23, 42, 0.22);
+        padding: 18px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+      }
+
+      .save-sheet-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .save-sheet-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+      }
+
+      .save-sheet-subtitle {
+        margin-top: 4px;
+        font-size: 13px;
+        line-height: 1.7;
+        color: #64748b;
+      }
+
+      .save-sheet-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: none;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 17px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .save-sheet-paper {
+        background: #f8fbff;
+        border: 1px solid #dbeafe;
+        border-radius: 16px;
+        padding: 13px 14px;
+        margin-bottom: 14px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.7;
+        color: #0f172a;
+      }
+
+      .save-sheet-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: #64748b;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin: 16px 0 8px;
+      }
+
+      .save-sheet-options {
+        display: grid;
+        gap: 10px;
+      }
+
+      .save-sheet-option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-radius: 16px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        background: #fff;
+        padding: 13px 14px;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .save-sheet-option:hover {
+        border-color: rgba(37, 99, 235, 0.24);
+        background: #f8fbff;
+      }
+
+      .save-sheet-option.active {
+        border-color: rgba(37, 99, 235, 0.32);
+        background: #eef4ff;
+      }
+
+      .save-sheet-option-main {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .save-sheet-option-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .save-sheet-option-meta {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .save-sheet-option-check {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #dbeafe;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 900;
+        opacity: 0;
+      }
+
+      .save-sheet-option.active .save-sheet-option-check {
+        opacity: 1;
+      }
+
+      .save-sheet-new-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .save-sheet-input {
+        flex: 1;
+        min-width: 0;
+        height: 46px;
+        border-radius: 14px;
+        border: 1px solid #d1d5db;
+        padding: 0 14px;
+        font-size: 14px;
+      }
+
+      .save-sheet-input:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      }
+
+      .save-sheet-submit {
+        min-width: 96px;
+        height: 46px;
+        border-radius: 14px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .save-sheet-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .comment-sheet-list {
+        display: grid;
+        gap: 10px;
+        max-height: min(44vh, 340px);
+        overflow: auto;
+        padding-right: 2px;
+      }
+
+      .comment-sheet-empty {
+        border: 1px dashed #dbe3ee;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: var(--subtext);
+        font-size: 13px;
+        line-height: 1.8;
+        padding: 15px 14px;
+        text-align: center;
+      }
+
+      .comment-sheet-form {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .comment-sheet-textarea {
+        width: 100%;
+        min-height: 96px;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.8;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      .comment-sheet-textarea:focus {
+        outline: none;
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+      }
+
+      .comment-sheet-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .comment-sheet-note {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.7;
+      }
+
+      .site-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 92px;
+        transform: translateX(-50%) translateY(8px);
+        background: rgba(15, 23, 42, 0.94);
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 280;
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+      }
+
+      .site-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      .comment-note {
+        font-size: 12px;
+        color: var(--subtext);
+        line-height: 1.7;
       }
 
       .section-title {
@@ -705,15 +1282,101 @@
         .organize-actions .btn {
           width: 100%;
         }
+
+        .memo-cta-row {
+          align-items: stretch;
+        }
+
+        .memo-cta-btn {
+          width: 100%;
+        }
+
+        .save-sheet-backdrop,
+        .comment-sheet-backdrop {
+          padding: 10px;
+        }
+
+        .save-sheet,
+        .comment-sheet {
+          width: 100%;
+          border-radius: 22px;
+          padding: 16px 14px;
+        }
+
+        .save-sheet-new-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .save-sheet-submit {
+          width: 100%;
+        }
       }
       .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
       .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
       .mobile-footer-link.is-active { color: #2563eb; }
       .mobile-footer-icon { font-size: 20px; line-height: 1; }
+
+      @media (min-width: 1024px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          position: sticky;
+          top: 0;
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          padding: 24px 16px 20px;
+          background: #fff;
+          border-right: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .main-area {
+          padding: 20px 28px 48px;
+        }
+
+        .mobile-footer {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="container">
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">リハエビデンスナビ</div>
+        <div class="sidebar-subtext">PubMed論文を日本語で素早く理解し、臨床判断にそのまま使える形で整理。</div>
+
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link is-active"><span class="sidebar-icon">🏠</span><span>検索</span></a>
+          <a href="/learn" class="sidebar-link"><span class="sidebar-icon">📖</span><span>学ぶ</span></a>
+          <a href="/memo" class="sidebar-link"><span class="sidebar-icon">📝</span><span>メモ</span></a>
+          <a href="/saved" class="sidebar-link"><span class="sidebar-icon">📚</span><span>保存</span></a>
+          <a href="/mypage" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+          {% if current_user %}
+          <div class="sidebar-plan">現在のプラン：<b>{{ current_plan | upper }}</b></div>
+          <div class="sidebar-auth">
+            <div class="sidebar-auth-text">{{ current_user.email }}</div>
+            <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+          </div>
+          {% else %}
+          <div class="sidebar-plan">ログインすると、保存や論文メモをそのまま積み上げられます。</div>
+          <div class="sidebar-auth">
+            <a href="/login?from=paper" class="sidebar-auth-link">ログイン</a>
+            <a href="/register" class="sidebar-auth-link secondary">新規登録</a>
+          </div>
+          {% endif %}
+        </div>
+      </aside>
+
+      <main class="main-area">
+      <div class="container">
       <a href="#" class="back-link" onclick="goBack(event)">← 戻る</a>
 
       <div class="card hero-card">
@@ -744,16 +1407,14 @@
         <div class="mini-action-row">
           <button
             type="button"
-            class="mini-action favorite-button {% if paper.is_favorite %}active{% endif %}"
-            onclick="toggleFavorite('{{ paper.id }}', this)"
-            aria-label="お気に入り"
+            class="mini-action save-trigger-button {% if paper.folder_name %}saved{% endif %}"
+            onclick="openPaperSaveSheet(this)"
+            aria-label="保存"
           >
             <span class="mini-glyph">
-              <span class="favorite-icon"
-                >{% if paper.is_favorite %}★{% else %}☆{% endif %}</span
-              >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path></svg>
             </span>
-            <span class="mini-copy">お気に入り</span>
+            <span class="mini-copy save-trigger-label">{% if paper.folder_name %}保存済み{% else %}保存{% endif %}</span>
           </button>
 
           <button
@@ -774,6 +1435,18 @@
 
           <button
             type="button"
+            class="mini-action comment-button"
+            onclick="openPaperCommentSheet()"
+            aria-label="コメント"
+          >
+            <span class="mini-glyph">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path></svg>
+            </span>
+            <span class="mini-copy comment-count">{{ paper.comment_count or 0 }}</span>
+          </button>
+
+          <button
+            type="button"
             class="mini-action share-button"
             data-title="{{ paper.jp_title or paper.title }}"
             data-url="/paper?id={{ paper.id }}"
@@ -786,129 +1459,31 @@
             <span class="mini-copy share-label">共有</span>
           </button>
         </div>
-      </div>
-
-      <div class="card">
-        <h2 class="save-card-title">あとで見返すために保存</h2>
+        {% if save_error_message %}
+        <div class="alert-box">{{ save_error_message }}</div>
+        {% endif %}
 
         {% if paper.summary_jp %}
         <div class="status-chip">✓ 要約済み</div>
         {% else %}
-        <div style="margin-bottom: 12px">
-          <form
-            action="/paper"
-            method="get"
-            onsubmit="showSummaryLoading(this)"
-          >
+        <div style="margin-top: 14px;">
+          <form action="/paper" method="get" onsubmit="showSummaryLoading(this)">
             <input type="hidden" name="id" value="{{ paper.id }}" />
-            <input
-              type="hidden"
-              name="translate"
-              value="{% if paper.jp %}1{% else %}0{% endif %}"
-            />
+            <input type="hidden" name="translate" value="{% if paper.jp %}1{% else %}0{% endif %}" />
             <input type="hidden" name="summarize" value="1" />
             <button class="btn summary-btn" type="submit">要約する</button>
           </form>
         </div>
-        {% endif %} {% if save_error_message %}
-        <div class="alert-box">{{ save_error_message }}</div>
         {% endif %}
 
-        <form action="/save" method="post" class="save-form" id="save-form">
-          <input type="hidden" name="pubmed_id" value="{{ paper.id }}" />
-          <input type="hidden" name="title" value="{{ paper.title }}" />
-          <input type="hidden" name="jp_title" value="{{ paper.jp_title }}" />
-          <input type="hidden" name="authors" value="{{ paper.authors }}" />
-          <input type="hidden" name="journal" value="{{ paper.journal }}" />
-          <input type="hidden" name="pubdate" value="{{ paper.pubdate }}" />
-
-          <textarea name="abstract" hidden>{{ paper.abstract }}</textarea>
-          <textarea name="jp" hidden>{{ paper.jp }}</textarea>
-          <textarea name="summary_jp" hidden>{{ paper.summary_jp }}</textarea>
-          <input
-            type="hidden"
-            name="clinical_score"
-            value="{{ paper.clinical_score }}"
-          />
-          <textarea name="clinical_reason" hidden>
-{{ paper.clinical_reason }}</textarea
-          >
-
-          <div class="folder-input-wrap">
-            <input
-              type="text"
-              name="folder_name"
-              class="folder-input"
-              list="folder-name-suggestions"
-              placeholder="フォルダ名を入力"
-              required
-            />
-
-            <datalist id="folder-name-suggestions">
-              {% for name in folder_suggestions %}
-              <option value="{{ name }}"></option>
-              {% endfor %}
-            </datalist>
-
-            <button class="btn save-btn" type="submit" id="save-button">
-              保存する
-            </button>
-          </div>
-
-          <div
-            id="save-message"
-            class="save-message"
-            style="display: none"
-          ></div>
-        </form>
-
-        <div class="helper-text">
-          初回は自由に入力できます。次回以降は、以前使った保存名が候補に表示されます。
-        </div>
-
-        {% if paper.folder_name %}
-        <div class="card">
-          <h2 class="section-title">メモ</h2>
-
-          <form
-            id="note-form"
-            onsubmit="submitPaperNote(event, '{{ paper.id }}')"
-          >
-            <div style="margin-bottom: 10px">
-              <textarea
-                name="user_note"
-                class="folder-input"
-                style="min-height: 120px; resize: vertical"
-                placeholder="この論文の使いどころや見返したいポイントをメモできます"
-              >
-{{ paper.user_note or '' }}</textarea
-              >
-            </div>
-            <button type="submit" class="btn summary-btn">メモを保存</button>
-          </form>
-
-          <div
-            id="organize-message"
-            class="save-message"
-            style="display: none"
-          ></div>
-        </div>
-        {% endif %}
-      </div>
-
-      <div class="card" style="padding: 18px 20px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div>
-            <div style="font-size:15px; font-weight:700; margin-bottom:4px;">📝 この論文のメモを書く</div>
-            <div style="font-size:13px; color:#6b7280; line-height:1.6;">気づき・臨床での使い方・覚えておきたいポイントをメモできます</div>
-          </div>
+        <div class="memo-cta-row">
+          <div class="memo-cta-copy">気づきや臨床での使いどころは、論文メモに残してあとで見返せます。</div>
           <form method="POST" action="/memo/paper/create" style="flex-shrink:0;">
             <input type="hidden" name="pubmed_id" value="{{ paper.id }}" />
             <input type="hidden" name="paper_title" value="{{ paper.jp_title or paper.title }}" />
             <input type="hidden" name="body" value="" />
-            <button type="submit" style="padding:10px 20px; background:#111827; color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer;">
-              論文メモを作成
-            </button>
+            <input type="hidden" name="return_to" value="{{ current_paper_url }}" />
+            <button type="submit" class="memo-cta-btn">論文メモを書く</button>
           </form>
         </div>
       </div>
@@ -988,6 +1563,80 @@
           </div>
         </details>
       </div>
+
+      <div class="comment-sheet-backdrop" id="paper-comment-sheet" aria-hidden="true">
+        <div class="comment-sheet" role="dialog" aria-modal="true" aria-labelledby="paper-comment-sheet-title">
+          <div class="save-sheet-header">
+            <div>
+              <div class="save-sheet-title" id="paper-comment-sheet-title">論文コメント</div>
+              <div class="save-sheet-subtitle">ひとこと感想や、臨床で使えそうなポイントを短く残せます。</div>
+            </div>
+            <button type="button" class="save-sheet-close" onclick="closePaperCommentSheet()" aria-label="閉じる">✕</button>
+          </div>
+          <div class="save-sheet-paper" id="paper-comment-paper-title">{{ paper.jp_title or paper.title }}</div>
+          <div class="comment-sheet-list" id="paper-comment-list">
+            {% if paper_comments %}
+              {% for comment in paper_comments %}
+              <div class="comment-item">
+                <div class="comment-item-header">
+                  <div class="comment-avatar">
+                    {% if comment.avatar %}
+                      {% if comment.avatar|length <= 4 %}{{ comment.avatar }}
+                      {% else %}<img src="{{ comment.avatar }}" alt="avatar">{% endif %}
+                    {% else %}
+                      {{ (comment.display_name or "?")[0]|upper }}
+                    {% endif %}
+                  </div>
+                  <div class="comment-meta">
+                    <div class="comment-name">{{ comment.display_name }}</div>
+                    <div class="comment-time">{{ comment.created_label }}</div>
+                  </div>
+                </div>
+                <div class="comment-body">{{ comment.content }}</div>
+              </div>
+              {% endfor %}
+            {% else %}
+            <div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>
+            {% endif %}
+          </div>
+
+          {% if request.session.get("user_id") %}
+          <form class="comment-sheet-form" onsubmit="submitPaperComment(event)">
+            <textarea class="comment-sheet-textarea" id="paper-comment-input" placeholder="この論文で気づいたことをひとこと書く"></textarea>
+            <div class="comment-sheet-actions">
+              <div class="comment-sheet-note">あとから論文詳細や学ぶタブでも見返せます。</div>
+              <button type="submit" class="save-sheet-submit" id="paper-comment-submit">コメントする</button>
+            </div>
+          </form>
+          {% else %}
+          <div class="comment-sheet-empty" style="margin-top: 14px;">コメントするにはログインが必要です。</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="save-sheet-backdrop" id="paper-save-sheet" aria-hidden="true">
+        <div class="save-sheet" role="dialog" aria-modal="true" aria-labelledby="paper-save-sheet-title">
+          <div class="save-sheet-header">
+            <div>
+              <div class="save-sheet-title" id="paper-save-sheet-title">保存先を選ぶ</div>
+              <div class="save-sheet-subtitle">この論文を、そのまま整理しやすい場所に入れられます。</div>
+            </div>
+            <button type="button" class="save-sheet-close" onclick="closePaperSaveSheet()" aria-label="閉じる">✕</button>
+          </div>
+          <div class="save-sheet-paper" id="paper-save-paper-title">{{ paper.jp_title or paper.title }}</div>
+          <div class="save-sheet-label">保存先</div>
+          <div class="save-sheet-options" id="paper-folder-options"></div>
+          <div class="save-sheet-label">新しいフォルダを作る</div>
+          <div class="save-sheet-new-row">
+            <input type="text" class="save-sheet-input" id="paper-save-new-folder" placeholder="例: 脳卒中 / 歩行 / 勉強会">
+            <button type="button" class="save-sheet-submit" id="paper-save-submit" onclick="submitPaperSaveSelection()">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="site-toast" id="site-toast" aria-live="polite"></div>
+      </div>
+      </main>
     </div>
 
     <!-- Highlight popup -->
@@ -1039,6 +1688,40 @@
         }
       }
 
+      const defaultPaperFolder = {{ default_saved_folder_label | tojson | safe }};
+      const paperFolderChoices = {{ save_folder_choices | tojson | safe }};
+      const paperUserLoggedIn = {{ 'true' if current_user else 'false' }};
+      const paperSavePayload = {
+        pubmed_id: {{ paper.id | tojson }},
+        title: {{ (paper.title or "") | tojson }},
+        jp_title: {{ (paper.jp_title or "") | tojson }},
+        authors: {{ (paper.authors or "") | tojson }},
+        journal: {{ (paper.journal or "") | tojson }},
+        pubdate: {{ (paper.pubdate or "") | tojson }},
+        abstract: {{ (paper.abstract or "") | tojson }},
+        jp: {{ (paper.jp or "") | tojson }},
+        summary_jp: {{ (paper.summary_jp or "") | tojson }},
+        clinical_score: {{ (paper.clinical_score or "") | tojson }},
+        clinical_reason: {{ (paper.clinical_reason or "") | tojson }},
+        folder_name: {{ (paper.folder_name or default_saved_folder_label) | tojson }},
+      };
+      const paperCommentState = { comments: [] };
+      const paperSaveState = {
+        selectedFolder: (paperSavePayload.folder_name || "").trim() || defaultPaperFolder,
+        wasSaved: {{ 'true' if paper.folder_name else 'false' }},
+      };
+
+      function showToast(message) {
+        const toast = document.getElementById("site-toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2200);
+      }
+
       async function sharePaper(title, url) {
         const shareUrl = url.startsWith("http")
           ? url
@@ -1051,40 +1734,250 @@
           }
 
           await navigator.clipboard.writeText(shareUrl);
-          alert("リンクをコピーしました");
+          showToast("リンクをコピーしました");
         } catch (error) {
           if (error?.name !== "AbortError") {
-            alert("共有に失敗しました");
+            showToast("共有に失敗しました");
           }
         }
       }
 
-      async function toggleFavorite(pubmedId, button) {
+      function escapeHtml(text) {
+        return (text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function renderPaperCommentAvatar(comment) {
+        if (comment.avatar && comment.avatar.length > 4) {
+          return `<img src="${comment.avatar}" alt="avatar">`;
+        }
+        return (comment.avatar || comment.display_name || "?").slice(0, 1).toUpperCase();
+      }
+
+      function updatePaperCommentCount(count) {
+        document.querySelectorAll(".comment-count").forEach((el) => {
+          el.textContent = String(count || 0);
+        });
+      }
+
+      function renderPaperComments(comments) {
+        const list = document.getElementById("paper-comment-list");
+        if (!list) return;
+        if (!comments || comments.length === 0) {
+          list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
+          updatePaperCommentCount(0);
+          return;
+        }
+        list.innerHTML = comments.map((comment) => `
+          <div class="comment-item">
+            <div class="comment-item-header">
+              <div class="comment-avatar">${renderPaperCommentAvatar(comment)}</div>
+              <div class="comment-meta">
+                <div class="comment-name">${escapeHtml(comment.display_name || "ユーザー")}</div>
+                <div class="comment-time">${escapeHtml(comment.created_label || "")}</div>
+              </div>
+            </div>
+            <div class="comment-body">${escapeHtml(comment.content || "").replace(/\n/g, "<br>")}</div>
+          </div>
+        `).join("");
+        updatePaperCommentCount(comments.length);
+      }
+
+      function openPaperCommentSheet() {
+        const sheet = document.getElementById("paper-comment-sheet");
+        const titleEl = document.getElementById("paper-comment-paper-title");
+        const listEl = document.getElementById("paper-comment-list");
+        if (titleEl) titleEl.textContent = paperSavePayload.jp_title || paperSavePayload.title || "論文";
+        if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントを読み込み中です…</div>';
+        if (sheet) {
+          sheet.classList.add("open");
+          sheet.setAttribute("aria-hidden", "false");
+        }
+        document.body.classList.add("modal-open");
+        fetch(`/paper/${encodeURIComponent(paperSavePayload.pubmed_id)}/comments`)
+          .then((response) => response.json())
+          .then((data) => {
+            paperCommentState.comments = data.comments || [];
+            renderPaperComments(paperCommentState.comments);
+            updatePaperCommentCount(data.count || paperCommentState.comments.length);
+          })
+          .catch(() => {
+            if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントの読み込みに失敗しました。</div>';
+          });
+      }
+
+      function closePaperCommentSheet() {
+        const sheet = document.getElementById("paper-comment-sheet");
+        if (sheet) {
+          sheet.classList.remove("open");
+          sheet.setAttribute("aria-hidden", "true");
+        }
+        if (!document.getElementById("paper-save-sheet")?.classList.contains("open")) {
+          document.body.classList.remove("modal-open");
+        }
+      }
+
+      async function submitPaperComment(event) {
+        event.preventDefault();
+        const input = document.getElementById("paper-comment-input");
+        const submit = document.getElementById("paper-comment-submit");
+        if (!input || !submit) return;
+        const content = (input.value || "").trim();
+        if (!content) {
+          showToast("コメントを入力してください");
+          return;
+        }
+
+        submit.disabled = true;
+        submit.textContent = "送信中…";
         try {
-          const response = await fetch(`/favorite/${pubmedId}`, {
+          const fd = new FormData();
+          fd.append("content", content);
+          fd.append("paper_title", {{ (paper.title or "") | tojson }});
+          fd.append("paper_jp_title", {{ (paper.jp_title or paper.title or "") | tojson }});
+          const response = await fetch(`/paper/{{ paper.id }}/comments`, {
             method: "POST",
+            body: fd,
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            showToast(data.message || "コメントに失敗しました");
+            return;
+          }
+          renderPaperComments(data.comments || []);
+          input.value = "";
+          showToast("コメントしました");
+        } catch (error) {
+          showToast("コメントに失敗しました");
+        } finally {
+          submit.disabled = false;
+          submit.textContent = "コメントする";
+        }
+      }
+
+      function ensurePaperFolderChoice(folderName) {
+        const clean = (folderName || "").trim();
+        if (!clean || paperFolderChoices.includes(clean)) return;
+        paperFolderChoices.push(clean);
+      }
+
+      function renderPaperFolderOptions() {
+        const wrap = document.getElementById("paper-folder-options");
+        if (!wrap) return;
+        wrap.innerHTML = "";
+        paperFolderChoices.forEach((folderName) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = "save-sheet-option";
+          if (folderName === paperSaveState.selectedFolder) option.classList.add("active");
+          option.addEventListener("click", () => {
+            paperSaveState.selectedFolder = folderName;
+            const input = document.getElementById("paper-save-new-folder");
+            if (input) input.value = "";
+            renderPaperFolderOptions();
           });
 
-          const data = await response.json();
+          const main = document.createElement("span");
+          main.className = "save-sheet-option-main";
 
-          if (data.ok) {
-            const icon = button.querySelector(".favorite-icon");
-            if (data.is_favorite) {
-              button.classList.add("active");
-              if (icon) icon.textContent = "★";
-            } else {
-              button.classList.remove("active");
-              if (icon) icon.textContent = "☆";
-            }
+          const name = document.createElement("span");
+          name.className = "save-sheet-option-name";
+          name.textContent = folderName;
 
-            button.classList.add("animate-pop");
-            setTimeout(() => {
-              button.classList.remove("animate-pop");
-            }, 250);
-          }
-        } catch (error) {
-          alert("お気に入りの更新に失敗しました");
+          const meta = document.createElement("span");
+          meta.className = "save-sheet-option-meta";
+          meta.textContent = folderName === defaultPaperFolder ? "迷ったときにまず入れるフォルダ" : "このフォルダにそのまま整理";
+
+          const check = document.createElement("span");
+          check.className = "save-sheet-option-check";
+          check.textContent = "✓";
+
+          main.appendChild(name);
+          main.appendChild(meta);
+          option.appendChild(main);
+          option.appendChild(check);
+          wrap.appendChild(option);
+        });
+      }
+
+      function openPaperSaveSheet(button) {
+        if (!paperUserLoggedIn) {
+          window.location.href = "/login?from=paper";
+          return;
         }
+        paperSaveState.button = button;
+        paperSaveState.selectedFolder = (paperSavePayload.folder_name || "").trim() || defaultPaperFolder;
+        ensurePaperFolderChoice(paperSaveState.selectedFolder);
+        renderPaperFolderOptions();
+        const input = document.getElementById("paper-save-new-folder");
+        const sheet = document.getElementById("paper-save-sheet");
+        const titleEl = document.getElementById("paper-save-paper-title");
+        if (input) input.value = "";
+        if (titleEl) titleEl.textContent = paperSavePayload.jp_title || paperSavePayload.title || "論文";
+        if (sheet) {
+          sheet.classList.add("open");
+          sheet.setAttribute("aria-hidden", "false");
+        }
+        document.body.classList.add("modal-open");
+      }
+
+      function closePaperSaveSheet() {
+        const sheet = document.getElementById("paper-save-sheet");
+        if (sheet) {
+          sheet.classList.remove("open");
+          sheet.setAttribute("aria-hidden", "true");
+        }
+        if (!document.getElementById("paper-comment-sheet")?.classList.contains("open")) {
+          document.body.classList.remove("modal-open");
+        }
+      }
+
+      function markPaperSaved(folderName) {
+        paperSavePayload.folder_name = folderName;
+        paperSaveState.wasSaved = true;
+        document.querySelectorAll(".save-trigger-button").forEach((button) => {
+          button.classList.add("saved");
+          const label = button.querySelector(".save-trigger-label");
+          if (label) label.textContent = "保存済み";
+        });
+      }
+
+      async function submitPaperSave(folderName) {
+        const submitButton = document.getElementById("paper-save-submit");
+        const cleanFolderName = (folderName || "").trim() || defaultPaperFolder;
+        const alreadySaved = !!paperSaveState.wasSaved;
+        ensurePaperFolderChoice(cleanFolderName);
+        if (submitButton) submitButton.disabled = true;
+        const fd = new FormData();
+        Object.entries(paperSavePayload).forEach(([key, value]) => {
+          if (key === "folder_name") return;
+          fd.append(key, value || "");
+        });
+        fd.set("folder_name", cleanFolderName === defaultPaperFolder ? "" : cleanFolderName);
+        try {
+          const response = await fetch("/save", { method: "POST", body: fd });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            showToast(data.message || "保存に失敗しました");
+            return;
+          }
+          markPaperSaved(cleanFolderName);
+          closePaperSaveSheet();
+          showToast(alreadySaved ? `保存先を「${cleanFolderName}」に変更しました` : `「${cleanFolderName}」に保存しました`);
+        } catch (error) {
+          showToast("保存に失敗しました");
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      }
+
+      function submitPaperSaveSelection() {
+        const input = document.getElementById("paper-save-new-folder");
+        const customFolder = (input?.value || "").trim();
+        const selectedFolder = customFolder || paperSaveState.selectedFolder || defaultPaperFolder;
+        submitPaperSave(selectedFolder);
       }
 
       function goBack(event) {
@@ -1126,197 +2019,21 @@
         return true;
       }
 
-      async function handleSaveFormSubmit(event) {
-        event.preventDefault();
-
-        const form = event.target;
-        const saveButton = document.getElementById("save-button");
-        const saveMessage = document.getElementById("save-message");
-
-        if (!form || !saveButton || !saveMessage) {
-          return;
-        }
-
-        const formData = new FormData(form);
-
-        saveButton.textContent = "保存中...";
-        saveButton.disabled = true;
-        saveButton.style.opacity = "0.7";
-        saveButton.style.cursor = "not-allowed";
-
-        saveMessage.style.display = "none";
-        saveMessage.classList.remove("success", "error");
-        saveMessage.textContent = "";
-
-        try {
-          const response = await fetch("/save", {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.ok) {
-            saveMessage.textContent =
-              "保存しました。あとで保存一覧から見返せます。";
-            saveMessage.classList.remove("error");
-            saveMessage.classList.add("success");
-            saveMessage.style.display = "block";
-
-            saveButton.textContent = "保存済み";
-            saveButton.classList.add("saved");
-            saveButton.classList.add("animate-pop");
-            saveButton.disabled = true;
-            saveButton.style.opacity = "1";
-            saveButton.style.cursor = "default";
-
-            if (navigator.vibrate) {
-              navigator.vibrate(20);
-            }
-
-            setTimeout(() => {
-              saveButton.classList.remove("animate-pop");
-            }, 250);
-
-            const folderInput = form.querySelector('input[name="folder_name"]');
-            if (folderInput) {
-              folderInput.disabled = true;
-            }
-          } else {
-            saveMessage.textContent = data.message || "保存に失敗しました";
-            saveMessage.classList.add("error");
-            saveMessage.style.display = "block";
-
-            saveButton.textContent = "保存する";
-            saveButton.disabled = false;
-            saveButton.style.opacity = "1";
-            saveButton.style.cursor = "pointer";
-          }
-        } catch (error) {
-          saveMessage.textContent = "保存に失敗しました";
-          saveMessage.classList.add("error");
-          saveMessage.style.display = "block";
-
-          saveButton.textContent = "保存する";
-          saveButton.disabled = false;
-          saveButton.style.opacity = "1";
-          saveButton.style.cursor = "pointer";
-        }
-      }
-
       disableLikedButtons();
 
-      const saveForm = document.getElementById("save-form");
-      if (saveForm) {
-        saveForm.addEventListener("submit", handleSaveFormSubmit);
-      }
+      document.getElementById("paper-save-sheet")?.addEventListener("click", (event) => {
+        if (event.target.id === "paper-save-sheet") closePaperSaveSheet();
+      });
 
-      async function submitPaperRename(event, pubmedId) {
-        event.preventDefault();
+      document.getElementById("paper-comment-sheet")?.addEventListener("click", (event) => {
+        if (event.target.id === "paper-comment-sheet") closePaperCommentSheet();
+      });
 
-        const form = event.target;
-        const formData = new FormData(form);
-        const message = document.getElementById("organize-message");
-
-        try {
-          const response = await fetch(`/saved/${pubmedId}/rename`, {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.ok) {
-            const titleEl = document.querySelector(".paper-title");
-            if (titleEl) {
-              titleEl.textContent = data.display_title;
-            }
-
-            message.textContent = "表示名を更新しました";
-            message.classList.remove("error");
-            message.classList.add("success");
-            message.style.display = "block";
-          } else {
-            message.textContent = data.message || "表示名の更新に失敗しました";
-            message.classList.remove("success");
-            message.classList.add("error");
-            message.style.display = "block";
-          }
-        } catch (error) {
-          message.textContent = "表示名の更新に失敗しました";
-          message.classList.remove("success");
-          message.classList.add("error");
-          message.style.display = "block";
-        }
-      }
-
-      async function submitPaperMove(event, pubmedId) {
-        event.preventDefault();
-
-        const form = event.target;
-        const formData = new FormData(form);
-        const message = document.getElementById("organize-message");
-
-        try {
-          const response = await fetch(`/saved/${pubmedId}/move`, {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.ok) {
-            message.textContent = "フォルダを変更しました";
-            message.classList.remove("error");
-            message.classList.add("success");
-            message.style.display = "block";
-          } else {
-            message.textContent = data.message || "フォルダ変更に失敗しました";
-            message.classList.remove("success");
-            message.classList.add("error");
-            message.style.display = "block";
-          }
-        } catch (error) {
-          message.textContent = "フォルダ変更に失敗しました";
-          message.classList.remove("success");
-          message.classList.add("error");
-          message.style.display = "block";
-        }
-      }
-
-      async function submitPaperNote(event, pubmedId) {
-        event.preventDefault();
-
-        const form = event.target;
-        const formData = new FormData(form);
-        const message = document.getElementById("organize-message");
-
-        try {
-          const response = await fetch(`/saved/${pubmedId}/note`, {
-            method: "POST",
-            body: formData,
-          });
-
-          const data = await response.json();
-
-          if (response.ok && data.ok) {
-            message.textContent = "メモを保存しました";
-            message.classList.remove("error");
-            message.classList.add("success");
-            message.style.display = "block";
-          } else {
-            message.textContent = data.message || "メモ保存に失敗しました";
-            message.classList.remove("success");
-            message.classList.add("error");
-            message.style.display = "block";
-          }
-        } catch (error) {
-          message.textContent = "メモ保存に失敗しました";
-          message.classList.remove("success");
-          message.classList.add("error");
-          message.style.display = "block";
-        }
-      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        closePaperSaveSheet();
+        closePaperCommentSheet();
+      });
 
       // ── Highlights ──
       const PAPER_ID = "{{ paper.id }}";
@@ -1470,6 +2187,9 @@
       // Initial render
       if (highlights.length) renderHighlights();
     </script>
+      </div>
+      </main>
+    </div>
     <nav class="mobile-footer">
       <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>
       <a href="/learn" class="mobile-footer-link"><span class="mobile-footer-icon">📖</span><span>学ぶ</span></a>

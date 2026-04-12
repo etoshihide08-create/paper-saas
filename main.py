@@ -8,12 +8,15 @@ import threading
 import urllib.request as _urlreq
 import urllib.parse as _urlparse
 from typing import Any
+from html import escape
+from html.parser import HTMLParser
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, JSONResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from Bio import Entrez
 from openai import OpenAI
 from datetime import datetime, timedelta
@@ -24,10 +27,16 @@ from db import (
     init_memos_tables,
     save_paper,
     get_saved_papers,
+    get_saved_papers_by_pubmed_ids,
     get_all_saved_papers,
     get_public_papers,
     get_saved_paper_by_id,
+    get_best_cached_paper,
     get_saved_papers_by_folder,
+    get_paper_history,
+    create_paper_comment,
+    get_paper_comments,
+    get_paper_comment_counts,
     toggle_favorite,
     add_like,
     toggle_public,
@@ -57,6 +66,8 @@ from db import (
     create_paper_memo,
     update_paper_memo,
     delete_paper_memo,
+    get_user_memo_map_layout,
+    upsert_user_memo_map_layout,
     create_post,
     get_posts,
     get_replies,
@@ -71,6 +82,7 @@ from db import (
     get_user_tags,
     upsert_user_tag,
     delete_user_tag,
+    upsert_paper_history,
     record_interest,
     get_recommended_papers,
     get_interest_tags,
@@ -90,6 +102,7 @@ from db import (
     mark_master_article_wordpress_posted,
     get_master_wordpress_settings,
     upsert_master_wordpress_settings,
+    is_wordpress_encryption_available,
     get_master_wordpress_autopost_settings,
     upsert_master_wordpress_autopost_settings,
     update_master_wordpress_autopost_run_state,
@@ -100,18 +113,24 @@ from db import (
     record_master_article_marketing_event,
     set_user_article_attribution,
     get_master_article_marketing_summary,
+    MANUAL_SAVED_SOURCES,
 )
 from starlette.middleware.sessions import SessionMiddleware
 
 load_dotenv()
 
 app = FastAPI()
+SESSION_HTTPS_ONLY = (
+    (os.getenv("SESSION_HTTPS_ONLY", "").strip() == "1")
+    or os.getenv("APP_BASE_URL", "").startswith("https://")
+)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("SESSION_SECRET"),
     max_age=60 * 60 * 24 * 30,  # 30日間セッションを維持
     same_site="lax",
-    https_only=False,
+    https_only=SESSION_HTTPS_ONLY,
+    session_cookie="rehaevidence_session",
 )
 templates = Jinja2Templates(directory="templates")
 _original_template_response = templates.TemplateResponse
@@ -240,6 +259,54 @@ JAPANESE_MEDICAL_KEYWORDS = {
     "システマティックレビュー": "systematic review",
 }
 
+SEARCH_QUERY_ALIASES = {
+    "中枢": "(stroke OR cerebral infarction OR intracerebral hemorrhage OR spinal cord injury OR traumatic brain injury)",
+    "脳神経": "(Parkinson disease OR multiple sclerosis OR amyotrophic lateral sclerosis OR peripheral neuropathy)",
+    "呼吸器": "(pulmonary rehabilitation OR COPD OR respiratory failure OR aspiration pneumonia)",
+    "循環器": "(cardiac rehabilitation OR heart failure OR myocardial infarction OR arrhythmia)",
+    "腎臓機能": "(chronic kidney disease OR dialysis OR renal rehabilitation)",
+    "高齢者・フレイル": "(frailty OR sarcopenia OR older adults OR geriatric rehabilitation)",
+    "廃用症候群": "(deconditioning OR disuse syndrome OR prolonged bed rest OR early mobilization)",
+    "リスク管理": "(risk management OR fall prevention OR complication prevention OR vital sign monitoring)",
+    "訪問・地域": "(home rehabilitation OR community rehabilitation OR home care)",
+    "小児リハ": "(pediatric rehabilitation OR cerebral palsy OR developmental disorder)",
+    "防災リハ": "(disaster rehabilitation OR shelter support OR disaster support)",
+    "ADL": "(activities of daily living OR ADL OR instrumental activities of daily living)",
+    "離床": "(early mobilization OR ICU mobilization OR postoperative mobilization)",
+    "装具": "(orthosis OR ankle foot orthosis OR AFO OR KAFO OR splint)",
+    "検査測定": "(assessment OR outcome measure OR evaluation)",
+    "栄養管理": "(nutrition management OR malnutrition OR nutritional assessment)",
+    "画像所見": "(MRI OR CT OR radiograph OR ultrasound imaging)",
+    "嚥下・言語": "(dysphagia OR swallowing rehabilitation OR aphasia OR communication disorder)",
+    "認知": "(cognition OR cognitive impairment OR dementia)",
+    "目標設定・教育": "(goal setting OR patient education OR self management)",
+    "アセスメント": "(clinical reasoning OR assessment OR prognosis)",
+    "多職種連携": "(interprofessional collaboration OR multidisciplinary team)",
+    "再入院予防": "(readmission prevention OR discharge planning)",
+    "心のケア": "(motivation OR depression OR anxiety OR psychological support)",
+    "病期・場面": "(acute care OR ICU OR rehabilitation ward OR home care)",
+    "基礎医学": "(anatomy OR physiology OR kinesiology OR pathology)",
+    "評価・研究デザイン": "(randomized controlled trial OR systematic review OR meta-analysis OR cohort study)",
+    "フレイル": "frailty",
+    "プレフレイル": "prefrailty",
+    "サルコペニア": "sarcopenia",
+    "ロコモティブシンドローム": "locomotive syndrome",
+    "在宅復帰": "home discharge",
+    "早期離床": "early mobilization",
+    "ICU離床": "ICU mobilization",
+    "術後離床": "postoperative mobilization",
+    "AFO": "ankle foot orthosis",
+    "KAFO": "knee ankle foot orthosis",
+    "Berg Balance Scale": "Berg Balance Scale",
+    "6分間歩行試験": "6-minute walk test",
+    "10m歩行テスト": "10-meter walk test",
+    "歩行分析": "gait analysis",
+    "栄養スクリーニング": "nutritional screening",
+    "感染対策": "infection control",
+    "患者教育": "patient education",
+    "家族支援": "family support",
+}
+
 COMMON_DISCOVERY_TAGS = [
     "整形",
     "中枢",
@@ -263,6 +330,59 @@ COMMON_DISCOVERY_TAGS = [
     "目標設定・教育",
     "多職種連携",
     "評価・研究デザイン",
+]
+
+OFFICIAL_LEARNING_PERSONAS = [
+    {
+        "slug": "official",
+        "name": "みなと",
+        "role": "編集部・論文ピック担当",
+        "icon": "み",
+        "badge": "編集部",
+        "badge_tone": "editorial",
+        "headline": "今日の注目論文",
+        "disclosure": "",
+    },
+    {
+        "slug": "clinical",
+        "name": "しおり",
+        "role": "編集部・臨床メモ担当",
+        "icon": "し",
+        "badge": "編集部",
+        "badge_tone": "editorial",
+        "headline": "臨床で見るポイント",
+        "disclosure": "",
+    },
+    {
+        "slug": "study",
+        "name": "なぎさ",
+        "role": "編集部・座学メモ担当",
+        "icon": "な",
+        "badge": "編集部",
+        "badge_tone": "editorial",
+        "headline": "座学で押さえたい論点",
+        "disclosure": "",
+    },
+    {
+        "slug": "pick",
+        "name": "りつ",
+        "role": "編集部・要点整理担当",
+        "icon": "り",
+        "badge": "編集部",
+        "badge_tone": "editorial",
+        "headline": "今見ておきたい理由",
+        "disclosure": "",
+    },
+    {
+        "slug": "easy",
+        "name": "こもも",
+        "role": "編集部・やさしく整理担当",
+        "icon": "こ",
+        "badge": "編集部",
+        "badge_tone": "editorial",
+        "headline": "やさしく言い換えると",
+        "disclosure": "",
+    },
 ]
 
 SUPPORTER_CAMPAIGNS = [
@@ -1887,20 +2007,206 @@ def can_user_save(user):
 
     return limits["save_limit"] != 0
 
+def normalize_search_keyword(keyword: str) -> str:
+    normalized = (keyword or "").strip()
+    normalized = normalized.replace("・", " ").replace("／", " ").replace("/", " ")
+    normalized = normalized.replace("　", " ").replace("，", " ").replace("、", " ")
+    return " ".join(normalized.split())
+
+
+def extract_non_japanese_search_terms(text: str) -> list[str]:
+    return [
+        token.strip()
+        for token in (text or "").split()
+        if token.strip() and not contains_japanese(token.strip())
+    ]
+
+
 def convert_japanese_keyword_to_english(keyword: str) -> str:
-    converted = keyword
+    normalized_keyword = normalize_search_keyword(keyword)
+    if not normalized_keyword:
+        return ""
 
-    for ja_word, en_word in JAPANESE_MEDICAL_KEYWORDS.items():
-        converted = converted.replace(ja_word, en_word)
+    merged_aliases = {**JAPANESE_MEDICAL_KEYWORDS, **SEARCH_QUERY_ALIASES}
+    exact_match = merged_aliases.get(normalized_keyword)
+    if exact_match:
+        return " ".join(str(exact_match).split())
 
-    converted = " ".join(converted.split())
-    return converted
+    converted_terms: list[str] = []
+
+    for piece in normalized_keyword.split():
+        mapped = merged_aliases.get(piece)
+        if mapped:
+            converted_terms.extend(str(mapped).split())
+            continue
+
+        if not contains_japanese(piece):
+            converted_terms.append(piece)
+            continue
+
+        piece_converted = piece
+        for ja_word in sorted(merged_aliases.keys(), key=len, reverse=True):
+            if len(ja_word) < 2 or ja_word == piece:
+                continue
+            if ja_word in piece_converted:
+                piece_converted = piece_converted.replace(ja_word, f" {merged_aliases[ja_word]} ")
+
+        converted_terms.extend(extract_non_japanese_search_terms(" ".join(piece_converted.split())))
+
+    return " ".join(converted_terms)
 
 
 def contains_japanese(text: str) -> bool:
     return re.search(r"[ぁ-んァ-ン一-龥]", text) is not None
 
 keyword_cache = {}
+search_id_cache: dict[str, dict[str, Any]] = {}
+search_summary_cache: dict[tuple[str, ...], dict[str, Any]] = {}
+title_translation_cache: dict[str, dict[str, Any]] = {}
+abstract_summary_cache: dict[str, dict[str, Any]] = {}
+SEARCH_CACHE_TTL = 1800
+OPENAI_CACHE_TTL = 86400 * 30
+SEARCH_RESULTS_PER_PAGE = 25
+SEARCH_PRIORITY_TRANSLATION_COUNT = 12
+SEARCH_BACKGROUND_TRANSLATION_MAX = 20
+DEFAULT_SAVED_FOLDER_LABEL = "あとで見る"
+AUTH_RATE_LIMITS = {
+    "login": {"limit": 8, "window": 600},
+    "register": {"limit": 6, "window": 900},
+}
+auth_attempt_log: dict[str, list[float]] = {}
+
+
+def _timed_cache_get(cache: dict, key: Any, ttl: int):
+    item = cache.get(key)
+    if not item:
+        return None
+    if (time.time() - float(item.get("ts", 0))) > ttl:
+        cache.pop(key, None)
+        return None
+    return item.get("value")
+
+
+def _timed_cache_set(cache: dict, key: Any, value: Any):
+    cache[key] = {"value": value, "ts": time.time()}
+
+
+def _chunked(items: list[Any], size: int) -> list[list[Any]]:
+    return [items[idx: idx + size] for idx in range(0, len(items), size)]
+
+
+def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
+    cached_id_list = _timed_cache_get(search_id_cache, converted_keyword, SEARCH_CACHE_TTL)
+    if cached_id_list is not None:
+        return cached_id_list
+
+    try:
+        handle = Entrez.esearch(
+            db="pubmed",
+            term=converted_keyword,
+            retmax=250
+        )
+        record = Entrez.read(handle)
+        handle.close()
+        id_list = record.get("IdList", [])
+        if not isinstance(id_list, list):
+            id_list = []
+        _timed_cache_set(search_id_cache, converted_keyword, id_list)
+        return id_list
+    except Exception:
+        return None
+
+
+def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "") -> tuple[str, list[str], int, int]:
+    normalized_keyword = normalize_search_keyword(keyword)
+    keyword_cache_key = normalized_keyword.lower()
+    converted_keyword = (converted_keyword_hint or "").strip()
+    if not converted_keyword:
+        converted_keyword = keyword_cache.get(keyword_cache_key)
+    if not converted_keyword:
+        try:
+            converted_keyword = convert_keyword_with_gpt_if_needed(normalized_keyword)
+        except Exception:
+            converted_keyword = normalized_keyword
+        keyword_cache[keyword_cache_key] = converted_keyword
+
+    id_list = _get_search_ids_for_keyword(converted_keyword) or []
+    if not id_list:
+        return converted_keyword, [], 1, 1
+
+    total_count = len(id_list)
+    total_pages = max(1, (total_count + SEARCH_RESULTS_PER_PAGE - 1) // SEARCH_RESULTS_PER_PAGE)
+    safe_page = max(1, min(page, total_pages))
+    start_idx = (safe_page - 1) * SEARCH_RESULTS_PER_PAGE
+    end_idx = start_idx + SEARCH_RESULTS_PER_PAGE
+    page_id_list = id_list[start_idx:end_idx]
+    return converted_keyword, page_id_list, safe_page, total_pages
+
+
+def _client_ip(request: Request) -> str:
+    try:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip() or "unknown"
+    except Exception:
+        pass
+    return request.client.host if request.client else "unknown"
+
+
+def _auth_limiter_keys(action: str, request: Request, email: str = "") -> list[str]:
+    ip = _client_ip(request)
+    keys = [f"{action}:ip:{ip}"]
+    clean_email = (email or "").strip().lower()
+    if clean_email:
+        keys.append(f"{action}:ip-email:{ip}:{clean_email}")
+    return keys
+
+
+def _prune_auth_attempts(key: str, window: int) -> list[float]:
+    now = time.time()
+    entries = [ts for ts in auth_attempt_log.get(key, []) if (now - ts) <= window]
+    if entries:
+        auth_attempt_log[key] = entries
+    else:
+        auth_attempt_log.pop(key, None)
+    return entries
+
+
+def is_auth_rate_limited(action: str, request: Request, email: str = "") -> bool:
+    config = AUTH_RATE_LIMITS.get(action) or {}
+    limit = int(config.get("limit") or 0)
+    window = int(config.get("window") or 0)
+    if limit <= 0 or window <= 0:
+        return False
+    for key in _auth_limiter_keys(action, request, email):
+        if len(_prune_auth_attempts(key, window)) >= limit:
+            return True
+    return False
+
+
+def record_auth_failure(action: str, request: Request, email: str = "") -> None:
+    now = time.time()
+    config = AUTH_RATE_LIMITS.get(action) or {}
+    window = int(config.get("window") or 0)
+    for key in _auth_limiter_keys(action, request, email):
+        entries = _prune_auth_attempts(key, window) if window > 0 else auth_attempt_log.get(key, [])
+        entries.append(now)
+        auth_attempt_log[key] = entries
+
+
+def clear_auth_failures(action: str, request: Request, email: str = "") -> None:
+    for key in _auth_limiter_keys(action, request, email):
+        auth_attempt_log.pop(key, None)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    return response
 
 # ─── PubMed トレンドキャッシュ ────────────────────────────────────
 _trending_cache: dict = {"papers": None, "ts": 0.0, "fetching": False}
@@ -2026,10 +2332,16 @@ def stable_score_offset(pubmed_id: str) -> float:
     return (value * 0.16) - 0.08
 
 def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
-    converted = convert_japanese_keyword_to_english(keyword)
+    normalized_keyword = normalize_search_keyword(keyword)
+    converted = convert_japanese_keyword_to_english(normalized_keyword)
 
-    if not contains_japanese(converted):
+    if converted and not contains_japanese(converted):
         return converted
+
+    # 一部だけでもローカル変換できた場合は、その語を優先して GPT の意図ズレを避ける。
+    local_terms = extract_non_japanese_search_terms(converted)
+    if local_terms:
+        return " ".join(local_terms)
 
     try:
         response = client.responses.create(
@@ -2045,15 +2357,15 @@ def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
 - もとの意味を変えない
 
 検索キーワード:
-{keyword}
+{normalized_keyword}
 """
         )
 
         gpt_keyword = response.output_text.strip()
-        return " ".join(gpt_keyword.split())
+        return " ".join(gpt_keyword.split()) or normalized_keyword
 
     except Exception:
-        return converted
+        return converted or normalized_keyword
     
 def generate_tags(title: str, abstract: str):
     text = f"{title} {abstract}".lower()
@@ -2279,7 +2591,10 @@ def _paper_display_title(paper: dict) -> str:
 
 
 def _build_recommendation_sections(user_id: int) -> list[dict]:
-    user_saved_map = {str(p["pubmed_id"]): p for p in get_saved_papers(user_id=user_id)}
+    user_saved_map = {
+        str(p["pubmed_id"]): p
+        for p in get_saved_papers(user_id=user_id, sources=MANUAL_SAVED_SOURCES)
+    }
 
     def decorate_user_state(paper: dict):
         pid = str(paper.get("pubmed_id") or "")
@@ -2318,7 +2633,7 @@ def _build_recommendation_sections(user_id: int) -> list[dict]:
         })
 
     personal_items = []
-    for item in get_recommended_papers(user_id, limit=10):
+    for item in get_recommended_papers(user_id, limit=24):
         paper = dict(item.get("paper") or {})
         pid = str(paper.get("pubmed_id") or "")
         if not pid or pid in seen:
@@ -2349,7 +2664,7 @@ def _build_recommendation_sections(user_id: int) -> list[dict]:
             "cta_label": "人気の理由を見る",
         })
         seen.add(pid)
-        if len(popular_items) >= 8:
+        if len(popular_items) >= 24:
             break
     push_section("みんなが読んでいる論文", "迷ったときに外しにくい定番どころをまとめています。", popular_items)
 
@@ -2373,7 +2688,7 @@ def _build_recommendation_sections(user_id: int) -> list[dict]:
             "cta_label": "臨床での使いどころを見る",
         })
         seen.add(pid)
-        if len(clinical_items) >= 8:
+        if len(clinical_items) >= 24:
             break
     push_section("臨床で使いやすい論文", "すぐ臨床に結びつけやすい、高評価の論文を優先しています。", clinical_items)
 
@@ -2398,17 +2713,280 @@ def _build_recommendation_sections(user_id: int) -> list[dict]:
                 "cta_label": "関連テーマをもっと見る",
             })
             seen.add(pid)
-            if len(tag_items) >= 8:
+            if len(tag_items) >= 24:
                 break
-        if len(tag_items) >= 8:
+        if len(tag_items) >= 24:
             break
     push_section("興味タグから広がる論文", "今の関心に近いテーマから、次の1本へつながるように並べています。", tag_items)
 
     return sections
+
+
+def _truncate_learning_note(text: str, limit: int = 86) -> str:
+    normalized = " ".join((text or "").replace("\n", " ").split()).strip()
+    if not normalized:
+        return ""
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[: limit - 1].rstrip(" 、。,.") + "…"
+
+
+def _normalize_learning_note_text(text: str) -> str:
+    return " ".join((text or "").replace("\n", " ").split()).strip()
+
+
+def _learning_note_sentence(prefix: str, text: str, limit: int | None = 86) -> str:
+    cleaned = _normalize_learning_note_text(text)
+    if not cleaned:
+        return prefix
+    sentence = f"{prefix}{cleaned}"
+    if limit:
+        return _truncate_learning_note(sentence, limit)
+    return sentence
+
+
+def _extract_learning_section(text: str, label: str) -> str:
+    source = text or ""
+    pattern = rf"【{re.escape(label)}】\s*(.*?)(?=【[^】]+】|$)"
+    match = re.search(pattern, source, re.S)
+    if not match:
+        return ""
+    return _normalize_learning_note_text(match.group(1))
+
+
+def _first_learning_sentence(text: str) -> str:
+    normalized = _normalize_learning_note_text(text)
+    if not normalized:
+        return ""
+    chunks = re.split(r"(?<=[。！？])\s*", normalized)
+    for chunk in chunks:
+        sentence = chunk.strip(" ・")
+        if sentence:
+            return sentence
+    return normalized
+
+
+def _short_learning_takeaway(summary_text: str, clinical_reason: str, limit: int = 58) -> str:
+    candidates = [
+        _extract_learning_section(summary_text, "結論"),
+        clinical_reason,
+        summary_text,
+    ]
+    for candidate in candidates:
+        sentence = _first_learning_sentence(candidate)
+        if sentence:
+            sentence = re.sub(r"【[^】]+】\s*", "", sentence).strip()
+            return _truncate_learning_note(sentence, limit)
+    return ""
+
+
+def _build_official_board_notes(current_user: dict | None, active_tag: str = "") -> list[dict]:
+    active_tag = normalize_discovery_tag((active_tag or "").strip())
+    current_user_id = current_user["id"] if current_user else None
+    source_candidates: list[dict] = []
+    seen_pubmed_ids: set[str] = set()
+
+    def extend_candidates(papers: list[dict]):
+        for raw_paper in papers:
+            paper = dict(raw_paper)
+            pubmed_id = str(paper.get("pubmed_id") or "").strip()
+            if not pubmed_id or pubmed_id in seen_pubmed_ids:
+                continue
+
+            summary_text = (paper.get("summary_jp") or paper.get("jp") or "").strip()
+            clinical_reason = (paper.get("clinical_reason") or "").strip()
+            if not summary_text and not clinical_reason:
+                continue
+
+            generated_tags = generate_tags(paper.get("title", ""), paper.get("abstract", "") or "")
+            normalized_tags: list[str] = []
+            for tag in generated_tags:
+                mapped = normalize_discovery_tag(tag)
+                if mapped and mapped not in normalized_tags:
+                    normalized_tags.append(mapped)
+
+            if active_tag and active_tag not in normalized_tags:
+                continue
+
+            paper["display_title"] = _paper_display_title(paper)
+            paper["generated_tags"] = normalized_tags[:3]
+            paper["score_value"] = _safe_float(paper.get("clinical_score")) or 0.0
+            paper["likes_value"] = int(paper.get("likes") or 0)
+            source_candidates.append(paper)
+            seen_pubmed_ids.add(pubmed_id)
+
+    if current_user_id:
+        extend_candidates(
+            sorted(
+                get_saved_papers(user_id=current_user_id),
+                key=lambda paper: (
+                    _safe_float(paper.get("clinical_score")) or -1,
+                    int(paper.get("likes") or 0),
+                    paper.get("created_at") or "",
+                ),
+                reverse=True,
+            )
+        )
+
+    extend_candidates(
+        sorted(
+            get_public_papers(),
+            key=lambda paper: (
+                _safe_float(paper.get("clinical_score")) or -1,
+                int(paper.get("likes") or 0),
+                paper.get("created_at") or "",
+            ),
+            reverse=True,
+        )
+    )
+
+    source_candidates = sorted(
+        source_candidates,
+        key=lambda paper: (
+            paper.get("score_value") or 0.0,
+            paper.get("likes_value") or 0,
+            paper.get("created_at") or "",
+        ),
+        reverse=True,
+    )
+
+    notes: list[dict] = []
+    for index, paper in enumerate(source_candidates[: len(OFFICIAL_LEARNING_PERSONAS)]):
+        persona = OFFICIAL_LEARNING_PERSONAS[index]
+        summary_text = (paper.get("summary_jp") or paper.get("jp") or "").strip()
+        clinical_reason = (paper.get("clinical_reason") or "").strip()
+        tags = paper.get("generated_tags") or []
+        score_value = paper.get("score_value") or 0.0
+        full_lines: list[str] = []
+        tags_text = " / ".join(tags[:2]) if tags else ""
+        takeaway = _short_learning_takeaway(summary_text, clinical_reason, 60)
+        clinical_takeaway = _short_learning_takeaway(clinical_reason, summary_text, 56)
+
+        if persona["slug"] == "official":
+            full_lines.append("これ、今日は当たりです。")
+            if takeaway:
+                full_lines.append(takeaway)
+            if tags_text:
+                full_lines.append(f"見るなら {tags_text} まわり。")
+            if score_value:
+                full_lines.append(f"使いやすさは {score_value:.1f}/5 くらい。")
+        elif persona["slug"] == "clinical":
+            full_lines.append("現場ならここを見ます。")
+            if clinical_takeaway:
+                full_lines.append(clinical_takeaway)
+            full_lines.append("評価と介入のヒントあり。")
+            if score_value and score_value >= 4.0:
+                full_lines.append("急ぎなら優先でOKです。")
+        elif persona["slug"] == "study":
+            full_lines.append("勉強メモです。")
+            if takeaway:
+                full_lines.append(takeaway)
+            if tags_text:
+                full_lines.append(f"つながるのは {tags_text}。")
+            full_lines.append("先に結論だけで大丈夫です。")
+        elif persona["slug"] == "pick":
+            full_lines.append("迷ったらこれでよさそう。")
+            if clinical_takeaway:
+                full_lines.append(clinical_takeaway)
+            if tags_text:
+                full_lines.append(f"関連は {tags_text}。")
+            full_lines.append("詳細は要約だけでも十分です。")
+        else:
+            full_lines.append("すごく簡単に言うと、")
+            if takeaway:
+                full_lines.append(takeaway)
+            if tags_text:
+                full_lines.append(f"{tags_text} の話です。")
+            full_lines.append("今日はここだけ見ればOKです。")
+
+        full_lines = [line for line in full_lines if line]
+        preview_lines = [_truncate_learning_note(line, 64) for line in full_lines[:4]]
+        has_more = (
+            len(full_lines) > 4
+            or any(preview != full for preview, full in zip(preview_lines, full_lines[:4]))
+            or bool(persona.get("disclosure"))
+        )
+
+        notes.append(
+            {
+                "id": f"official-note-{persona['slug']}-{paper.get('pubmed_id')}",
+                "display_name": persona["name"],
+                "role": persona["role"],
+                "icon": persona["icon"],
+                "badge": persona["badge"],
+                "badge_tone": persona["badge_tone"],
+                "headline": persona["headline"],
+                "disclosure": persona["disclosure"],
+                "paper": paper,
+                "paper_title": paper.get("display_title") or "タイトル未設定",
+                "pubmed_id": paper.get("pubmed_id") or "",
+                "tags": tags,
+                "created_label": persona["role"],
+                "preview_lines": preview_lines,
+                "full_lines": full_lines,
+                "has_more": has_more,
+            }
+        )
+
+    return notes
+
+
+def _build_board_feed(posts: list[dict], official_notes: list[dict]) -> list[dict]:
+    if not official_notes:
+        return [{"kind": "post", "item": post} for post in posts]
+    if not posts:
+        return [{"kind": "official", "item": note} for note in official_notes]
+
+    feed: list[dict] = []
+    note_index = 0
+
+    for index, post in enumerate(posts):
+        feed.append({"kind": "post", "item": post})
+        should_insert_note = index == 1 or ((index + 1) % 4 == 0)
+        if should_insert_note and note_index < len(official_notes):
+            feed.append({"kind": "official", "item": official_notes[note_index]})
+            note_index += 1
+
+    while note_index < len(official_notes):
+        feed.append({"kind": "official", "item": official_notes[note_index]})
+        note_index += 1
+
+    return feed
+
+
+def _paper_comment_display_name(comment_row: dict) -> str:
+    display_name = (comment_row.get("user_display_name") or "").strip()
+    if display_name:
+        return display_name
+    email = (comment_row.get("user_email") or "").strip()
+    if email and "@" in email:
+        return email.split("@", 1)[0]
+    return "ユーザー"
+
+
+def _serialize_paper_comment(comment_row: dict, current_user_id: int | None = None) -> dict:
+    created_at = str(comment_row.get("created_at") or "").strip()
+    return {
+        "id": int(comment_row.get("id") or 0),
+        "pubmed_id": str(comment_row.get("pubmed_id") or ""),
+        "display_name": _paper_comment_display_name(comment_row),
+        "avatar": (comment_row.get("user_avatar") or "").strip(),
+        "content": str(comment_row.get("content") or "").strip(),
+        "created_at": created_at,
+        "created_label": created_at[:16].replace("T", " ") if created_at else "",
+        "is_own": bool(current_user_id and int(comment_row.get("user_id") or 0) == int(current_user_id)),
+    }
     
 def translate_title_to_japanese(title: str) -> str:
-    if not title:
+    normalized_title = " ".join((title or "").split()).strip()
+    if not normalized_title:
         return ""
+    if contains_japanese(normalized_title):
+        return normalized_title
+
+    cached = _timed_cache_get(title_translation_cache, normalized_title, OPENAI_CACHE_TTL)
+    if cached is not None:
+        return cached
 
     try:
         response = client.responses.create(
@@ -2426,23 +3004,112 @@ def translate_title_to_japanese(title: str) -> str:
 - 余計な説明は書かない
 
 英語タイトル:
-{title}
+{normalized_title}
 """
         )
-
-        return response.output_text.strip()
+        translated = (response.output_text or "").strip() or normalized_title
+        _timed_cache_set(title_translation_cache, normalized_title, translated)
+        return translated
 
     except Exception:
-        return title
+        return normalized_title
+
+
+def batch_translate_titles_to_japanese(title_items: list[tuple[str, str]]) -> dict[str, str]:
+    translations: dict[str, str] = {}
+    pending: list[tuple[str, str]] = []
+
+    for raw_id, raw_title in title_items:
+        item_id = str(raw_id).strip()
+        normalized_title = " ".join((raw_title or "").split()).strip()
+        if not item_id or not normalized_title:
+            continue
+        if contains_japanese(normalized_title):
+            translations[item_id] = normalized_title
+            continue
+
+        cached = _timed_cache_get(title_translation_cache, normalized_title, OPENAI_CACHE_TTL)
+        if cached is not None:
+            translations[item_id] = cached
+            continue
+
+        pending.append((item_id, normalized_title))
+
+    for chunk in _chunked(pending, 12):
+        if not chunk:
+            continue
+
+        if len(chunk) == 1:
+            item_id, normalized_title = chunk[0]
+            translated = translate_title_to_japanese(normalized_title)
+            translations[item_id] = translated
+            continue
+
+        chunk_prompt = "\n".join(
+            f"{item_id}\t{normalized_title}"
+            for item_id, normalized_title in chunk
+        )
+
+        try:
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=f"""
+次の英語論文タイトルを、日本の医療職が一目で理解しやすい自然な日本語タイトルに変換してください。
+
+条件:
+- 各行を `ID<TAB>日本語タイトル` の形式で返す
+- 入力したIDをそのまま使う
+- 行数を増減させない
+- タイトル以外の説明や見出しは書かない
+- 40〜55字程度を目安にする
+- 患者・介入・評価が分かるなら優先して反映する
+- 誇張しない
+- 原文の意味を変えない
+
+入力:
+{chunk_prompt}
+"""
+            )
+            raw_text = (response.output_text or "").strip()
+            parsed: dict[str, str] = {}
+            for line in raw_text.splitlines():
+                cleaned = line.strip()
+                if not cleaned:
+                    continue
+                if "\t" in cleaned:
+                    item_id, translated = cleaned.split("\t", 1)
+                elif "|" in cleaned:
+                    item_id, translated = cleaned.split("|", 1)
+                elif ":" in cleaned:
+                    item_id, translated = cleaned.split(":", 1)
+                else:
+                    continue
+                parsed[item_id.strip()] = translated.strip()
+
+            for item_id, normalized_title in chunk:
+                translated = parsed.get(item_id) or normalized_title
+                _timed_cache_set(title_translation_cache, normalized_title, translated)
+                translations[item_id] = translated
+        except Exception:
+            for item_id, normalized_title in chunk:
+                translations[item_id] = normalized_title
+
+    return translations
 
 
 def summarize_abstract_in_japanese(text: str):
-    if not text:
+    normalized_text = (text or "").strip()
+    if not normalized_text:
         return {
             "score": "0.0",
             "reason": "abstractがありません。",
             "summary": "abstractがありません。"
         }
+
+    cache_key = hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
+    cached = _timed_cache_get(abstract_summary_cache, cache_key, OPENAI_CACHE_TTL)
+    if cached is not None:
+        return cached
 
     try:
         response = client.responses.create(
@@ -2508,7 +3175,7 @@ abstractに書かれている情報のみ使う。
 ・見出しを必ず付ける
 
 abstract:
-{text}
+{normalized_text}
 """
         )
 
@@ -2537,18 +3204,22 @@ abstract:
             reason = reason_match.group(1).strip()
             cleaned_summary = reason_match.group(2).strip()
 
-        return {
+        result = {
             "score": score,
             "reason": reason,
             "summary": cleaned_summary
         }
+        _timed_cache_set(abstract_summary_cache, cache_key, result)
+        return result
 
     except Exception as e:
-        return {
+        result = {
             "score": "0.0",
             "reason": f"要約エラー: {str(e)}",
             "summary": f"要約エラー: {str(e)}"
         }
+        _timed_cache_set(abstract_summary_cache, cache_key, result)
+        return result
 
 
 @app.get("/")
@@ -2563,6 +3234,8 @@ def root(request: Request):
         user = check_trial_expired(user)
 
         current_user = user
+
+    current_user_id = current_user["id"] if current_user else None
 
     plan = get_user_plan(current_user)
     limits = get_plan_limits(plan)
@@ -2605,6 +3278,60 @@ def root(request: Request):
     except Exception:
         trending_papers = []
 
+    manual_saved_map = {}
+    save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
+    if current_user_id:
+        try:
+            manual_saved_map = {
+                str(p["pubmed_id"]): p
+                for p in get_saved_papers(user_id=current_user_id, sources=MANUAL_SAVED_SOURCES)
+            }
+            seen_folders = {DEFAULT_SAVED_FOLDER_LABEL}
+            for folder_name in get_folder_name_suggestions(user_id=current_user_id):
+                display_name = (folder_name or "").strip()
+                if not display_name or display_name in {"未分類", DEFAULT_SAVED_FOLDER_LABEL}:
+                    continue
+                if display_name in seen_folders:
+                    continue
+                save_folder_choices.append(display_name)
+                seen_folders.add(display_name)
+        except Exception:
+            manual_saved_map = {}
+            save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
+
+    ranking_pmids: list[str] = []
+    for ranking_group in (popular_papers, top_rated_papers, trending_papers):
+        for paper in ranking_group:
+            pid = str(paper.get("pubmed_id") or "").strip()
+            if pid and pid not in ranking_pmids:
+                ranking_pmids.append(pid)
+
+    try:
+        comment_counts = get_paper_comment_counts(ranking_pmids)
+    except Exception:
+        comment_counts = {}
+
+    def decorate_home_papers(paper_list: list[dict]) -> list[dict]:
+        decorated: list[dict] = []
+        for paper in paper_list:
+            item = dict(paper)
+            pid = str(item.get("pubmed_id") or "").strip()
+            saved = manual_saved_map.get(pid)
+            if not (item.get("jp_title") or "").strip():
+                item["jp_title"] = item.get("title") or ""
+            item["display_title"] = _paper_display_title(item)
+            item["is_saved"] = saved is not None
+            item["folder_name"] = (saved.get("folder_name") or "") if saved else ""
+            item["liked"] = get_paper_liked(pid, current_user_id) if pid and current_user_id else False
+            item["comment_count"] = int(comment_counts.get(pid, 0))
+            item["likes"] = int((saved.get("likes") if saved else item.get("likes")) or 0)
+            decorated.append(item)
+        return decorated
+
+    popular_papers = decorate_home_papers(popular_papers)
+    top_rated_papers = decorate_home_papers(top_rated_papers)
+    trending_papers = decorate_home_papers(trending_papers)
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -2616,6 +3343,8 @@ def root(request: Request):
             "current_plan": plan,
             "can_view_score_ranking": limits["can_view_score_ranking"],
             "ranking_limit": limits["ranking_limit"],
+            "save_folder_choices": save_folder_choices,
+            "default_saved_folder_label": DEFAULT_SAVED_FOLDER_LABEL,
         }
     )
 
@@ -3023,7 +3752,10 @@ def master_settings_page(request: Request, notice: str = Query(""), error: str =
             "saved_site_url": saved_settings.get("site_url") or "",
             "saved_username": saved_settings.get("username") or "",
             "saved_app_base_url": saved_settings.get("app_base_url") or "",
-            "has_saved_password": bool(saved_settings.get("app_password")),
+            "has_saved_password": bool(saved_settings.get("app_password") or saved_settings.get("app_password_is_encrypted")),
+            "password_encrypted": bool(saved_settings.get("app_password_is_encrypted")),
+            "password_unavailable": bool(saved_settings.get("app_password_unavailable")),
+            "wordpress_encryption_available": is_wordpress_encryption_available(),
             "wordpress_configured": bool(effective_config),
             "wordpress_config_source": effective_config.get("source") or "",
             "effective_site_url": effective_config.get("site_url") or "",
@@ -3063,9 +3795,14 @@ def master_settings_save(
             f"/master/settings?error={_urlparse.quote('WordPressユーザー名を入力してください。')}",
             status_code=303,
         )
-    if not normalized_password and not existing.get("app_password"):
+    if not normalized_password and not (existing.get("app_password") or existing.get("app_password_is_encrypted")):
         return RedirectResponse(
             f"/master/settings?error={_urlparse.quote('初回保存ではアプリパスワードの入力が必要です。')}",
+            status_code=303,
+        )
+    if normalized_password and not is_wordpress_encryption_available():
+        return RedirectResponse(
+            f"/master/settings?error={_urlparse.quote('WordPress接続情報を暗号化する準備がまだできていません。依存関係の更新後に再度お試しください。')}",
             status_code=303,
         )
 
@@ -3163,27 +3900,71 @@ def board_page(request: Request, tag: str = Query("")):
 @app.get("/learn")
 def learn_page(request: Request, tab: str = Query("recommend"), tag: str = Query("")):
     current_user = get_current_user(request)
+    current_plan = get_user_plan(current_user) if current_user else "guest"
     posts = get_posts(limit=50, viewer_user_id=current_user["id"] if current_user else None, tag_filter=tag)
+    official_notes = _build_official_board_notes(current_user, tag)
+    board_feed = _build_board_feed(posts, official_notes)
     recommended = []
     recommend_sections = []
+    save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
     if current_user:
         try:
-            recommended = get_recommended_papers(current_user["id"], limit=10)
+            recommended = get_recommended_papers(current_user["id"], limit=24)
         except Exception:
             recommended = []
         try:
             recommend_sections = _build_recommendation_sections(current_user["id"])
         except Exception:
             recommend_sections = []
+        try:
+            seen_folders = {DEFAULT_SAVED_FOLDER_LABEL}
+            for folder_name in get_folder_name_suggestions(user_id=current_user["id"]):
+                display_name = (folder_name or "").strip()
+                if not display_name or display_name in {"未分類", DEFAULT_SAVED_FOLDER_LABEL}:
+                    continue
+                if display_name in seen_folders:
+                    continue
+                save_folder_choices.append(display_name)
+                seen_folders.add(display_name)
+        except Exception:
+            save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
+
+        try:
+            recommend_pubmed_ids: list[str] = []
+            for section in recommend_sections:
+                for item in section.get("items") or []:
+                    pid = str((item.get("paper") or {}).get("pubmed_id") or "").strip()
+                    if pid and pid not in recommend_pubmed_ids:
+                        recommend_pubmed_ids.append(pid)
+            for item in recommended:
+                pid = str((item.get("paper") or {}).get("pubmed_id") or "").strip()
+                if pid and pid not in recommend_pubmed_ids:
+                    recommend_pubmed_ids.append(pid)
+            comment_counts = get_paper_comment_counts(recommend_pubmed_ids)
+        except Exception:
+            comment_counts = {}
+
+        for section in recommend_sections:
+            for item in section.get("items") or []:
+                paper = item.get("paper") or {}
+                paper["comment_count"] = int(comment_counts.get(str(paper.get("pubmed_id") or ""), 0))
+        for item in recommended:
+            paper = item.get("paper") or {}
+            paper["comment_count"] = int(comment_counts.get(str(paper.get("pubmed_id") or ""), 0))
     return templates.TemplateResponse("learn.html", {
         "request": request,
         "current_user": current_user,
+        "current_plan": current_plan,
         "posts": posts,
+        "official_notes": official_notes,
+        "board_feed": board_feed,
         "active_tag": tag,
         "tab": tab,
         "recommended": recommended,
         "recommend_sections": recommend_sections,
         "board_tags": COMMON_DISCOVERY_TAGS,
+        "save_folder_choices": save_folder_choices,
+        "default_saved_folder_label": DEFAULT_SAVED_FOLDER_LABEL,
     })
 
 
@@ -3356,7 +4137,7 @@ def saved_export(request: Request):
     plan = get_user_plan(user)
     if plan not in ("pro", "expert"):
         return RedirectResponse("/plans?error=export_requires_pro", status_code=303)
-    papers = get_saved_papers(current_user["id"])
+    papers = get_saved_papers(current_user["id"], sources=MANUAL_SAVED_SOURCES)
     return templates.TemplateResponse("saved_export_print.html", {
         "request": request,
         "papers": papers,
@@ -3367,7 +4148,7 @@ def saved_export(request: Request):
 @app.get("/search")
 def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     current_user = get_current_user(request)
-    PER_PAGE = 25
+    current_plan = get_user_plan(get_user_by_id(current_user["id"])) if current_user else "guest"
 
     if not keyword.strip():
         return templates.TemplateResponse(
@@ -3377,45 +4158,17 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "papers": [],
                 "keyword": keyword,
                 "converted_keyword": "",
+                "page": 1,
+                "total_pages": 1,
                 "current_user": current_user,
+                "current_plan": current_plan,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
+                "background_translation_ids": [],
             }
         )
 
-    if keyword in keyword_cache:
-        converted_keyword = keyword_cache[keyword]
-    else:
-        try:
-            converted_keyword = convert_keyword_with_gpt_if_needed(keyword)
-        except Exception:
-            converted_keyword = keyword
-
-        keyword_cache[keyword] = converted_keyword
-
-    try:
-        handle = Entrez.esearch(
-            db="pubmed",
-            term=converted_keyword,
-            retmax=250
-        )
-        record = Entrez.read(handle)
-        handle.close()
-    except Exception:
-        return templates.TemplateResponse(
-            "search.html",
-            {
-                "request": request,
-                "papers": [],
-                "keyword": keyword,
-                "converted_keyword": converted_keyword,
-                "current_user": current_user,
-                "discovery_tags": COMMON_DISCOVERY_TAGS,
-            }
-        )
-
-    id_list = record.get("IdList", [])
-
-    if not id_list:
+    converted_keyword, page_id_list, page, total_pages = _resolve_search_page_context(keyword, page)
+    if not page_id_list:
         return templates.TemplateResponse(
             "search.html",
             {
@@ -3426,24 +4179,23 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "page": 1,
                 "total_pages": 1,
                 "current_user": current_user,
+                "current_plan": current_plan,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
+                "background_translation_ids": [],
             }
         )
 
-    total_count = len(id_list)
-    total_pages = max(1, (total_count + PER_PAGE - 1) // PER_PAGE)
-
-    if page < 1:
-        page = 1
-    if page > total_pages:
-        page = total_pages
-
-    start_idx = (page - 1) * PER_PAGE
-    end_idx = start_idx + PER_PAGE
-    page_id_list = id_list[start_idx:end_idx]
-
-    saved_papers = get_saved_papers(current_user["id"]) if current_user else get_saved_papers()
+    saved_papers = get_saved_papers_by_pubmed_ids(
+        page_id_list,
+        current_user["id"] if current_user else None,
+    )
+    manual_saved_papers = get_saved_papers_by_pubmed_ids(
+        page_id_list,
+        current_user["id"] if current_user else None,
+        sources=MANUAL_SAVED_SOURCES,
+    )
     saved_map = {str(p["pubmed_id"]): p for p in saved_papers}
+    manual_saved_map = {str(p["pubmed_id"]): p for p in manual_saved_papers}
 
     papers = []
 
@@ -3490,24 +4242,30 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "clinical_score": display_clinical_score,
                 "clinical_reason": saved.get("clinical_reason", "") or "",
                 "likes": saved.get("likes", 0) if saved.get("likes") is not None else 0,
-                "is_saved": True,
+                "is_saved": str(pmid) in manual_saved_map,
             })
         except Exception:
             continue
 
     # DBにない論文だけPubMedから取得する
     if unsaved_ids:
-        try:
-            handle = Entrez.efetch(
-                db="pubmed",
-                id=",".join(unsaved_ids),
-                retmode="xml"
-            )
-            records = Entrez.read(handle)
-            handle.close()
-        except Exception:
-            return templates.TemplateResponse(
-                "search.html",
+        summary_cache_key = tuple(str(pid) for pid in unsaved_ids)
+        cached_summaries = _timed_cache_get(search_summary_cache, summary_cache_key, SEARCH_CACHE_TTL)
+
+        if cached_summaries is not None:
+            summary_items = cached_summaries
+        else:
+            try:
+                handle = Entrez.esummary(
+                    db="pubmed",
+                    id=",".join(unsaved_ids)
+                )
+                summary_items = list(Entrez.read(handle))
+                handle.close()
+                _timed_cache_set(search_summary_cache, summary_cache_key, summary_items)
+            except Exception:
+                return templates.TemplateResponse(
+                    "search.html",
                 {
                     "request": request,
                     "papers": papers,
@@ -3516,111 +4274,44 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                     "page": page,
                     "total_pages": total_pages,
                     "current_user": current_user,
+                    "current_plan": current_plan,
                     "discovery_tags": COMMON_DISCOVERY_TAGS,
+                    "background_translation_ids": [],
                 }
             )
 
-        for article in records.get("PubmedArticle", []):
+        for item in summary_items:
             try:
-                citation = article.get("MedlineCitation", {})
-                pmid = str(citation.get("PMID", ""))
+                pmid = str(item.get("Id") or item.get("uid") or "")
+                if not pmid:
+                    continue
 
-                article_data = citation.get("Article", {})
-                saved = saved_map.get(pmid)
-
-                raw_title = str(article_data.get("ArticleTitle", ""))
-
-                authors = []
-                if "AuthorList" in article_data:
-                    for a in article_data["AuthorList"]:
-                        last = a.get("LastName", "")
-                        fore = a.get("ForeName", "")
-                        full_name = f"{last} {fore}".strip()
-                        if full_name:
-                            authors.append(full_name)
-
-                raw_authors = ", ".join(authors)
-
-                raw_journal = ""
-                raw_pubdate = ""
-                if "Journal" in article_data:
-                    raw_journal = article_data["Journal"].get("Title", "")
-                    issue = article_data["Journal"].get("JournalIssue", {})
-                    pub = issue.get("PubDate", {})
-                    year = pub.get("Year", "")
-                    month = pub.get("Month", "")
-                    day = pub.get("Day", "")
-                    raw_pubdate = " ".join([year, month, day]).strip()
-
-                raw_abstract = ""
-                if "Abstract" in article_data:
-                    parts = article_data["Abstract"].get("AbstractText", [])
-                    raw_abstract = "\n\n".join([str(p) for p in parts])
-
-                title = saved.get("title", raw_title) if saved else raw_title
-                authors_text = saved.get("authors", raw_authors) if saved else raw_authors
-                journal = saved.get("journal", raw_journal) if saved else raw_journal
-                pubdate = saved.get("pubdate", raw_pubdate) if saved else raw_pubdate
-                abstract = saved.get("abstract", raw_abstract) if saved else raw_abstract
-
-                # 日本語タイトルを優先。なければグローバルキャッシュ→翻訳の順で取得
-                jp_title = saved.get("jp_title", "") if saved else ""
-
-                if not jp_title:
-                    jp_title = get_paper_jp_title_global(pmid)
-
-                if not jp_title and title:
-                    try:
-                        jp_title = translate_title_to_japanese(title)
-                    except Exception:
-                        jp_title = title
-
-                    try:
-                        save_paper(
-                            pubmed_id=pmid,
-                            title=title,
-                            jp_title=jp_title,
-                            authors=authors_text,
-                            journal=journal,
-                            pubdate=pubdate,
-                            abstract=abstract or "",
-                            jp=saved.get("jp", "") if saved else "",
-                            summary_jp=saved.get("summary_jp", "") if saved else "",
-                            folder_name=saved.get("folder_name", "") if saved else "",
-                            clinical_score=saved.get("clinical_score", "") if saved else "",
-                            clinical_reason=saved.get("clinical_reason", "") if saved else "",
-                            user_id=current_user["id"] if current_user else None,
-                        )
-                    except Exception:
-                        pass
-
-                raw_saved_score = saved.get("clinical_score", "") if saved else ""
-                display_clinical_score = ""
-
-                if raw_saved_score:
-                    try:
-                        base_saved_score = float(raw_saved_score)
-                        adjusted_saved_score = base_saved_score + stable_score_offset(pmid)
-                        adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
-                        display_clinical_score = f"{adjusted_saved_score:.2f}"
-                    except Exception:
-                        display_clinical_score = raw_saved_score
+                title = str(item.get("Title", "") or "")
+                author_items = item.get("AuthorList") or []
+                authors_text = ", ".join([
+                    str(author.get("Name") if isinstance(author, dict) else author).strip()
+                    for author in author_items
+                    if str(author.get("Name") if isinstance(author, dict) else author).strip()
+                ])
+                journal = str(item.get("FullJournalName") or item.get("Source") or "")
+                pubdate = str(item.get("PubDate") or "")
+                jp_title = get_paper_jp_title_global(pmid)
 
                 papers.append({
                     "id": pmid,
                     "pubmed_id": pmid,
                     "title": title,
-                    "jp_title": jp_title or title,
+                    "jp_title": jp_title or "",
                     "authors": authors_text,
                     "journal": journal,
                     "pubdate": pubdate,
-                    "abstract": abstract or "",
-                    "tags": generate_tags(title, abstract or ""),
-                    "summary_jp": saved.get("summary_jp", "") if saved else "",
-                    "clinical_score": display_clinical_score,
-                    "clinical_reason": saved.get("clinical_reason", "") if saved else "",
-                    "likes": saved.get("likes", 0) if saved and saved.get("likes") is not None else 0,
-                    "is_saved": bool(saved),
+                    "abstract": "",
+                    "tags": generate_tags(title, ""),
+                    "summary_jp": "",
+                    "clinical_score": "",
+                    "clinical_reason": "",
+                    "likes": 0,
+                    "is_saved": str(pmid) in manual_saved_map,
                 })
             except Exception:
                 continue
@@ -3628,6 +4319,25 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
 
     papers_map = {str(p["pubmed_id"]): p for p in papers}
     papers = [papers_map[str(pmid)] for pmid in page_id_list if str(pmid) in papers_map]
+
+    untranslated_items = [
+        (str(paper["pubmed_id"]), str(paper.get("title") or ""))
+        for paper in papers
+        if not (paper.get("jp_title") or "").strip() and (paper.get("title") or "").strip()
+    ]
+    priority_translations = batch_translate_titles_to_japanese(
+        untranslated_items[:SEARCH_PRIORITY_TRANSLATION_COUNT]
+    )
+    if priority_translations:
+        for paper in papers:
+            translated = priority_translations.get(str(paper["pubmed_id"]))
+            if translated:
+                paper["jp_title"] = translated
+
+    background_translation_ids = [
+        item_id
+        for item_id, _title in untranslated_items[SEARCH_PRIORITY_TRANSLATION_COUNT:SEARCH_PRIORITY_TRANSLATION_COUNT + SEARCH_BACKGROUND_TRANSLATION_MAX]
+    ]
 
     return templates.TemplateResponse(
         "search.html",
@@ -3639,9 +4349,81 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             "page": page,
             "total_pages": total_pages,
             "current_user": current_user,
+            "current_plan": current_plan,
             "discovery_tags": COMMON_DISCOVERY_TAGS,
+            "background_translation_ids": background_translation_ids,
         }
     )
+
+
+@app.get("/search/title-translations")
+def search_title_translations(
+    request: Request,
+    keyword: str = Query(""),
+    page: int = Query(1),
+    ids: str = Query(""),
+    converted_keyword: str = Query(""),
+):
+    keyword = keyword.strip()
+    requested_ids = [
+        item.strip()
+        for item in (ids or "").split(",")
+        if item.strip()
+    ][:SEARCH_BACKGROUND_TRANSLATION_MAX]
+    if not keyword or not requested_ids:
+        return JSONResponse({"ok": True, "translations": {}})
+
+    _converted_keyword, page_id_list, _page, _total_pages = _resolve_search_page_context(keyword, page, converted_keyword)
+    if not page_id_list:
+        return JSONResponse({"ok": True, "translations": {}})
+
+    allowed_ids = {str(pid) for pid in page_id_list}
+    target_ids = [item_id for item_id in requested_ids if item_id in allowed_ids]
+    if not target_ids:
+        return JSONResponse({"ok": True, "translations": {}})
+
+    current_user = get_current_user(request)
+    saved_papers = get_saved_papers_by_pubmed_ids(
+        target_ids,
+        current_user["id"] if current_user else None,
+    )
+    saved_map = {str(p["pubmed_id"]): p for p in saved_papers}
+    title_items: list[tuple[str, str]] = []
+
+    missing_ids = [item_id for item_id in target_ids if item_id not in saved_map]
+    for item_id in target_ids:
+        saved = saved_map.get(item_id)
+        if not saved:
+            continue
+        if (saved.get("jp_title") or "").strip():
+            title_items.append((item_id, saved.get("jp_title") or ""))
+        else:
+            title_items.append((item_id, saved.get("title") or ""))
+
+    if missing_ids:
+        summary_cache_key = tuple(str(pid) for pid in missing_ids)
+        summary_items = _timed_cache_get(search_summary_cache, summary_cache_key, SEARCH_CACHE_TTL)
+
+        if summary_items is None:
+            try:
+                handle = Entrez.esummary(
+                    db="pubmed",
+                    id=",".join(missing_ids)
+                )
+                summary_items = list(Entrez.read(handle))
+                handle.close()
+                _timed_cache_set(search_summary_cache, summary_cache_key, summary_items)
+            except Exception:
+                summary_items = []
+
+        for item in summary_items or []:
+            pmid = str(item.get("Id") or item.get("uid") or "")
+            title = str(item.get("Title", "") or "")
+            if pmid and title:
+                title_items.append((pmid, title))
+
+    translations = batch_translate_titles_to_japanese(title_items)
+    return JSONResponse({"ok": True, "translations": translations})
 
 @app.get("/paper/meta")
 def paper_meta(request: Request, id: str = Query("")):
@@ -3715,6 +4497,10 @@ def paper(
 ):
     current_user = get_current_user(request)
     current_user_id = current_user["id"] if current_user else None
+    current_plan = get_user_plan(get_user_by_id(current_user_id)) if current_user_id else "guest"
+    current_paper_url = request.url.path
+    if request.url.query:
+        current_paper_url += f"?{request.url.query}"
 
     handle = Entrez.efetch(
         db="pubmed",
@@ -3774,25 +4560,31 @@ def paper(
     clinical_reason = ""
 
     saved_paper = get_saved_paper_by_id(id, user_id=current_user_id)
+    shared_cached_paper = get_best_cached_paper(id)
+    raw_cached_score = ""
 
-    if saved_paper:
-        jp_title = saved_paper.get("jp_title") or ""
-        jp = saved_paper.get("jp") or ""
-        summary_jp = saved_paper.get("summary_jp") or ""
-        clinical_reason = saved_paper.get("clinical_reason") or ""
+    for cached_source in [saved_paper, shared_cached_paper]:
+        if not cached_source:
+            continue
+        if not jp_title:
+            jp_title = cached_source.get("jp_title") or ""
+        if not jp:
+            jp = cached_source.get("jp") or ""
+        if not summary_jp:
+            summary_jp = cached_source.get("summary_jp") or ""
+        if not clinical_reason:
+            clinical_reason = cached_source.get("clinical_reason") or ""
+        if not raw_cached_score:
+            raw_cached_score = cached_source.get("clinical_score") or ""
 
-        raw_saved_score = saved_paper.get("clinical_score") or ""
-
-        if raw_saved_score:
-            try:
-                base_saved_score = float(raw_saved_score)
-                adjusted_saved_score = base_saved_score + stable_score_offset(id)
-                adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
-                clinical_score = f"{adjusted_saved_score:.2f}"
-            except Exception:
-                clinical_score = raw_saved_score
-        else:
-            clinical_score = ""
+    if raw_cached_score:
+        try:
+            base_saved_score = float(raw_cached_score)
+            adjusted_saved_score = base_saved_score + stable_score_offset(id)
+            adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
+            clinical_score = f"{adjusted_saved_score:.2f}"
+        except Exception:
+            clinical_score = raw_cached_score
 
     if not jp_title:
         jp_title = translate_title_to_japanese(title)
@@ -3814,30 +4606,97 @@ def paper(
         adjusted_score = max(0.0, min(5.0, adjusted_score))
         clinical_score = f"{adjusted_score:.2f}"
 
-    # サイト内キャッシュとして自動保存
+    manual_summary_requested = current_user_id is not None and (translate == 1 or summarize == 1)
+
+    # サイト内キャッシュとして保存
     if jp_title or jp or summary_jp:
         existing_folder_name = ""
 
         if saved_paper:
             existing_folder_name = saved_paper.get("folder_name") or ""
 
+        existing_saved_source = str((saved_paper or {}).get("save_source") or "").strip()
+        user_save_source = existing_saved_source or ("manual_summary" if manual_summary_requested else "auto")
+        if user_save_source == "manual_save" and manual_summary_requested:
+            user_save_source = "manual_save"
+
+        if current_user_id is not None and (saved_paper or manual_summary_requested):
+            save_paper(
+                pubmed_id=id,
+                title=title,
+                jp_title=jp_title,
+                authors=", ".join(authors),
+                journal=journal,
+                pubdate=pubdate,
+                abstract=abstract,
+                jp=jp,
+                summary_jp=summary_jp,
+                folder_name=existing_folder_name,
+                clinical_score=clinical_score,
+                clinical_reason=clinical_reason,
+                user_id=current_user_id,
+                save_source=user_save_source,
+            )
+
+        if current_user_id is not None and (summary_jp or jp or clinical_reason):
+            upsert_paper_history(
+                user_id=current_user_id,
+                pubmed_id=id,
+                title=title,
+                jp_title=jp_title,
+                authors=", ".join(authors),
+                journal=journal,
+                pubdate=pubdate,
+                abstract=abstract,
+                summary_jp=summary_jp or jp,
+                clinical_score=clinical_score,
+                clinical_reason=clinical_reason,
+            )
+
+        site_cached_paper = get_saved_paper_by_id(id, user_id=None)
+        site_jp_title = jp_title or (site_cached_paper.get("jp_title") if site_cached_paper else "") or (shared_cached_paper.get("jp_title") if shared_cached_paper else "") or ""
+        site_jp = jp or (site_cached_paper.get("jp") if site_cached_paper else "") or (shared_cached_paper.get("jp") if shared_cached_paper else "") or ""
+        site_summary_jp = summary_jp or (site_cached_paper.get("summary_jp") if site_cached_paper else "") or (shared_cached_paper.get("summary_jp") if shared_cached_paper else "") or ""
+        site_clinical_score = clinical_score or (site_cached_paper.get("clinical_score") if site_cached_paper else "") or (shared_cached_paper.get("clinical_score") if shared_cached_paper else "") or ""
+        site_clinical_reason = clinical_reason or (site_cached_paper.get("clinical_reason") if site_cached_paper else "") or (shared_cached_paper.get("clinical_reason") if shared_cached_paper else "") or ""
+
         save_paper(
             pubmed_id=id,
             title=title,
-            jp_title=jp_title,
+            jp_title=site_jp_title,
             authors=", ".join(authors),
             journal=journal,
             pubdate=pubdate,
             abstract=abstract,
-            jp=jp,
-            summary_jp=summary_jp,
-            folder_name=existing_folder_name,
-            clinical_score=clinical_score,
-            clinical_reason=clinical_reason,
-            user_id=current_user_id,
+            jp=site_jp,
+            summary_jp=site_summary_jp,
+            folder_name=(site_cached_paper.get("folder_name") or "") if site_cached_paper else "",
+            clinical_score=site_clinical_score,
+            clinical_reason=site_clinical_reason,
+            user_id=None,
+            save_source="cache",
         )
 
     refreshed_saved = get_saved_paper_by_id(id, user_id=current_user_id)
+    save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
+    if current_user_id:
+        try:
+            seen_folders = {DEFAULT_SAVED_FOLDER_LABEL}
+            for folder_name in get_folder_name_suggestions(user_id=current_user_id):
+                display_name = (folder_name or "").strip()
+                if not display_name or display_name in {"未分類", DEFAULT_SAVED_FOLDER_LABEL}:
+                    continue
+                if display_name in seen_folders:
+                    continue
+                save_folder_choices.append(display_name)
+                seen_folders.add(display_name)
+        except Exception:
+            save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
+    paper_comments_raw = get_paper_comments(id, limit=40)
+    paper_comments = [
+        _serialize_paper_comment(comment_row, current_user_id=current_user_id)
+        for comment_row in paper_comments_raw
+    ]
 
     paper = {
         "id": id,
@@ -3857,6 +4716,7 @@ def paper(
         "folder_name": refreshed_saved.get("folder_name") or "" if refreshed_saved else "",
         "custom_title": refreshed_saved.get("custom_title") or "" if refreshed_saved else "",
         "user_note": refreshed_saved.get("user_note") or "" if refreshed_saved else "",
+        "comment_count": len(paper_comments),
     }
 
     save_error_message = ""
@@ -3870,11 +4730,67 @@ def paper(
     "paper.html",
     {
         "request": request,
+        "current_user": current_user,
+        "current_plan": current_plan,
         "paper": paper,
+        "paper_comments": paper_comments,
+        "save_folder_choices": save_folder_choices,
+        "default_saved_folder_label": DEFAULT_SAVED_FOLDER_LABEL,
         "folder_suggestions": get_folder_name_suggestions(user_id=current_user_id),
         "save_error_message": save_error_message,
+        "current_paper_url": current_paper_url,
     }
 )
+
+
+@app.get("/paper/{pubmed_id}/comments")
+def paper_comments_api(request: Request, pubmed_id: str):
+    current_user = get_current_user(request)
+    current_user_id = current_user["id"] if current_user else None
+    comments = [
+        _serialize_paper_comment(comment_row, current_user_id=current_user_id)
+        for comment_row in get_paper_comments(pubmed_id, limit=60)
+    ]
+    return JSONResponse({"ok": True, "comments": comments, "count": len(comments)})
+
+
+@app.post("/paper/{pubmed_id}/comments")
+def create_paper_comment_api(
+    request: Request,
+    pubmed_id: str,
+    content: str = Form(""),
+    paper_title: str = Form(""),
+    paper_jp_title: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "message": "コメントするにはログインが必要です"}, status_code=401)
+
+    clean_content = (content or "").strip()
+    if not clean_content:
+        return JSONResponse({"ok": False, "message": "コメントを入力してください"}, status_code=400)
+    if len(clean_content) > 240:
+        return JSONResponse({"ok": False, "message": "コメントは240文字以内で入力してください"}, status_code=400)
+
+    create_paper_comment(
+        user_id=current_user["id"],
+        pubmed_id=pubmed_id,
+        content=clean_content,
+        paper_title=paper_title,
+        paper_jp_title=paper_jp_title,
+    )
+    comments = [
+        _serialize_paper_comment(comment_row, current_user_id=current_user["id"])
+        for comment_row in get_paper_comments(pubmed_id, limit=60)
+    ]
+    return JSONResponse(
+        {
+            "ok": True,
+            "message": "コメントしました",
+            "comments": comments,
+            "count": len(comments),
+        }
+    )
 
 
 @app.post("/save")
@@ -3901,6 +4817,10 @@ def save_paper_route(
             status_code=401
         )
 
+    clean_folder_name = (folder_name or "").strip()
+    if clean_folder_name == DEFAULT_SAVED_FOLDER_LABEL:
+        clean_folder_name = ""
+
     save_paper(
         pubmed_id=pubmed_id,
         title=title,
@@ -3911,10 +4831,11 @@ def save_paper_route(
         abstract=abstract,
         jp=jp,
         summary_jp=summary_jp,
-        folder_name=folder_name,
+        folder_name=clean_folder_name,
         clinical_score=clinical_score,
         clinical_reason=clinical_reason,
         user_id=current_user["id"],
+        save_source="manual_save",
     )
 
     # 保存行動を興味タグに記録（重み3）
@@ -3954,55 +4875,221 @@ def save_paper_route(
 @app.get("/saved")
 def saved(request: Request):
     current_user = get_current_user(request)
+    is_guest = not current_user
+    current_user_id = current_user["id"] if current_user else None
+    current_plan = get_user_plan(current_user) if current_user else "guest"
+    papers = (
+        get_public_papers()
+        if is_guest
+        else get_saved_papers(user_id=current_user_id, sources=MANUAL_SAVED_SOURCES)
+    )
+    history_rows = [] if is_guest else get_paper_history(current_user_id)
 
-    if not current_user:
-        papers = get_public_papers()
+    def safe_score_value(raw_score):
+        try:
+            return float(str(raw_score).strip())
+        except (TypeError, ValueError):
+            return None
 
-        folders = {}
+    def build_display_paper(raw_paper):
+        paper = dict(raw_paper)
+        folder_name = (paper.get("folder_name") or "").strip()
+        is_default_folder = folder_name in {"", "未分類", DEFAULT_SAVED_FOLDER_LABEL}
+        display_folder_name = "公開保存" if is_guest else (DEFAULT_SAVED_FOLDER_LABEL if is_default_folder else folder_name)
+        display_title = (
+            (paper.get("custom_title") or "").strip()
+            or (paper.get("jp_title") or "").strip()
+            or (paper.get("title") or "").strip()
+            or "タイトル未設定"
+        )
+        note_text = (
+            (paper.get("user_note") or "").strip()
+            or memo_body_to_plain_text(paper.get("highlights") or "").strip()
+        )
+        score_value = safe_score_value(paper.get("clinical_score"))
+        created_at = str(paper.get("created_at") or "").strip()
 
-        for paper in papers:
-            folder_name = paper.get("folder_name") or "公開保存"
+        paper["display_folder_name"] = display_folder_name
+        paper["folder_name"] = display_folder_name
+        paper["display_title"] = display_title
+        paper["has_note"] = bool(note_text)
+        paper["note_preview"] = note_text[:80]
+        paper["score_value"] = score_value
+        paper["created_at_sort"] = created_at
+        paper["created_at_label"] = created_at[:10] if created_at else ""
+        paper["folder_badge"] = display_folder_name
+        return paper
 
-            if folder_name not in folders:
-                folders[folder_name] = []
+    display_papers = [build_display_paper(paper) for paper in papers]
+    display_papers_sorted = sorted(
+        display_papers,
+        key=lambda paper: (paper.get("created_at_sort") or "", paper.get("display_title") or ""),
+        reverse=True,
+    )
 
-            folders[folder_name].append(paper)
+    folders = {}
+    for paper in display_papers_sorted:
+        folder_name = paper["display_folder_name"]
+        folders.setdefault(folder_name, []).append(paper)
 
-        return templates.TemplateResponse(
-            "saved.html",
+    folder_cards = []
+    for folder_name, folder_papers in folders.items():
+        preview_titles = []
+        for paper in folder_papers:
+            title = paper.get("display_title") or "タイトル未設定"
+            if title not in preview_titles:
+                preview_titles.append(title)
+            if len(preview_titles) == 3:
+                break
+
+        favorite_count = sum(1 for paper in folder_papers if int(paper.get("is_favorite") or 0) == 1)
+        note_count = sum(1 for paper in folder_papers if paper.get("has_note"))
+        score_count = sum(1 for paper in folder_papers if (paper.get("score_value") or 0) >= 4.0)
+        latest_paper = folder_papers[0] if folder_papers else {}
+        folder_cards.append(
             {
-                "request": request,
-                "folders": folders,
-                "is_guest": True,
+                "name": folder_name,
+                "count": len(folder_papers),
+                "favorite_count": favorite_count,
+                "note_count": note_count,
+                "score_count": score_count,
+                "updated_at_label": latest_paper.get("created_at_label") or "日付なし",
+                "updated_at_sort": latest_paper.get("created_at_sort") or "",
+                "latest_title": latest_paper.get("display_title") or "タイトル未設定",
+                "preview_titles": preview_titles,
+                "is_uncategorized": folder_name == DEFAULT_SAVED_FOLDER_LABEL,
+                "search_terms": " ".join([folder_name, *preview_titles]).lower(),
             }
         )
 
-    current_user_id = current_user["id"]
+    folder_cards = sorted(
+        folder_cards,
+        key=lambda folder: (folder.get("updated_at_sort") or "", folder.get("count") or 0, folder.get("name") or ""),
+        reverse=True,
+    )
 
-    papers = get_saved_papers(user_id=current_user_id)
+    folder_filters = [
+        {
+            "name": "すべて",
+            "slug": "all",
+            "count": len(display_papers_sorted),
+        }
+    ]
+    folder_filters.extend(
+        {
+            "name": folder["name"],
+            "slug": folder["name"],
+            "count": folder["count"],
+        }
+        for folder in folder_cards
+    )
 
-    folders = {}
+    history_entries = []
+    for item in history_rows:
+        score_value = safe_score_value(item.get("clinical_score"))
+        history_entries.append(
+            {
+                "pubmed_id": item.get("pubmed_id") or "",
+                "display_title": (item.get("jp_title") or item.get("title") or "").strip() or "タイトル未設定",
+                "summary_preview": _truncate_learning_note((item.get("summary_jp") or item.get("clinical_reason") or "").strip(), 96),
+                "score_value": score_value,
+                "viewed_at_label": str(item.get("viewed_at") or "")[:10] or "日付なし",
+                "viewed_at_sort": str(item.get("viewed_at") or ""),
+            }
+        )
+    history_entries = sorted(
+        history_entries,
+        key=lambda item: (item.get("viewed_at_sort") or "", item.get("display_title") or ""),
+        reverse=True,
+    )
 
-    for paper in papers:
-        folder_name = (paper.get("folder_name") or "").strip()
+    recent_matches = display_papers_sorted
+    favorite_matches = [paper for paper in display_papers_sorted if int(paper.get("is_favorite") or 0) == 1]
+    note_matches = [paper for paper in display_papers_sorted if paper.get("has_note")]
+    score_matches = [paper for paper in display_papers_sorted if (paper.get("score_value") or 0) >= 4.0]
 
-        if not folder_name:
-            continue
+    recent_papers = recent_matches[:3]
+    favorite_papers = favorite_matches[:3]
+    note_papers = note_matches[:3]
+    score_papers = score_matches[:3]
 
-        if folder_name == "未分類":
-            continue
+    quick_sections = []
+    if recent_papers:
+        quick_sections.append(
+            {
+                "slug": "recent",
+                "tone": "primary",
+                "icon": "⏱",
+                "label": "最近ひらく",
+                "headline": "直近で保存した論文",
+                "description": "いま追っているテーマへ最短で戻れます。",
+                "count": len(recent_matches),
+                "papers": recent_papers,
+            }
+        )
+    if favorite_papers:
+        quick_sections.append(
+            {
+                "slug": "favorites",
+                "tone": "warm",
+                "icon": "★",
+                "label": "よく使う",
+                "headline": "お気に入りから再開",
+                "description": "臨床で繰り返し見返す論文をすぐ開けます。",
+                "count": len(favorite_matches),
+                "papers": favorite_papers,
+            }
+        )
+    if note_papers:
+        quick_sections.append(
+            {
+                "slug": "notes",
+                "tone": "calm",
+                "icon": "✍",
+                "label": "考えを残した",
+                "headline": "メモ付き論文",
+                "description": "自分の解釈や臨床メモが付いた論文だけを拾えます。",
+                "count": len(note_matches),
+                "papers": note_papers,
+            }
+        )
+    if score_papers:
+        quick_sections.append(
+            {
+                "slug": "scores",
+                "tone": "accent",
+                "icon": "🩺",
+                "label": "臨床で使う",
+                "headline": "臨床参考度が高い論文",
+                "description": "参考度4.0以上の論文から優先して取り出せます。",
+                "count": len(score_matches),
+                "papers": score_papers,
+            }
+        )
 
-        if folder_name not in folders:
-            folders[folder_name] = []
-
-        folders[folder_name].append(paper)
+    overview = {
+        "folder_count": len(folder_cards),
+        "paper_count": len(display_papers_sorted),
+        "history_count": len(history_entries),
+        "favorite_count": sum(1 for paper in display_papers_sorted if int(paper.get("is_favorite") or 0) == 1),
+        "note_count": sum(1 for paper in display_papers_sorted if paper.get("has_note")),
+        "score_count": sum(1 for paper in display_papers_sorted if (paper.get("score_value") or 0) >= 4.0),
+    }
 
     return templates.TemplateResponse(
         "saved.html",
         {
             "request": request,
             "folders": folders,
-            "is_guest": False,
+            "folder_cards": folder_cards,
+            "folder_filters": folder_filters,
+            "saved_papers": display_papers_sorted,
+            "history_entries": history_entries,
+            "quick_sections": quick_sections,
+            "overview": overview,
+            "current_user": current_user,
+            "current_plan": current_plan,
+            "is_guest": is_guest,
         }
     )
 
@@ -4031,13 +5118,24 @@ def public_paper(request: Request, pubmed_id: str):
 def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
     current_user = get_current_user(request)
     current_user_id = current_user["id"] if current_user else None
+    current_plan = get_user_plan(current_user) if current_user else "guest"
+    display_folder_name = (folder_name or "").strip() or DEFAULT_SAVED_FOLDER_LABEL
 
-    papers = get_saved_papers_by_folder(folder_name, user_id=current_user_id)
+    papers = get_saved_papers_by_folder(
+        display_folder_name,
+        user_id=current_user_id,
+        sources=MANUAL_SAVED_SOURCES,
+    )
 
     for paper in papers:
         custom_title = (paper.get("custom_title") or "").strip()
         default_title = (paper.get("jp_title") or paper.get("title") or "").strip()
         paper["display_title"] = custom_title or default_title
+        paper["folder_name"] = (
+            DEFAULT_SAVED_FOLDER_LABEL
+            if (paper.get("folder_name") or "").strip() in {"", "未分類", DEFAULT_SAVED_FOLDER_LABEL}
+            else (paper.get("folder_name") or "").strip()
+        )
         paper["liked"] = get_paper_liked(paper["pubmed_id"], current_user_id) if current_user_id else False
 
     if sort == "score":
@@ -4063,9 +5161,16 @@ def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
         "saved_folder.html",
         {
             "request": request,
-            "folder_name": folder_name,
+            "current_user": current_user,
+            "current_plan": current_plan,
+            "folder_name": display_folder_name,
             "papers": papers,
             "sort": sort,
+            "folder_suggestions": [
+                name
+                for name in get_folder_name_suggestions(current_user_id)
+                if name not in {display_folder_name, "未分類", DEFAULT_SAVED_FOLDER_LABEL}
+            ],
         }
     )
 
@@ -4153,10 +5258,11 @@ def like(request: Request, pubmed_id: str):
             abstract=abstract,
             jp="",
             summary_jp="",
-            folder_name="未分類",
+            folder_name="",
             clinical_score="",
             clinical_reason="",
             user_id=current_user_id,
+            save_source="auto",
         )
 
     if current_user_id:
@@ -4183,7 +5289,10 @@ def move_saved_paper(
     current_user_id = current_user["id"]
     target_folder_name = (folder_name or "").strip()
 
-    if not target_folder_name:
+    if target_folder_name == DEFAULT_SAVED_FOLDER_LABEL:
+        target_folder_name = ""
+
+    if not target_folder_name and (folder_name or "").strip() != DEFAULT_SAVED_FOLDER_LABEL:
         return JSONResponse({"ok": False, "message": "移動先フォルダ名を入力してください"}, status_code=400)
 
     saved_paper = get_saved_paper_by_id(pubmed_id, user_id=current_user_id)
@@ -4194,7 +5303,7 @@ def move_saved_paper(
 
     return JSONResponse({
         "ok": True,
-        "folder_name": target_folder_name,
+        "folder_name": target_folder_name or DEFAULT_SAVED_FOLDER_LABEL,
         "message": "フォルダを変更しました",
     })
 
@@ -4458,7 +5567,27 @@ def register(
     campaign_slug = (campaign_slug or "").strip().lower()
     promo_code = (promo_code or "").strip().upper()
 
+    if is_auth_rate_limited("register", request, email):
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "error": "試行回数が多いため、少し時間をおいてからもう一度お試しください。",
+                "supporter_campaigns": get_supporter_campaigns(),
+                "supporter_offer": get_supporter_offer_state(),
+                "selected_campaign": get_campaign_display(campaign_slug),
+                "campaign_slug": campaign_slug,
+                "selected_promo_offer": get_private_promo_offer_display(promo_code),
+                "promo_code": promo_code,
+                "locked_email": locked_email,
+                "ref_code": ref_code,
+                "from_page": from_page,
+                "article_marketing_attribution": article_attribution,
+            }
+        )
+
     if not email or not password:
+        record_auth_failure("register", request, email)
         return templates.TemplateResponse(
             "register.html",
             {
@@ -4478,6 +5607,7 @@ def register(
         )
 
     if locked_email and email != locked_email:
+        record_auth_failure("register", request, email)
         return templates.TemplateResponse(
             "register.html",
             {
@@ -4497,6 +5627,7 @@ def register(
         )
 
     if len(password) < 6:
+        record_auth_failure("register", request, email)
         return templates.TemplateResponse(
             "register.html",
             {
@@ -4518,6 +5649,7 @@ def register(
     if promo_code:
         ok, reason = reserve_friend_promo_for_email(promo_code, email)
         if not ok and reason != "ok":
+            record_auth_failure("register", request, email)
             error_messages = {
                 "invalid_email": "有効なメールアドレスを入力してください。",
                 "not_found": "この特別枠が見つかりません。",
@@ -4545,6 +5677,7 @@ def register(
     user = create_user(email, password)
 
     if not user:
+        record_auth_failure("register", request, email)
         return templates.TemplateResponse(
             "register.html",
             {
@@ -4601,6 +5734,7 @@ def register(
                     }
                 )
 
+    clear_auth_failures("register", request, email)
     request.session["user_id"] = user["id"]
 
     if article_attribution.get("draft_id"):
@@ -4690,7 +5824,25 @@ def login(
     email = email.strip().lower()
     locked_email = (locked_email or "").strip().lower()
 
+    if is_auth_rate_limited("login", request, email):
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": "試行回数が多いため、少し時間をおいてからもう一度お試しください。",
+                "from_page": from_page,
+                "supporter_offer": get_supporter_offer_state(),
+                "selected_campaign": get_campaign_display(campaign_slug),
+                "campaign_slug": (campaign_slug or "").strip().lower(),
+                "selected_promo_offer": get_private_promo_offer_display(promo_code),
+                "promo_code": (promo_code or "").strip().upper(),
+                "locked_email": locked_email,
+                "article_marketing_attribution": article_attribution,
+            }
+        )
+
     if locked_email and email != locked_email:
+        record_auth_failure("login", request, email)
         return templates.TemplateResponse(
             "login.html",
             {
@@ -4710,6 +5862,7 @@ def login(
     user = verify_user(email, password)
 
     if not user:
+        record_auth_failure("login", request, email)
         return templates.TemplateResponse(
             "login.html",
             {
@@ -4729,6 +5882,7 @@ def login(
     if promo_code:
         ok, reason = reserve_friend_promo_for_email(promo_code, email)
         if not ok and reason != "ok":
+            record_auth_failure("login", request, email)
             error_messages = {
                 "invalid_email": "有効なメールアドレスを入力してください。",
                 "not_found": "この特別枠が見つかりません。",
@@ -4752,6 +5906,7 @@ def login(
                 }
             )
 
+    clear_auth_failures("login", request, email)
     request.session["user_id"] = user["id"]
     if article_attribution:
         clear_article_marketing_attribution(request)
@@ -4869,6 +6024,9 @@ def public_toggle(request: Request, pubmed_id: str):
 
 @app.get("/memo")
 def memo_list(request: Request, tab: str = "quick"):
+    if tab not in {"quick", "paper", "map"}:
+        tab = "quick"
+
     current_user = get_current_user(request)
     if not current_user:
         return templates.TemplateResponse("memo.html", {
@@ -4878,6 +6036,10 @@ def memo_list(request: Request, tab: str = "quick"):
             "tab": tab,
             "quick_memos": [],
             "paper_memos": [],
+            "map_quick_memos": [],
+            "map_paper_memos": [],
+            "map_more_quick_count": 0,
+            "map_more_paper_count": 0,
             "total_count": 0,
             "memo_limit": 0,
         })
@@ -4890,7 +6052,41 @@ def memo_list(request: Request, tab: str = "quick"):
     # タイトルも本文も空のクイックメモは一覧に表示しない（pagehideで削除されるはずだが念のため除外）
     quick_memos = [m for m in get_user_memos(user_id) if (m.get("title") or "").strip() or (m.get("body") or "").strip()]
     paper_memos = get_user_paper_memos(user_id)
+    for memo in quick_memos:
+        memo["body_preview"] = memo_body_to_plain_text(memo.get("body") or "")
+    for memo in paper_memos:
+        memo["body_preview"] = memo_body_to_plain_text(memo.get("body") or "")
     total_count = len(quick_memos) + len(paper_memos)
+    map_preview_limit = 10
+    map_quick_memos = quick_memos[:map_preview_limit]
+    map_paper_memos = paper_memos[:map_preview_limit]
+    memo_map_layout = get_user_memo_map_layout(user_id)
+
+    memo_map_quick_nodes = [
+        {
+            "id": memo["id"],
+            "node_key": f"quick:{memo['id']}",
+            "title": (memo.get("title") or memo.get("body_preview") or "タイトルなし").strip(),
+            "preview": (memo.get("body_preview") or "").strip(),
+            "updated_at": memo.get("updated_at", "")[:10],
+            "url": f"/memo/{memo['id']}",
+            "type": "quick",
+        }
+        for memo in map_quick_memos
+    ]
+    memo_map_paper_nodes = [
+        {
+            "id": memo["id"],
+            "node_key": f"paper:{memo['id']}",
+            "title": (memo.get("paper_title") or "論文メモ").strip(),
+            "preview": (memo.get("body_preview") or "").strip(),
+            "updated_at": memo.get("updated_at", "")[:10],
+            "url": f"/memo/paper/{memo['id']}",
+            "type": "paper",
+            "pubmed_id": memo.get("pubmed_id", ""),
+        }
+        for memo in map_paper_memos
+    ]
 
     return templates.TemplateResponse(
         "memo.html",
@@ -4901,10 +6097,49 @@ def memo_list(request: Request, tab: str = "quick"):
             "tab": tab,
             "quick_memos": quick_memos,
             "paper_memos": paper_memos,
+            "map_quick_memos": map_quick_memos,
+            "map_paper_memos": map_paper_memos,
+            "map_more_quick_count": max(0, len(quick_memos) - len(map_quick_memos)),
+            "map_more_paper_count": max(0, len(paper_memos) - len(map_paper_memos)),
+            "memo_map_layout": memo_map_layout,
+            "memo_map_quick_nodes": memo_map_quick_nodes,
+            "memo_map_paper_nodes": memo_map_paper_nodes,
             "total_count": total_count,
             "memo_limit": memo_limit,
         }
     )
+
+
+@app.post("/memo/map/layout")
+async def memo_map_layout_update(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    raw_layout = payload.get("layout") if isinstance(payload, dict) else {}
+    normalized_layout: dict[str, dict[str, float]] = {}
+
+    if isinstance(raw_layout, dict):
+        for node_key, position in raw_layout.items():
+            if not isinstance(node_key, str) or not isinstance(position, dict):
+                continue
+            try:
+                x = float(position.get("x"))
+                y = float(position.get("y"))
+            except (TypeError, ValueError):
+                continue
+            normalized_layout[node_key] = {
+                "x": max(0.06, min(0.94, x)),
+                "y": max(0.10, min(0.92, y)),
+            }
+
+    upsert_user_memo_map_layout(current_user["id"], normalized_layout)
+    return JSONResponse({"ok": True})
 
 
 @app.post("/memo/create")
@@ -4923,7 +6158,7 @@ def memo_create(request: Request, title: str = Form(""), body: str = Form("")):
         if total >= memo_limit:
             return RedirectResponse("/memo?tab=quick&error=limit_reached", status_code=303)
 
-    memo_id = create_memo(user_id, title.strip(), body.strip())
+    memo_id = create_memo(user_id, title.strip(), normalize_memo_body_for_storage(body))
     return RedirectResponse(f"/memo/{memo_id}", status_code=303)
 
 
@@ -4938,6 +6173,7 @@ def memo_detail(request: Request, memo_id: int):
         return RedirectResponse("/memo", status_code=303)
 
     plan = get_user_plan(current_user)
+    memo["editor_body_html"] = prepare_memo_editor_html(memo.get("body") or "")
 
     return templates.TemplateResponse(
         "memo_detail.html",
@@ -4962,7 +6198,7 @@ def memo_update(
     if not current_user:
         return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
 
-    update_memo(memo_id, current_user["id"], title.strip(), body.strip())
+    update_memo(memo_id, current_user["id"], title.strip(), normalize_memo_body_for_storage(body))
     return JSONResponse({"ok": True})
 
 
@@ -4982,7 +6218,7 @@ def memo_delete_if_empty(request: Request, memo_id: int):
     if not current_user:
         return JSONResponse({"ok": False})
     memo = get_memo_by_id(memo_id, current_user["id"])
-    if memo and not memo["title"].strip() and not memo["body"].strip():
+    if memo and not memo["title"].strip() and not memo_body_to_plain_text(memo["body"]).strip():
         delete_memo(memo_id, current_user["id"])
     return JSONResponse({"ok": True})
 
@@ -5030,6 +6266,7 @@ def paper_memo_create(
     pubmed_id: str = Form(...),
     paper_title: str = Form(""),
     body: str = Form(""),
+    return_to: str = Form(""),
 ):
     current_user = get_current_user(request)
     if not current_user:
@@ -5045,8 +6282,17 @@ def paper_memo_create(
         if total >= memo_limit:
             return RedirectResponse("/memo?tab=paper&error=limit_reached", status_code=303)
 
-    memo_id = create_paper_memo(user_id, pubmed_id.strip(), paper_title.strip(), body.strip())
-    return RedirectResponse(f"/memo/paper/{memo_id}", status_code=303)
+    memo_id = create_paper_memo(
+        user_id,
+        pubmed_id.strip(),
+        paper_title.strip(),
+        normalize_memo_body_for_storage(body),
+    )
+    redirect_url = f"/memo/paper/{memo_id}"
+    clean_return_to = (return_to or "").strip()
+    if clean_return_to:
+        redirect_url += "?" + _urlparse.urlencode({"return_to": clean_return_to})
+    return RedirectResponse(redirect_url, status_code=303)
 
 
 @app.get("/memo/paper/{memo_id}")
@@ -5060,6 +6306,63 @@ def paper_memo_detail(request: Request, memo_id: int):
         return RedirectResponse("/memo?tab=paper", status_code=303)
 
     plan = get_user_plan(current_user)
+    return_to = (request.query_params.get("return_to") or "").strip()
+    memo["editor_body_html"] = prepare_memo_editor_html(memo.get("body") or "")
+    paper_reference = None
+    pubmed_id = str(memo.get("pubmed_id") or "").strip()
+    if pubmed_id:
+        cached_paper = (
+            get_saved_paper_by_id(pubmed_id, current_user["id"])
+            or get_best_cached_paper(pubmed_id)
+            or get_saved_paper_by_id(pubmed_id, None)
+        )
+        if cached_paper:
+            raw_score = str(cached_paper.get("clinical_score") or "").strip()
+            score_label = ""
+            if raw_score:
+                try:
+                    score_label = f"{float(raw_score):.1f}"
+                except Exception:
+                    score_label = raw_score
+            paper_reference = {
+                "pubmed_id": pubmed_id,
+                "display_title": (
+                    (cached_paper.get("jp_title") or "").strip()
+                    or (cached_paper.get("title") or "").strip()
+                    or (memo.get("paper_title") or "").strip()
+                    or "論文"
+                ),
+                "original_title": (cached_paper.get("title") or "").strip(),
+                "journal": (cached_paper.get("journal") or "").strip(),
+                "pubdate": (cached_paper.get("pubdate") or "").strip(),
+                "summary_jp": (cached_paper.get("summary_jp") or "").strip(),
+                "clinical_reason": (cached_paper.get("clinical_reason") or "").strip(),
+                "clinical_score": score_label,
+                "jp": (cached_paper.get("jp") or "").strip(),
+                "abstract": (cached_paper.get("abstract") or "").strip(),
+                "has_content": any(
+                    (
+                        (cached_paper.get("summary_jp") or "").strip(),
+                        (cached_paper.get("clinical_reason") or "").strip(),
+                        (cached_paper.get("jp") or "").strip(),
+                        (cached_paper.get("abstract") or "").strip(),
+                    )
+                ),
+            }
+        else:
+            paper_reference = {
+                "pubmed_id": pubmed_id,
+                "display_title": (memo.get("paper_title") or "").strip() or "論文",
+                "original_title": "",
+                "journal": "",
+                "pubdate": "",
+                "summary_jp": "",
+                "clinical_reason": "",
+                "clinical_score": "",
+                "jp": "",
+                "abstract": "",
+                "has_content": False,
+            }
 
     return templates.TemplateResponse(
         "memo_detail.html",
@@ -5069,6 +6372,8 @@ def paper_memo_detail(request: Request, memo_id: int):
             "current_plan": plan,
             "memo": memo,
             "memo_type": "paper",
+            "paper_reference": paper_reference,
+            "return_to": return_to,
         }
     )
 
@@ -5083,7 +6388,7 @@ def paper_memo_update(
     if not current_user:
         return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
 
-    update_paper_memo(memo_id, current_user["id"], body.strip())
+    update_paper_memo(memo_id, current_user["id"], normalize_memo_body_for_storage(body))
     return JSONResponse({"ok": True})
 
 
@@ -5103,7 +6408,7 @@ def paper_memo_delete_if_empty(request: Request, memo_id: int):
     if not current_user:
         return JSONResponse({"ok": False})
     memo = get_paper_memo_by_id(memo_id, current_user["id"])
-    if memo and not memo["body"].strip():
+    if memo and not memo_body_to_plain_text(memo["body"]).strip():
         delete_paper_memo(memo_id, current_user["id"])
     return JSONResponse({"ok": True})
 
@@ -5132,3 +6437,170 @@ def check_trial_expired(user):
         user = get_user_by_id(user["id"])
 
     return user
+
+
+ALLOWED_MEMO_TAGS = {
+    "strong", "b", "em", "i", "u", "s", "strike",
+    "a", "ul", "ol", "li", "h2", "h3", "blockquote",
+    "p", "div", "br"
+}
+
+
+def _normalize_memo_href(value: str) -> str:
+    href = (value or "").strip()
+    if re.match(r"^(https?:|mailto:)", href, flags=re.IGNORECASE):
+        return href
+    return ""
+
+
+class _MemoHTMLSanitizer(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts: list[str] = []
+        self.open_tags: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        clean_tag = (tag or "").lower()
+        if clean_tag not in ALLOWED_MEMO_TAGS:
+            return
+        if clean_tag == "br":
+            self.parts.append("<br>")
+            return
+        if clean_tag == "a":
+            attr_map = dict(attrs or [])
+            href = _normalize_memo_href(attr_map.get("href", ""))
+            if not href:
+                return
+            self.parts.append(
+                f'<a href="{escape(href, quote=True)}" target="_blank" rel="noopener noreferrer">'
+            )
+            self.open_tags.append("a")
+            return
+        self.parts.append(f"<{clean_tag}>")
+        self.open_tags.append(clean_tag)
+
+    def handle_endtag(self, tag):
+        clean_tag = (tag or "").lower()
+        if clean_tag not in ALLOWED_MEMO_TAGS or clean_tag == "br":
+            return
+        if not self.open_tags:
+            return
+        if self.open_tags[-1] == clean_tag:
+            self.open_tags.pop()
+            self.parts.append(f"</{clean_tag}>")
+
+    def handle_data(self, data):
+        self.parts.append(escape(data or ""))
+
+    def handle_entityref(self, name):
+        self.parts.append(f"&{name};")
+
+    def handle_charref(self, name):
+        self.parts.append(f"&#{name};")
+
+
+class _MemoTextExtractor(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        clean_tag = (tag or "").lower()
+        if clean_tag in {"br"}:
+            self.parts.append("\n")
+        elif clean_tag in {"li"}:
+            self.parts.append("• ")
+        elif clean_tag in {"p", "div", "h2", "h3", "blockquote"}:
+            if self.parts and not self.parts[-1].endswith("\n"):
+                self.parts.append("\n")
+
+    def handle_endtag(self, tag):
+        clean_tag = (tag or "").lower()
+        if clean_tag in {"li", "p", "div", "h2", "h3", "blockquote", "ul", "ol"}:
+            if not self.parts or not self.parts[-1].endswith("\n"):
+                self.parts.append("\n")
+
+    def handle_data(self, data):
+        self.parts.append(data or "")
+
+
+def sanitize_memo_html(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    parser = _MemoHTMLSanitizer()
+    parser.feed(raw)
+    parser.close()
+    while parser.open_tags:
+        parser.parts.append(f"</{parser.open_tags.pop()}>")
+    cleaned = "".join(parser.parts).strip()
+    return cleaned
+
+
+def _convert_plain_memo_to_html(value: str) -> str:
+    raw = (value or "").replace("\r", "").strip()
+    if not raw:
+        return ""
+
+    lines = raw.split("\n")
+    blocks: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            blocks.append("<div><br></div>")
+            continue
+
+        escaped_line = escape(stripped)
+        escaped_line = re.sub(
+            r"\[([^\]]+)\]\((https?://[^)]+)\)",
+            lambda m: f'<a href="{escape(m.group(2), quote=True)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
+            escaped_line,
+        )
+        escaped_line = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped_line)
+        escaped_line = re.sub(r"~~(.+?)~~", r"<s>\1</s>", escaped_line)
+
+        if stripped.startswith("### "):
+            blocks.append(f"<h3>{escaped_line[4:]}</h3>")
+        elif stripped.startswith("## "):
+            blocks.append(f"<h2>{escaped_line[3:]}</h2>")
+        elif stripped.startswith("> "):
+            blocks.append(f"<blockquote>{escaped_line[2:]}</blockquote>")
+        elif stripped.startswith("- [ ] "):
+            blocks.append(f"<div>☐ {escaped_line[6:]}</div>")
+        elif stripped.startswith("- "):
+            blocks.append(f"<div>• {escaped_line[2:]}</div>")
+        elif re.match(r"^\d+\.\s", stripped):
+            blocks.append(f"<div>{escaped_line}</div>")
+        else:
+            blocks.append(f"<div>{escaped_line}</div>")
+    return "".join(blocks)
+
+
+def normalize_memo_body_for_storage(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    if re.search(r"<[a-zA-Z][^>]*>", raw):
+        return sanitize_memo_html(raw)
+    return sanitize_memo_html(_convert_plain_memo_to_html(raw))
+
+
+def memo_body_to_plain_text(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    parser = _MemoTextExtractor()
+    parser.feed(raw)
+    parser.close()
+    text = "".join(parser.parts)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def prepare_memo_editor_html(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    if re.search(r"<[a-zA-Z][^>]*>", raw):
+        return sanitize_memo_html(raw)
+    return _convert_plain_memo_to_html(raw)

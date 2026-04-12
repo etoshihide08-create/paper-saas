@@ -6,16 +6,18 @@
     <title>{{ folder_name }}</title>
     <style>
       :root {
-        --bg: #f7f8fb;
+        --bg: #f4f7fb;
         --card: #ffffff;
-        --text: #111827;
-        --subtext: #6b7280;
-        --line: #e5e7eb;
+        --text: #0f172a;
+        --subtext: #64748b;
+        --line: #dbe3ee;
         --blue: #2563eb;
-        --blue-soft: #eff6ff;
+        --blue-soft: #eaf2ff;
         --blue-soft-hover: #dbeafe;
-        --amber: #d97706;
-        --amber-soft: #fff8e8;
+        --secondary: #16324f;
+        --secondary-soft: #eef4f8;
+        --amber: #f59e0b;
+        --amber-soft: #fff5db;
         --like-bg: #eff6ff;
         --like-text: #1d4ed8;
         --fav-bg: #fff7ed;
@@ -26,7 +28,7 @@
         --green-text: #166534;
         --danger-soft: #fef2f2;
         --danger-text: #b91c1c;
-        --shadow: 0 4px 24px rgba(15,23,42,0.08);
+        --shadow: 0 12px 32px rgba(15,23,42,0.08);
         --radius: 18px;
       }
 
@@ -36,16 +38,22 @@
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
+        background: radial-gradient(circle at top, rgba(37,99,235,0.06), transparent 28%), var(--bg);
         color: var(--text);
         margin: 0;
-        padding: 24px 14px 40px;
+      }
+
+      .app-layout { min-height: 100vh; }
+      .sidebar { display: none; }
+
+      .main-area {
+        min-height: 100vh;
+        padding: 24px 14px 96px;
       }
 
       .container {
         max-width: 920px;
         margin: 0 auto;
-        padding-bottom: 80px;
       }
 
       .top-link {
@@ -63,6 +71,11 @@
 
       .page-header {
         margin-bottom: 20px;
+        padding: 22px 22px 18px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92));
+        border: 1px solid rgba(37,99,235,0.08);
+        box-shadow: var(--shadow);
       }
 
       .page-title {
@@ -70,6 +83,7 @@
         font-size: 28px;
         line-height: 1.3;
         letter-spacing: -0.02em;
+        color: var(--secondary);
       }
 
       .page-subtext {
@@ -82,10 +96,145 @@
       .sort-box {
         margin-bottom: 18px;
         background: var(--card);
-        border: 1px solid var(--line);
+        border: 1px solid rgba(37,99,235,0.08);
         border-radius: var(--radius);
         padding: 14px;
         box-shadow: var(--shadow);
+      }
+
+      .folder-tools {
+        margin-bottom: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.96));
+        border: 1px solid rgba(22,50,79,0.08);
+        border-radius: var(--radius);
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .folder-tools-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .folder-tools-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--secondary);
+      }
+
+      .folder-tools-subtext {
+        font-size: 13px;
+        color: var(--subtext);
+        line-height: 1.7;
+      }
+
+      .folder-stats {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .folder-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid rgba(148,163,184,0.18);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .folder-search-row {
+        display: grid;
+        gap: 12px;
+      }
+
+      .folder-search-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--secondary);
+      }
+
+      .folder-search-input {
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid #d6deea;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 14px;
+        background: #fff;
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .folder-search-input:focus {
+        border-color: rgba(37,99,235,0.42);
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+      }
+
+      .folder-filter-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .folder-filter-chip,
+      .move-suggestion-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 8px 12px;
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--subtext);
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .folder-filter-chip:hover,
+      .move-suggestion-chip:hover {
+        border-color: rgba(37,99,235,0.24);
+        color: var(--blue);
+        transform: translateY(-1px);
+      }
+
+      .folder-filter-chip.is-active {
+        background: linear-gradient(135deg, rgba(22,50,79,0.95), rgba(37,99,235,0.92));
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .folder-empty-state {
+        display: none;
+        margin-bottom: 12px;
+        padding: 18px 16px;
+        border-radius: 16px;
+        border: 1px dashed rgba(148,163,184,0.42);
+        background: rgba(255,255,255,0.84);
+        color: var(--subtext);
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.7;
+        text-align: center;
       }
 
       .sort-form {
@@ -98,7 +247,7 @@
       .sort-label {
         font-size: 14px;
         font-weight: 700;
-        color: #374151;
+        color: var(--secondary);
       }
 
       .sort-select {
@@ -111,12 +260,22 @@
       }
 
       .paper-card {
+        position: relative;
+        overflow: hidden;
         background: var(--card);
-        border: 1px solid var(--line);
+        border: 1px solid rgba(37,99,235,0.08);
         border-radius: var(--radius);
         padding: 16px 16px 14px;
         margin-bottom: 12px;
         box-shadow: var(--shadow);
+      }
+
+      .paper-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary), var(--blue));
       }
 
       .paper-title {
@@ -151,7 +310,7 @@
       }
 
       .score-line span {
-        color: #92400e;
+        color: #9a6700;
         font-weight: 700;
       }
 
@@ -224,7 +383,7 @@
       }
 
       .like-button {
-        color: #6b7280;
+        color: var(--subtext);
       }
 
       .like-button:hover {
@@ -277,7 +436,7 @@
       }
 
       .detail-link:hover .mini-glyph {
-        background: #dbeafe;
+        background: var(--blue-soft);
         box-shadow: inset 0 0 0 1px rgba(37,99,235,0.12);
       }
 
@@ -300,8 +459,8 @@
 
       .organize-toggle {
         border: none;
-        background: #f3f4f6;
-        color: #374151;
+        background: var(--secondary-soft);
+        color: var(--secondary);
         padding: 7px 11px;
         border-radius: 999px;
         font-size: 12px;
@@ -310,9 +469,9 @@
       }
 
       .organize-toggle:hover {
-        background: #e5e7eb;
-        border: 1px solid #2563eb;
-        color: #2563eb;
+        background: #e8eef5;
+        border: 1px solid var(--blue);
+        color: var(--blue);
       }
 
       .organize-panel {
@@ -321,18 +480,25 @@
         padding: 14px;
         border: 1px solid var(--line);
         border-radius: 14px;
-        background: #fafbfc;
+        background: #f8fbff;
       }
 
       .organize-panel.open {
         display: block;
       }
 
+      .move-suggestions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
       .organize-title {
         margin: 0 0 10px;
         font-size: 13px;
         font-weight: 800;
-        color: #374151;
+        color: var(--secondary);
       }
 
       .mini-form {
@@ -367,7 +533,7 @@
 
       .mini-submit {
         border: none;
-        background: var(--blue);
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
         color: #fff;
         padding: 10px 12px;
         border-radius: 12px;
@@ -383,7 +549,7 @@
       .paper-note {
         margin-top: 10px;
         padding: 12px 13px;
-        background: #f8fafc;
+        background: #f8fbff;
         border: 1px solid var(--line);
         border-radius: 12px;
         font-size: 13px;
@@ -453,9 +619,142 @@
         transition: transform 0.2s ease;
       }
 
+      .mobile-footer { display: none; }
+
+      @media (min-width: 980px) {
+        .app-layout {
+          display: grid;
+          grid-template-columns: 260px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 18px 16px;
+          background: #fff;
+          border-right: 1px solid var(--line);
+        }
+
+        .sidebar-brand { padding: 8px 10px 20px; }
+
+        .sidebar-title {
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--secondary);
+          line-height: 1.4;
+        }
+
+        .sidebar-subtext {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.7;
+          color: var(--subtext);
+        }
+
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+          border-radius: 14px;
+          color: #374151;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .sidebar-link:hover {
+          background: #f8fafc;
+          color: #111827;
+        }
+
+        .sidebar-link.is-active {
+          background: var(--blue-soft);
+          color: var(--blue);
+        }
+
+        .sidebar-icon {
+          width: 20px;
+          text-align: center;
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 14px 10px 8px;
+          border-top: 1px solid var(--line);
+        }
+
+        .sidebar-plan {
+          font-size: 12px;
+          line-height: 1.7;
+          color: var(--subtext);
+          margin-bottom: 10px;
+        }
+
+        .sidebar-auth {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .sidebar-auth-text {
+          font-size: 12px;
+          color: #6b7280;
+          line-height: 1.5;
+          word-break: break-word;
+        }
+
+        .sidebar-auth-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 38px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--secondary), var(--blue));
+          color: white;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .sidebar-auth-link:hover { opacity: 0.92; }
+
+        .sidebar-auth-link.secondary {
+          background: #fff;
+          color: var(--blue);
+          border: 1.5px solid rgba(37,99,235,0.18);
+          box-shadow: inset 0 0 0 1px rgba(37,99,235,0.04);
+        }
+
+        .main-area {
+          padding: 28px 32px 60px;
+        }
+      }
+
+      @media (max-width: 979px) {
+        .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
+        .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+        .mobile-footer-link.is-active { color: var(--blue); }
+        .mobile-footer-icon { font-size: 20px; line-height: 1; }
+      }
+
       @media (max-width: 640px) {
         body {
-          padding: 16px 12px 28px;
+          padding: 0;
         }
         .page-title {
           font-size: 24px;
@@ -497,14 +796,43 @@
           width: 100%;
         }
       }
-      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
-      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
-      .mobile-footer-link.is-active { color: #2563eb; }
-      .mobile-footer-icon { font-size: 20px; line-height: 1; }
     </style>
   </head>
   <body>
-    <div class="container">
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-title">リハエビデンスナビ</div>
+          <div class="sidebar-subtext">保存した論文をフォルダ単位で整えて、必要なときにすぐ取り出せる状態に保てます。</div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="/" class="sidebar-link"><span class="sidebar-icon">🏠</span><span>検索</span></a>
+          <a href="/learn" class="sidebar-link"><span class="sidebar-icon">📖</span><span>学ぶ</span></a>
+          <a href="/memo" class="sidebar-link"><span class="sidebar-icon">📝</span><span>メモ</span></a>
+          <a href="/saved" class="sidebar-link is-active"><span class="sidebar-icon">📚</span><span>保存</span></a>
+          <a href="/mypage" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+          {% if current_user %}
+          <div class="sidebar-plan">現在のプラン：<b>{{ current_plan | upper }}</b></div>
+          <div class="sidebar-auth">
+            <div class="sidebar-auth-text">{{ current_user.email }}</div>
+            <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+          </div>
+          {% else %}
+          <div class="sidebar-plan">ログインすると保存フォルダの整理や再発見がもっとしやすくなります。</div>
+          <div class="sidebar-auth">
+            <a href="/login?from=saved" class="sidebar-auth-link">ログイン</a>
+            <a href="/register" class="sidebar-auth-link secondary">新規登録</a>
+          </div>
+          {% endif %}
+        </div>
+      </aside>
+
+      <main class="main-area">
+      <div class="container">
       <a href="/saved" class="top-link">← フォルダ一覧へ戻る</a>
 
       <div class="page-header">
@@ -530,9 +858,65 @@
       </div>
 
       {% if papers %}
+      {% set folder_stats = namespace(favorites=0, notes=0, high_score=0) %}
+      {% for paper in papers %}
+        {% if paper.is_favorite %}{% set folder_stats.favorites = folder_stats.favorites + 1 %}{% endif %}
+        {% if paper.user_note %}{% set folder_stats.notes = folder_stats.notes + 1 %}{% endif %}
+        {% if paper.clinical_score and (paper.clinical_score | float) >= 4 %}{% set folder_stats.high_score = folder_stats.high_score + 1 %}{% endif %}
+      {% endfor %}
+      <div class="folder-tools">
+        <div class="folder-tools-head">
+          <div>
+            <div class="folder-tools-title">このフォルダを見返しやすく整理</div>
+            <div class="folder-tools-subtext">タイトル検索と状態フィルタで、あとで使いたい論文だけをすぐ見つけられます。</div>
+          </div>
+          <div class="folder-stats">
+            <span class="folder-stat-chip">📚 {{ papers|length }}本</span>
+            <span class="folder-stat-chip">★ お気に入り {{ folder_stats.favorites }}</span>
+            <span class="folder-stat-chip">📝 メモあり {{ folder_stats.notes }}</span>
+          </div>
+        </div>
+        <div class="folder-search-row">
+          <div>
+            <label for="folder-paper-search" class="folder-search-label">このフォルダ内を検索</label>
+            <input
+              type="search"
+              id="folder-paper-search"
+              class="folder-search-input"
+              placeholder="タイトル・表示名・著者で絞り込む"
+            />
+          </div>
+          <div class="folder-filter-row" id="folder-filter-row">
+            <button type="button" class="folder-filter-chip is-active" data-filter="all">すべて</button>
+            <button type="button" class="folder-filter-chip" data-filter="favorite">お気に入り</button>
+            <button type="button" class="folder-filter-chip" data-filter="note">メモあり</button>
+            <button type="button" class="folder-filter-chip" data-filter="score">臨床参考度あり</button>
+            <button type="button" class="folder-filter-chip" data-filter="high-score">4.0以上</button>
+          </div>
+        </div>
+      </div>
+      <div class="folder-empty-state" id="folder-empty-state">
+        条件に合う論文が見つかりませんでした。検索語をゆるめるか、フィルタを解除してみてください。
+      </div>
+      <datalist id="folder-suggestions">
+        {% for suggestion in folder_suggestions %}
+        <option value="{{ suggestion }}"></option>
+        {% endfor %}
+      </datalist>
+      {% endif %}
+
+      {% if papers %}
       <div class="paper-list">
         {% for paper in papers %}
-        <article class="paper-card" id="paper-card-{{ paper.pubmed_id }}">
+        <article
+          class="paper-card"
+          id="paper-card-{{ paper.pubmed_id }}"
+          data-title="{{ (paper.display_title or paper.jp_title or paper.title or '')|lower }}"
+          data-authors="{{ (paper.authors or '')|lower }}"
+          data-favorite="{{ 1 if paper.is_favorite else 0 }}"
+          data-note="{{ 1 if paper.user_note else 0 }}"
+          data-score="{{ paper.clinical_score or '' }}"
+        >
           <h2 class="paper-title" id="paper-title-{{ paper.pubmed_id }}">
             <a href="/paper?id={{ paper.pubmed_id }}">
               {{ paper.display_title or paper.jp_title or paper.title }}
@@ -605,11 +989,25 @@
                 name="folder_name"
                 class="mini-input"
                 value="{{ paper.folder_name or '' }}"
+                list="folder-suggestions"
                 placeholder="移動先フォルダ名を入力"
                 required
               />
               <button type="submit" class="mini-submit">移動する</button>
             </form>
+            {% if folder_suggestions %}
+            <div class="move-suggestions">
+              {% for suggestion in folder_suggestions[:6] %}
+              <button
+                type="button"
+                class="move-suggestion-chip"
+                onclick='useFolderSuggestion("{{ paper.pubmed_id }}", {{ suggestion|tojson }})'
+              >
+                {{ suggestion }}
+              </button>
+              {% endfor %}
+            </div>
+            {% endif %}
             <div
               class="inline-message"
               id="move-message-{{ paper.pubmed_id }}"
@@ -703,9 +1101,67 @@
       {% else %}
       <div class="empty-card">このフォルダにはまだ論文がありません。</div>
       {% endif %}
+      </div>
+      </main>
     </div>
 
     <script>
+      const folderSearchInput = document.getElementById("folder-paper-search");
+      const folderFilterButtons = Array.from(document.querySelectorAll(".folder-filter-chip"));
+      const paperCards = Array.from(document.querySelectorAll(".paper-card"));
+      const folderEmptyState = document.getElementById("folder-empty-state");
+      let activeFolderFilter = "all";
+
+      function getScoreValue(card) {
+        const rawScore = parseFloat(card.dataset.score || "0");
+        return Number.isFinite(rawScore) ? rawScore : 0;
+      }
+
+      function matchesFolderFilter(card, filterKey) {
+        if (filterKey === "favorite") return card.dataset.favorite === "1";
+        if (filterKey === "note") return card.dataset.note === "1";
+        if (filterKey === "score") return getScoreValue(card) > 0;
+        if (filterKey === "high-score") return getScoreValue(card) >= 4;
+        return true;
+      }
+
+      function filterFolderCards() {
+        const keyword = (folderSearchInput?.value || "").trim().toLowerCase();
+        let visibleCount = 0;
+
+        paperCards.forEach((card) => {
+          const title = card.dataset.title || "";
+          const authors = card.dataset.authors || "";
+          const matchesKeyword = !keyword || title.includes(keyword) || authors.includes(keyword);
+          const matchesFilter = matchesFolderFilter(card, activeFolderFilter);
+          const isVisible = matchesKeyword && matchesFilter;
+
+          card.style.display = isVisible ? "" : "none";
+          if (isVisible) visibleCount += 1;
+        });
+
+        if (folderEmptyState) {
+          folderEmptyState.style.display = visibleCount === 0 ? "block" : "none";
+        }
+      }
+
+      folderSearchInput?.addEventListener("input", filterFolderCards);
+
+      folderFilterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          activeFolderFilter = button.dataset.filter || "all";
+          folderFilterButtons.forEach((chip) => chip.classList.toggle("is-active", chip === button));
+          filterFolderCards();
+        });
+      });
+
+      function useFolderSuggestion(pubmedId, folderName) {
+        const input = document.querySelector(`#move-${pubmedId} input[name="folder_name"]`);
+        if (!input) return;
+        input.value = folderName;
+        input.focus();
+      }
+
       async function addLike(pubmedId, button) {
         const wasLiked = button.classList.contains("liked");
         const countSpan = button.querySelector(".like-count");
@@ -800,6 +1256,7 @@
                 card.style.opacity = "0.4";
                 setTimeout(() => {
                   card.remove();
+                  filterFolderCards();
                 }, 180);
               }
             }
@@ -904,6 +1361,7 @@
       }
 
       disableLikedButtons();
+      filterFolderCards();
     </script>
     <nav class="mobile-footer">
       <a href="/" class="mobile-footer-link"><span class="mobile-footer-icon">🏠</span><span>検索</span></a>

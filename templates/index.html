@@ -279,10 +279,21 @@
         padding: 28px;
         box-shadow: var(--shadow);
         margin-bottom: 28px;
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+        transition:
+          opacity 0.35s ease,
+          transform 0.42s cubic-bezier(.2,.8,.2,1),
+          box-shadow 0.25s ease;
       }
 
       .ranking-card.hidden {
         display: none;
+      }
+
+      .ranking-card.is-visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
 
       .card-header {
@@ -295,12 +306,176 @@
       }
 
       .ranking-item {
+        display: block;
         background: #f8fafc;
         border: 1px solid #e5e7eb;
         border-radius: 18px;
         padding: 18px 16px;
         margin-bottom: 14px;
         box-shadow: var(--shadow-soft);
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      }
+
+      .ranking-item.clickable {
+        cursor: pointer;
+      }
+
+      .ranking-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 42px rgba(15,23,42,0.12);
+        border-color: rgba(37,99,235,0.18);
+      }
+
+      .ranking-card.is-visible .ranking-item {
+        animation: rankingItemReveal 0.52s cubic-bezier(.2,.8,.2,1) both;
+      }
+
+      .ranking-card.is-visible .ranking-item:nth-child(2) { animation-delay: 0.03s; }
+      .ranking-card.is-visible .ranking-item:nth-child(3) { animation-delay: 0.08s; }
+      .ranking-card.is-visible .ranking-item:nth-child(4) { animation-delay: 0.13s; }
+      .ranking-card.is-visible .ranking-item:nth-child(5) { animation-delay: 0.18s; }
+      .ranking-card.is-visible .ranking-item:nth-child(6) { animation-delay: 0.23s; }
+
+      @keyframes rankingItemReveal {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .ranking-item.podium {
+        border-width: 1px;
+        box-shadow: 0 18px 42px rgba(15,23,42,0.10);
+      }
+
+      .ranking-item.podium::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 5px;
+      }
+
+      .podium-rank-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        background: rgba(255,255,255,0.78);
+        box-shadow: 0 8px 22px rgba(15,23,42,0.08);
+      }
+
+      .ranking-card.tone-popular .ranking-rank { color: #d97706; }
+      .ranking-card.tone-score .ranking-rank { color: #2563eb; }
+      .ranking-card.tone-trend .ranking-rank { color: #7c3aed; }
+
+      .ranking-card.tone-popular .ranking-item.podium-1 {
+        background: linear-gradient(135deg, #fff7db 0%, #ffefbf 100%);
+        border-color: rgba(217, 119, 6, 0.28);
+      }
+
+      .ranking-card.tone-popular .ranking-item.podium-1::before {
+        background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
+      }
+
+      .ranking-card.tone-popular .ranking-item.podium-2 {
+        background: linear-gradient(135deg, #fffaf0 0%, #fff4dd 100%);
+        border-color: rgba(217, 119, 6, 0.2);
+      }
+
+      .ranking-card.tone-popular .ranking-item.podium-2::before {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+      }
+
+      .ranking-card.tone-popular .ranking-item.podium-3 {
+        background: linear-gradient(135deg, #fffdf7 0%, #fff8ea 100%);
+        border-color: rgba(217, 119, 6, 0.14);
+      }
+
+      .ranking-card.tone-popular .ranking-item.podium-3::before {
+        background: linear-gradient(90deg, #fbbf24 0%, #fcd34d 100%);
+      }
+
+      .ranking-card.tone-popular .podium-rank-chip {
+        color: #b45309;
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-1 {
+        background: linear-gradient(135deg, #edf5ff 0%, #dcecff 100%);
+        border-color: rgba(37, 99, 235, 0.28);
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-1::before {
+        background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-2 {
+        background: linear-gradient(135deg, #f5f9ff 0%, #eaf2ff 100%);
+        border-color: rgba(37, 99, 235, 0.2);
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-2::before {
+        background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-3 {
+        background: linear-gradient(135deg, #f8fbff 0%, #eff6ff 100%);
+        border-color: rgba(37, 99, 235, 0.14);
+      }
+
+      .ranking-card.tone-score .ranking-item.podium-3::before {
+        background: linear-gradient(90deg, #60a5fa 0%, #93c5fd 100%);
+      }
+
+      .ranking-card.tone-score .podium-rank-chip {
+        color: #1d4ed8;
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-1 {
+        background: linear-gradient(135deg, #f7edff 0%, #ebdcff 100%);
+        border-color: rgba(124, 58, 237, 0.28);
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-1::before {
+        background: linear-gradient(90deg, #7c3aed 0%, #9333ea 100%);
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-2 {
+        background: linear-gradient(135deg, #fbf5ff 0%, #f3e8ff 100%);
+        border-color: rgba(124, 58, 237, 0.2);
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-2::before {
+        background: linear-gradient(90deg, #9333ea 0%, #a855f7 100%);
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-3 {
+        background: linear-gradient(135deg, #fdf9ff 0%, #f7f0ff 100%);
+        border-color: rgba(124, 58, 237, 0.14);
+      }
+
+      .ranking-card.tone-trend .ranking-item.podium-3::before {
+        background: linear-gradient(90deg, #a855f7 0%, #c084fc 100%);
+      }
+
+      .ranking-card.tone-trend .podium-rank-chip {
+        color: #7c3aed;
+      }
+
+      .podium-crown {
+        font-size: 15px;
+        line-height: 1;
       }
 
       .ranking-item-header {
@@ -324,75 +499,465 @@
         margin-bottom: 8px;
       }
 
-      .ranking-badge {
+      .ranking-title-ja {
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.5;
+        margin-top: 2px;
+        color: #111827;
+        letter-spacing: -0.01em;
+      }
+
+      .ranking-clinical-chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-size: 13px;
-        font-weight: 700;
-        padding: 6px 10px;
+        margin-top: 10px;
+        min-height: 30px;
+        padding: 0 10px;
         border-radius: 999px;
-        background: #eff6ff;
-        color: #3730a3;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid rgba(15,23,42,0.06);
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
       }
 
-      .ranking-title-ja {
-        font-size: 22px;
-        font-weight: 800;
+      .ranking-social-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(226,232,240,0.9);
+      }
+
+      .ranking-social-btn {
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0;
+        min-height: 32px;
+        font-size: 12px;
+        font-weight: 700;
+        transition: color 0.15s ease, transform 0.15s ease;
+      }
+
+      .ranking-social-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .ranking-social-btn:active {
+        transform: translateY(0);
+      }
+
+      .ranking-social-btn.comment:hover,
+      .ranking-social-btn.share:hover {
+        color: var(--blue);
+      }
+
+      .ranking-social-btn.save.saved,
+      .ranking-social-btn.save:hover {
+        color: #1d4ed8;
+      }
+
+      .ranking-social-btn.liked,
+      .ranking-social-btn.like:hover {
+        color: #f91880;
+      }
+
+      .ranking-social-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      .ranking-social-btn.liked .ranking-social-icon.like-fill {
+        fill: currentColor;
+        stroke: currentColor;
+      }
+
+      .ranking-social-label {
+        line-height: 1;
+      }
+
+      .save-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(15,23,42,0.34);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 210;
+        padding: 18px 16px calc(86px + env(safe-area-inset-bottom));
+      }
+
+      .save-sheet-backdrop.open {
+        display: flex;
+      }
+
+      .save-sheet {
+        width: min(100%, 520px);
+        background: rgba(255,255,255,0.98);
+        border-radius: 26px 26px 20px 20px;
+        box-shadow: 0 28px 56px rgba(15,23,42,0.24);
+        padding: 18px 16px 16px;
+      }
+
+      .save-sheet-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .save-sheet-title {
+        font-size: 16px;
+        font-weight: 900;
+        color: #16324f;
+      }
+
+      .save-sheet-subtitle {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
         line-height: 1.6;
+      }
+
+      .save-sheet-close {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: #f3f4f6;
+        color: #475569;
+        font-size: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .save-sheet-close:hover {
+        background: #e5e7eb;
+      }
+
+      .save-sheet-paper {
+        padding: 12px 13px;
+        border-radius: 16px;
+        background: #f8fbff;
+        border: 1px solid rgba(37,99,235,0.08);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.6;
+        color: #16324f;
+        margin-bottom: 12px;
+      }
+
+      .save-sheet-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: #64748b;
+        margin: 12px 0 8px;
+      }
+
+      .save-sheet-options {
+        display: grid;
+        gap: 8px;
+      }
+
+      .save-sheet-option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid #dbe3ee;
+        border-radius: 16px;
+        background: #fff;
+        color: #111827;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+      }
+
+      .save-sheet-option:hover {
+        border-color: rgba(37,99,235,0.24);
+        background: #f8fbff;
+        transform: translateY(-1px);
+      }
+
+      .save-sheet-option.active {
+        border-color: rgba(37,99,235,0.32);
+        background: #eef4ff;
+        color: #16324f;
+      }
+
+      .save-sheet-option-main {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .save-sheet-option-name {
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .save-sheet-option-meta {
+        font-size: 11px;
+        color: #64748b;
+      }
+
+      .save-sheet-option-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37,99,235,0.1);
+        color: #2563eb;
+        font-size: 13px;
+        font-weight: 900;
+        opacity: 0;
+      }
+
+      .save-sheet-option.active .save-sheet-option-check {
+        opacity: 1;
+      }
+
+      .save-sheet-new-row {
+        display: flex;
+        gap: 8px;
         margin-top: 8px;
       }
 
-      .ranking-title-ja a {
-        color: #111827;
-        text-decoration: none;
+      .save-sheet-input {
+        flex: 1;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 11px 13px;
+        font-size: 13px;
+        outline: none;
       }
 
-      .ranking-title-ja a:hover {
-        color: var(--blue);
-        text-decoration: underline;
+      .save-sheet-input:focus {
+        border-color: rgba(37,99,235,0.28);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
       }
 
-      .ranking-title-en {
-        margin-top: 14px;
-        font-size: 15px;
-        line-height: 1.7;
-        color: #4b5563;
-        font-weight: 600;
+      .save-sheet-submit {
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #16324f, #2563eb);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        padding: 0 16px;
+        cursor: pointer;
+        white-space: nowrap;
       }
 
-      .summary {
-        margin-top: 12px;
+      .save-sheet-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .comment-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(15,23,42,0.34);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 215;
+        padding: 18px 16px calc(86px + env(safe-area-inset-bottom));
+      }
+
+      .comment-sheet-backdrop.open {
+        display: flex;
+      }
+
+      .comment-sheet {
+        width: min(100%, 560px);
+        background: rgba(255,255,255,0.98);
+        border-radius: 26px 26px 20px 20px;
+        box-shadow: 0 28px 56px rgba(15,23,42,0.24);
+        padding: 18px 16px 16px;
+        max-height: min(80vh, 760px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .comment-sheet-list {
+        display: grid;
+        gap: 10px;
+        overflow-y: auto;
+        padding-right: 2px;
+        margin: 2px 0 14px;
+      }
+
+      .comment-sheet-empty {
+        padding: 14px;
+        border-radius: 16px;
         background: #f8fafc;
-        border-left: 4px solid var(--blue);
-        border-radius: 12px;
-        padding: 12px 14px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: center;
+      }
+
+      .comment-item {
+        padding: 12px 13px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid rgba(37,99,235,0.08);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .comment-item-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .comment-item-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .comment-item-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .comment-item-meta {
+        min-width: 0;
+      }
+
+      .comment-item-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: #16324f;
+      }
+
+      .comment-item-time {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+
+      .comment-item-body {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #334155;
         white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .comment-sheet-form {
+        display: grid;
+        gap: 10px;
+        margin-top: auto;
+      }
+
+      .comment-sheet-textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
+        border: 1px solid #dbe3ee;
+        border-radius: 16px;
+        padding: 12px 14px;
+        font: inherit;
+        font-size: 14px;
         line-height: 1.7;
-        font-size: 14px;
+        outline: none;
       }
 
-      .ranking-meta {
-        margin-top: 10px;
-        color: #666;
-        font-size: 14px;
-        line-height: 1.7;
+      .comment-sheet-textarea:focus {
+        border-color: rgba(37,99,235,0.28);
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
       }
 
-      .ranking-link-row {
-        margin-top: 14px;
+      .comment-sheet-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
       }
 
-      .ranking-detail-link {
-        display: inline-block;
-        font-size: 14px;
+      .comment-sheet-note {
+        font-size: 12px;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .site-toast {
+        position: fixed;
+        bottom: 88px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: #16324f;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 999px;
+        font-size: 13px;
         font-weight: 700;
-        color: var(--blue);
-        text-decoration: none;
+        opacity: 0;
+        transition: all 0.25s ease;
+        pointer-events: none;
+        z-index: 240;
+        white-space: nowrap;
+        box-shadow: 0 18px 36px rgba(15,23,42,0.22);
       }
 
-      .ranking-detail-link:hover {
-        text-decoration: underline;
+      .site-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      @media (min-width: 760px) {
+        .save-sheet-backdrop,
+        .comment-sheet-backdrop {
+          align-items: center;
+          padding: 32px;
+        }
+
+        .save-sheet,
+        .comment-sheet {
+          border-radius: 24px;
+        }
       }
 
       .empty-box {
@@ -401,30 +966,149 @@
       }
 
       .section-toggle-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin: 0 0 18px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin: 0 0 22px;
       }
 
       .section-toggle-btn {
-        border: none;
-        background: #eff6ff;
-        color: #3730a3;
-        padding: 10px 14px;
-        border-radius: 999px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.45);
+        background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 42%, #ffffff 100%);
+        color: #0f172a;
+        padding: 18px 18px 16px;
+        border-radius: 24px;
         font-size: 14px;
         font-weight: 800;
         cursor: pointer;
+        text-align: left;
+        box-shadow: 0 18px 44px rgba(37,99,235,0.10);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      }
+
+      .section-toggle-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top right, rgba(255,255,255,0.95), transparent 34%),
+          linear-gradient(120deg, rgba(255,255,255,0.16), transparent 55%);
+        pointer-events: none;
       }
 
       .section-toggle-btn:hover {
-        background: #dbeafe;
+        transform: translateY(-3px) scale(1.01);
+        box-shadow: 0 24px 56px rgba(15,23,42,0.16);
+      }
+
+      .section-toggle-btn:active {
+        transform: scale(0.985);
       }
 
       .section-toggle-btn.is-active {
-        background: #111827;
-        color: #fff;
+        border-color: rgba(255,255,255,0.72);
+        box-shadow: 0 26px 60px rgba(15,23,42,0.22);
+        transform: translateY(-2px);
+      }
+
+      .section-toggle-btn[data-tone="popular"] {
+        background: linear-gradient(135deg, #fff7dd 0%, #fee6b5 56%, #ffd89a 100%);
+        box-shadow: 0 18px 44px rgba(245, 158, 11, 0.18);
+      }
+
+      .section-toggle-btn[data-tone="popular"].is-active {
+        background: linear-gradient(135deg, #f59e0b 0%, #fb923c 100%);
+        color: #fff7ed;
+      }
+
+      .section-toggle-btn[data-tone="score"] {
+        background: linear-gradient(135deg, #eff8ff 0%, #dbeafe 55%, #c4e6ff 100%);
+        box-shadow: 0 18px 44px rgba(14, 165, 233, 0.18);
+      }
+
+      .section-toggle-btn[data-tone="score"].is-active {
+        background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        color: #eff6ff;
+      }
+
+      .section-toggle-btn[data-tone="trend"] {
+        background: linear-gradient(135deg, #f6edff 0%, #eadcff 52%, #dcc2ff 100%);
+        box-shadow: 0 18px 44px rgba(124, 58, 237, 0.18);
+      }
+
+      .section-toggle-btn[data-tone="trend"].is-active {
+        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        color: #faf5ff;
+      }
+
+      .section-toggle-top {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .section-toggle-icon {
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .section-toggle-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        background: rgba(255,255,255,0.74);
+        color: rgba(15,23,42,0.78);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .section-toggle-title {
+        position: relative;
+        z-index: 1;
+        display: block;
+        font-size: 18px;
+        line-height: 1.35;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .section-toggle-desc {
+        position: relative;
+        z-index: 1;
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.7;
+        font-weight: 700;
+        color: rgba(15,23,42,0.72);
+      }
+
+      .section-toggle-btn.is-active .section-toggle-desc,
+      .section-toggle-btn.is-active .section-toggle-badge {
+        color: inherit;
+      }
+
+      .section-toggle-meta {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
       }
 
       .mobile-footer {
@@ -695,26 +1379,33 @@
 
         .ranking-title-ja {
           font-size: 17px;
-          line-height: 1.5;
-        }
-
-        .ranking-title-en,
-        .ranking-meta,
-        .summary {
-          font-size: 14px;
-          line-height: 1.7;
+          line-height: 1.45;
         }
 
         .section-toggle-row {
-          gap: 8px;
+          grid-template-columns: 1fr;
+          gap: 10px;
           margin-bottom: 14px;
         }
 
         .section-toggle-btn {
-          flex: 1;
-          min-height: 42px;
-          font-size: 13px;
-          padding: 10px 12px;
+          min-height: 0;
+          padding: 16px 14px 14px;
+          border-radius: 18px;
+        }
+
+        .section-toggle-icon {
+          font-size: 24px;
+        }
+
+        .section-toggle-title {
+          font-size: 16px;
+          line-height: 1.35;
+        }
+
+        .section-toggle-desc {
+          font-size: 12px;
+          line-height: 1.65;
         }
 
         .mobile-footer {
@@ -906,86 +1597,148 @@
               <div class="tag-row" id="tag-main-row"></div>
               <div class="tag-sub-section" id="tag-sub-section"></div>
             </div>
-
-            <p class="sub-text">
-              検索からすぐ読み始められます。保存・ランキング・マイページはナビから移動できます。
-            </p>
           </div>
 
           <div class="section-toggle-row">
             <button
               type="button"
               class="section-toggle-btn"
+              data-tone="popular"
               id="popular-toggle-btn"
               onclick="showRankingSection('popular-ranking')"
-              style="background:#fef3c7; color:#d97706;"
             >
-              🔥 人気ランキング
+              <span class="section-toggle-top">
+                <span class="section-toggle-icon">🔥</span>
+                <span class="section-toggle-badge">一番人気</span>
+              </span>
+              <span class="section-toggle-title">人気ランキング</span>
+              <span class="section-toggle-desc">まず外したくない論文から見たいときに。反応が集まった定番を先に拾えます。</span>
+              <span class="section-toggle-meta">いますぐ開く →</span>
             </button>
             <button
               type="button"
               class="section-toggle-btn"
+              data-tone="score"
               id="score-toggle-btn"
               onclick="showRankingSection('score-ranking')"
-              style="background:#e0f2fe; color:#0369a1; white-space: normal; text-align: center; line-height: 1.3;"
             >
-              ⭐ 臨床参考度<br>ランキング
+              <span class="section-toggle-top">
+                <span class="section-toggle-icon">⭐</span>
+                <span class="section-toggle-badge">臨床で使いやすい</span>
+              </span>
+              <span class="section-toggle-title">臨床参考度ランキング</span>
+              <span class="section-toggle-desc">明日の介入や説明に近い論文から見たいときに。実用性重視で絞れます。</span>
+              <span class="section-toggle-meta">深掘りする →</span>
             </button>
             <button
               type="button"
               class="section-toggle-btn"
+              data-tone="trend"
               id="trend-toggle-btn"
               onclick="showRankingSection('trend-ranking')"
-              style="background:#f3e8ff; color:#7c3aed;"
             >
-              📈 PubMedトレンド
+              <span class="section-toggle-top">
+                <span class="section-toggle-icon">📈</span>
+                <span class="section-toggle-badge">新しい話題</span>
+              </span>
+              <span class="section-toggle-title">PubMedトレンド</span>
+              <span class="section-toggle-desc">最近の流れや旬のテーマを追いたいときに。新しい話題をまとめて確認できます。</span>
+              <span class="section-toggle-meta">流れを見る →</span>
             </button>
           </div>
 
-          <div id="popular-ranking" class="ranking-card hidden">
+          <div id="popular-ranking" class="ranking-card tone-popular hidden">
             <div class="card-header">
               <h2>人気ランキング TOP {{ ranking_limit }}</h2>
             </div>
 
             {% if popular_papers %} {% for paper in popular_papers %}
-            <div class="ranking-item">
+            <div
+              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              data-paper-url="/paper?id={{ paper.pubmed_id }}"
+              tabindex="0"
+              role="link"
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
               <div class="ranking-item-header">
                 <div class="ranking-rank">
-                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
-                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
-                  loop.index }}位 {% endif %}
+                  {% if loop.index == 1 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">👑</span> 1位</span>
+                  {% elif loop.index == 2 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">✨</span> 2位</span>
+                  {% elif loop.index == 3 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">⚡</span> 3位</span>
+                  {% else %} {{ loop.index }}位 {% endif %}
                 </div>
 
-                <div class="ranking-badge">
-                  👍 {{ paper.likes or 0 }} いいね
-                </div>
               </div>
 
-              <div class="ranking-title-ja">
-                <a href="/paper?id={{ paper.pubmed_id }}">
-                  {{ paper.jp_title or paper.title }}
-                </a>
-              </div>
-
-              {% if paper.jp_title %}
-              <div class="ranking-title-en">{{ paper.title }}</div>
-              {% endif %} {% if paper.summary_jp %}
-              <div class="summary">{{ paper.summary_jp }}</div>
+              <div class="ranking-title-ja">{{ paper.jp_title or paper.title }}</div>
+              {% if paper.clinical_score %}
+              <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
               {% endif %}
-
-              <div class="ranking-meta">
-                <div>PubMed ID: {{ paper.pubmed_id }}</div>
-                <div>雑誌: {{ paper.journal }}</div>
-                <div>公開日: {{ paper.pubdate }}</div>
-                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
-              </div>
-
-              <div class="ranking-link-row">
-                <a
-                  href="/paper?id={{ paper.pubmed_id }}"
-                  class="ranking-detail-link"
-                  >詳細を見る</a
-                >
+              <div class="ranking-social-row">
+                <button type="button"
+                  class="ranking-social-btn comment"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingCommentSheet({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文のコメントを見る">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-comment-count">{{ paper.comment_count or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn save {% if paper.is_saved %}saved{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingSaveSheet(this, {{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or "",
+                    "authors": paper.authors or "",
+                    "journal": paper.journal or "",
+                    "pubdate": paper.pubdate or "",
+                    "abstract": paper.abstract or "",
+                    "jp": paper.jp or "",
+                    "summary_jp": paper.summary_jp or "",
+                    "folder_name": paper.folder_name or default_saved_folder_label,
+                    "clinical_score": paper.clinical_score or "",
+                    "clinical_reason": paper.clinical_reason or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を保存する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path>
+                  </svg>
+                  <span class="ranking-social-label">{% if paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn like {% if paper.liked %}liked{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick="toggleRankingLike('{{ paper.pubmed_id }}', this)"
+                  aria-label="この論文にいいねする">
+                  <svg class="ranking-social-icon like-fill" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20.5s-7-4.35-7-10.18C5 7.4 6.96 5.5 9.35 5.5c1.54 0 2.97.83 3.65 2.13.68-1.3 2.11-2.13 3.65-2.13C19.04 5.5 21 7.4 21 10.32 21 16.15 14 20.5 14 20.5H12Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-like-count">{{ paper.likes or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn share"
+                  onclick='shareRankingPaper({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を共有する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 12v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7"></path>
+                    <path d="M12 16V4"></path>
+                    <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                  </svg>
+                  <span class="ranking-social-label">共有</span>
+                </button>
               </div>
             </div>
             {% endfor %} {% else %}
@@ -993,50 +1746,98 @@
             {% endif %}
           </div>
 
-          <div id="score-ranking" class="ranking-card hidden">
+          <div id="score-ranking" class="ranking-card tone-score hidden">
             <div class="card-header">
               <h2>臨床参考度ランキング TOP {{ ranking_limit }}</h2>
             </div>
 
             {% if top_rated_papers %} {% for paper in top_rated_papers %}
-            <div class="ranking-item">
+            <div
+              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              data-paper-url="/paper?id={{ paper.pubmed_id }}"
+              tabindex="0"
+              role="link"
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
               <div class="ranking-item-header">
                 <div class="ranking-rank">
-                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
-                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
-                  loop.index }}位 {% endif %}
+                  {% if loop.index == 1 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">👑</span> 1位</span>
+                  {% elif loop.index == 2 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">✨</span> 2位</span>
+                  {% elif loop.index == 3 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">⚡</span> 3位</span>
+                  {% else %} {{ loop.index }}位 {% endif %}
                 </div>
 
-                <div class="ranking-badge">
-                  ⭐ {{ paper.clinical_score or "0.00" }} / 5.0
-                </div>
               </div>
 
-              <div class="ranking-title-ja">
-                <a href="/paper?id={{ paper.pubmed_id }}">
-                  {{ paper.jp_title or paper.title }}
-                </a>
-              </div>
-
-              {% if paper.jp_title %}
-              <div class="ranking-title-en">{{ paper.title }}</div>
-              {% endif %} {% if paper.summary_jp %}
-              <div class="summary">{{ paper.summary_jp }}</div>
+              <div class="ranking-title-ja">{{ paper.jp_title or paper.title }}</div>
+              {% if paper.clinical_score %}
+              <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
               {% endif %}
-
-              <div class="ranking-meta">
-                <div>PubMed ID: {{ paper.pubmed_id }}</div>
-                <div>雑誌: {{ paper.journal }}</div>
-                <div>公開日: {{ paper.pubdate }}</div>
-                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
-              </div>
-
-              <div class="ranking-link-row">
-                <a
-                  href="/paper?id={{ paper.pubmed_id }}"
-                  class="ranking-detail-link"
-                  >詳細を見る</a
-                >
+              <div class="ranking-social-row">
+                <button type="button"
+                  class="ranking-social-btn comment"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingCommentSheet({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文のコメントを見る">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-comment-count">{{ paper.comment_count or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn save {% if paper.is_saved %}saved{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingSaveSheet(this, {{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or "",
+                    "authors": paper.authors or "",
+                    "journal": paper.journal or "",
+                    "pubdate": paper.pubdate or "",
+                    "abstract": paper.abstract or "",
+                    "jp": paper.jp or "",
+                    "summary_jp": paper.summary_jp or "",
+                    "folder_name": paper.folder_name or default_saved_folder_label,
+                    "clinical_score": paper.clinical_score or "",
+                    "clinical_reason": paper.clinical_reason or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を保存する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path>
+                  </svg>
+                  <span class="ranking-social-label">{% if paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn like {% if paper.liked %}liked{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick="toggleRankingLike('{{ paper.pubmed_id }}', this)"
+                  aria-label="この論文にいいねする">
+                  <svg class="ranking-social-icon like-fill" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20.5s-7-4.35-7-10.18C5 7.4 6.96 5.5 9.35 5.5c1.54 0 2.97.83 3.65 2.13.68-1.3 2.11-2.13 3.65-2.13C19.04 5.5 21 7.4 21 10.32 21 16.15 14 20.5 14 20.5H12Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-like-count">{{ paper.likes or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn share"
+                  onclick='shareRankingPaper({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を共有する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 12v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7"></path>
+                    <path d="M12 16V4"></path>
+                    <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                  </svg>
+                  <span class="ranking-social-label">共有</span>
+                </button>
               </div>
             </div>
             {% endfor %} {% else %}
@@ -1044,46 +1845,96 @@
             {% endif %}
           </div>
 
-          <div id="trend-ranking" class="ranking-card hidden">
+          <div id="trend-ranking" class="ranking-card tone-trend hidden">
             <div class="card-header">
               <h2>📈 PubMedトレンド論文</h2>
             </div>
-            <div style="padding:10px 0 14px; font-size:13px; color:#7c3aed; line-height:1.7; background:#f3e8ff; border-radius:12px; padding:10px 14px; margin-bottom:14px;">
-              PubMedで最近アクティビティが増えている論文です。累積閲覧数順ではありません。
-            </div>
-
             {% if trending_papers %} {% for paper in trending_papers %}
-            <div class="ranking-item">
+            <div
+              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              data-paper-url="/paper?id={{ paper.pubmed_id }}"
+              tabindex="0"
+              role="link"
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
               <div class="ranking-item-header">
                 <div class="ranking-rank">
-                  {% if loop.index == 1 %} 🥇1位 {% elif loop.index == 2 %}
-                  🥈2位 {% elif loop.index == 3 %} 🥉3位 {% else %} {{
-                  loop.index }}位 {% endif %}
-                </div>
-                <div class="ranking-badge" style="background:#f3e8ff; color:#7c3aed;">
-                  📈 トレンド
+                  {% if loop.index == 1 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">🚀</span> 1位</span>
+                  {% elif loop.index == 2 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">✨</span> 2位</span>
+                  {% elif loop.index == 3 %}
+                  <span class="podium-rank-chip"><span class="podium-crown">⚡</span> 3位</span>
+                  {% else %} {{ loop.index }}位 {% endif %}
                 </div>
               </div>
 
-              <div class="ranking-title-ja">
-                <a href="/paper?id={{ paper.pubmed_id }}">
-                  {{ paper.jp_title or paper.title }}
-                </a>
-              </div>
-
-              {% if paper.jp_title %}
-              <div class="ranking-title-en">{{ paper.title }}</div>
+              <div class="ranking-title-ja">{{ paper.jp_title or paper.title }}</div>
+              {% if paper.clinical_score %}
+              <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
               {% endif %}
-
-              <div class="ranking-meta">
-                <div>PubMed ID: {{ paper.pubmed_id }}</div>
-                <div>雑誌: {{ paper.journal }}</div>
-                <div>公開日: {{ paper.pubdate }}</div>
-                <div>論文URL: <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/" target="_blank" rel="noopener" style="color:#2563eb; word-break:break-all;">https://pubmed.ncbi.nlm.nih.gov/{{ paper.pubmed_id }}/</a></div>
-              </div>
-
-              <div class="ranking-link-row">
-                <a href="/paper?id={{ paper.pubmed_id }}" class="ranking-detail-link">詳細を見る</a>
+              <div class="ranking-social-row">
+                <button type="button"
+                  class="ranking-social-btn comment"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingCommentSheet({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文のコメントを見る">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-comment-count">{{ paper.comment_count or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn save {% if paper.is_saved %}saved{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick='openRankingSaveSheet(this, {{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or "",
+                    "authors": paper.authors or "",
+                    "journal": paper.journal or "",
+                    "pubdate": paper.pubdate or "",
+                    "abstract": paper.abstract or "",
+                    "jp": paper.jp or "",
+                    "summary_jp": paper.summary_jp or "",
+                    "folder_name": paper.folder_name or default_saved_folder_label,
+                    "clinical_score": paper.clinical_score or "",
+                    "clinical_reason": paper.clinical_reason or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を保存する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path>
+                  </svg>
+                  <span class="ranking-social-label">{% if paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn like {% if paper.liked %}liked{% endif %}"
+                  data-pubmed-id="{{ paper.pubmed_id }}"
+                  onclick="toggleRankingLike('{{ paper.pubmed_id }}', this)"
+                  aria-label="この論文にいいねする">
+                  <svg class="ranking-social-icon like-fill" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20.5s-7-4.35-7-10.18C5 7.4 6.96 5.5 9.35 5.5c1.54 0 2.97.83 3.65 2.13.68-1.3 2.11-2.13 3.65-2.13C19.04 5.5 21 7.4 21 10.32 21 16.15 14 20.5 14 20.5H12Z"></path>
+                  </svg>
+                  <span class="ranking-social-label ranking-like-count">{{ paper.likes or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="ranking-social-btn share"
+                  onclick='shareRankingPaper({{ {
+                    "pubmed_id": paper.pubmed_id,
+                    "title": paper.title or "",
+                    "jp_title": paper.jp_title or paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を共有する">
+                  <svg class="ranking-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 12v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7"></path>
+                    <path d="M12 16V4"></path>
+                    <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                  </svg>
+                  <span class="ranking-social-label">共有</span>
+                </button>
               </div>
             </div>
             {% endfor %} {% else %}
@@ -1093,6 +1944,51 @@
         </div>
       </main>
     </div>
+
+    <div class="comment-sheet-backdrop" id="ranking-comment-sheet" aria-hidden="true">
+      <div class="comment-sheet" role="dialog" aria-modal="true" aria-labelledby="ranking-comment-sheet-title">
+        <div class="save-sheet-header">
+          <div>
+            <div class="save-sheet-title" id="ranking-comment-sheet-title">論文コメント</div>
+            <div class="save-sheet-subtitle">ひとこと感想や、臨床で使えるポイントを残せます。</div>
+          </div>
+          <button type="button" class="save-sheet-close" onclick="closeRankingCommentSheet()" aria-label="閉じる">✕</button>
+        </div>
+        <div class="save-sheet-paper" id="ranking-comment-paper-title"></div>
+        <div class="comment-sheet-list" id="ranking-comment-list">
+          <div class="comment-sheet-empty">コメントを読み込み中です…</div>
+        </div>
+        <form class="comment-sheet-form" onsubmit="submitRankingComment(event)">
+          <textarea class="comment-sheet-textarea" id="ranking-comment-input" placeholder="この論文で気づいたことをひとこと書く"></textarea>
+          <div class="comment-sheet-actions">
+            <div class="comment-sheet-note">あとで論文詳細からも見返せます。</div>
+            <button type="submit" class="save-sheet-submit" id="ranking-comment-submit">コメントする</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="save-sheet-backdrop" id="ranking-save-sheet" aria-hidden="true">
+      <div class="save-sheet" role="dialog" aria-modal="true" aria-labelledby="ranking-save-sheet-title">
+        <div class="save-sheet-header">
+          <div>
+            <div class="save-sheet-title" id="ranking-save-sheet-title">保存先を選ぶ</div>
+            <div class="save-sheet-subtitle">ランキングから見つけた論文を、そのまま整理できます。</div>
+          </div>
+          <button type="button" class="save-sheet-close" onclick="closeRankingSaveSheet()" aria-label="閉じる">✕</button>
+        </div>
+        <div class="save-sheet-paper" id="ranking-save-paper-title"></div>
+        <div class="save-sheet-label">保存先</div>
+        <div class="save-sheet-options" id="ranking-folder-options"></div>
+        <div class="save-sheet-label">新しいフォルダを作る</div>
+        <div class="save-sheet-new-row">
+          <input type="text" class="save-sheet-input" id="ranking-save-new-folder" placeholder="例: 脳卒中 / 歩行 / 勉強会">
+          <button type="button" class="save-sheet-submit" id="ranking-save-submit" onclick="submitRankingSaveSelection()">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-toast" id="site-toast" aria-live="polite"></div>
 
     <nav class="mobile-footer" aria-label="モバイル固定フッター">
       <a href="/" class="mobile-footer-link is-active">
@@ -1123,6 +2019,30 @@
 
 
     <script>
+      const defaultRankingFolder = {{ default_saved_folder_label | tojson | safe }};
+      const rankingFolderChoices = {{ save_folder_choices | tojson | safe }};
+      const rankingSaveState = {
+        button: null,
+        paper: null,
+        selectedFolder: defaultRankingFolder,
+        wasSaved: false,
+      };
+      const rankingCommentState = {
+        paper: null,
+        comments: [],
+      };
+
+      function showToast(msg) {
+        const toast = document.getElementById("site-toast");
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2200);
+      }
+
       function setRankingActiveState(isRankingOpen) {
         const sidebarRankingButton = document.getElementById(
           "sidebar-ranking-button",
@@ -1155,21 +2075,24 @@
         const scoreBtn = document.getElementById("score-toggle-btn");
         const trendBtn = document.getElementById("trend-toggle-btn");
 
-        [popular, score, trend].forEach(el => { if (el) el.classList.add("hidden"); });
+        [popular, score, trend].forEach(el => {
+          if (!el) return;
+          el.classList.add("hidden");
+          el.classList.remove("is-visible");
+        });
         [popularBtn, scoreBtn, trendBtn].forEach(btn => { if (btn) btn.classList.remove("is-active"); });
 
         const target = document.getElementById(sectionId);
         if (!target) return;
 
         target.classList.remove("hidden");
+        requestAnimationFrame(() => {
+          target.classList.add("is-visible");
+        });
 
         if (sectionId === "popular-ranking" && popularBtn) popularBtn.classList.add("is-active");
         if (sectionId === "score-ranking" && scoreBtn) scoreBtn.classList.add("is-active");
-        if (sectionId === "trend-ranking" && trendBtn) {
-          trendBtn.classList.add("is-active");
-          trendBtn.style.background = "#7c3aed";
-          trendBtn.style.color = "white";
-        }
+        if (sectionId === "trend-ranking" && trendBtn) trendBtn.classList.add("is-active");
 
         setRankingActiveState(true);
         target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1193,6 +2116,299 @@
         }
 
         showRankingSection("popular-ranking");
+      }
+
+      function renderRankingFolderOptions() {
+        const wrap = document.getElementById("ranking-folder-options");
+        if (!wrap) return;
+        wrap.innerHTML = "";
+        rankingFolderChoices.forEach((folderName) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = "save-sheet-option";
+          if (folderName === rankingSaveState.selectedFolder) option.classList.add("active");
+          option.addEventListener("click", () => selectRankingFolder(folderName));
+
+          const main = document.createElement("span");
+          main.className = "save-sheet-option-main";
+
+          const name = document.createElement("span");
+          name.className = "save-sheet-option-name";
+          name.textContent = folderName;
+
+          const meta = document.createElement("span");
+          meta.className = "save-sheet-option-meta";
+          meta.textContent = folderName === defaultRankingFolder ? "迷ったときにまず入れるフォルダ" : "このフォルダにそのまま整理";
+
+          const check = document.createElement("span");
+          check.className = "save-sheet-option-check";
+          check.textContent = "✓";
+
+          main.appendChild(name);
+          main.appendChild(meta);
+          option.appendChild(main);
+          option.appendChild(check);
+          wrap.appendChild(option);
+        });
+      }
+
+      function ensureRankingFolderChoice(folderName) {
+        const clean = (folderName || "").trim();
+        if (!clean || rankingFolderChoices.includes(clean)) return;
+        rankingFolderChoices.push(clean);
+      }
+
+      function selectRankingFolder(folderName) {
+        rankingSaveState.selectedFolder = folderName;
+        const input = document.getElementById("ranking-save-new-folder");
+        if (input) input.value = "";
+        renderRankingFolderOptions();
+      }
+
+      function openRankingSaveSheet(button, paper) {
+        if (!paper || !paper.pubmed_id) return;
+        rankingSaveState.button = button;
+        rankingSaveState.paper = { ...paper };
+        rankingSaveState.wasSaved = button.classList.contains("saved");
+        rankingSaveState.selectedFolder = (paper.folder_name || "").trim() || defaultRankingFolder;
+        ensureRankingFolderChoice(rankingSaveState.selectedFolder);
+        renderRankingFolderOptions();
+
+        const titleEl = document.getElementById("ranking-save-paper-title");
+        const input = document.getElementById("ranking-save-new-folder");
+        const sheet = document.getElementById("ranking-save-sheet");
+        if (titleEl) titleEl.textContent = paper.jp_title || paper.display_title || paper.title || "論文";
+        if (input) input.value = "";
+        if (sheet) {
+          sheet.classList.add("open");
+          sheet.setAttribute("aria-hidden", "false");
+        }
+        document.body.classList.add("modal-open");
+      }
+
+      function closeRankingSaveSheet() {
+        const sheet = document.getElementById("ranking-save-sheet");
+        if (sheet) {
+          sheet.classList.remove("open");
+          sheet.setAttribute("aria-hidden", "true");
+        }
+        if (!document.getElementById("ranking-comment-sheet")?.classList.contains("open")) {
+          document.body.classList.remove("modal-open");
+        }
+      }
+
+      function markRankingButtonsSaved(pubmedId) {
+        document.querySelectorAll(`.ranking-social-btn.save[data-pubmed-id="${pubmedId}"]`).forEach((button) => {
+          button.classList.add("saved");
+          const label = button.querySelector(".ranking-social-label");
+          if (label) label.textContent = "保存済み";
+        });
+      }
+
+      async function submitRankingSave(folderName) {
+        if (!rankingSaveState.paper || !rankingSaveState.paper.pubmed_id) return;
+        const button = rankingSaveState.button;
+        const submitButton = document.getElementById("ranking-save-submit");
+        const cleanFolderName = (folderName || "").trim() || defaultRankingFolder;
+        ensureRankingFolderChoice(cleanFolderName);
+        if (button) button.disabled = true;
+        if (submitButton) submitButton.disabled = true;
+        const fd = new FormData();
+        Object.entries(rankingSaveState.paper).forEach(([key, value]) => fd.append(key, value || ""));
+        fd.set("folder_name", cleanFolderName === defaultRankingFolder ? "" : cleanFolderName);
+        try {
+          const response = await fetch("/save", { method: "POST", body: fd });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            showToast(data.message || "保存に失敗しました");
+            return;
+          }
+          rankingSaveState.paper.folder_name = cleanFolderName;
+          markRankingButtonsSaved(rankingSaveState.paper.pubmed_id);
+          closeRankingSaveSheet();
+          showToast(rankingSaveState.wasSaved ? `保存先を「${cleanFolderName}」に変更しました` : `「${cleanFolderName}」に保存しました`);
+        } catch (error) {
+          showToast("保存に失敗しました");
+        } finally {
+          if (button) button.disabled = false;
+          if (submitButton) submitButton.disabled = false;
+        }
+      }
+
+      function submitRankingSaveSelection() {
+        const input = document.getElementById("ranking-save-new-folder");
+        const customFolder = (input?.value || "").trim();
+        const selectedFolder = customFolder || rankingSaveState.selectedFolder || defaultRankingFolder;
+        submitRankingSave(selectedFolder);
+      }
+
+      function renderCommentAvatar(comment) {
+        if (comment.avatar && comment.avatar.length > 4) {
+          return `<img src="${comment.avatar}" alt="avatar">`;
+        }
+        const fallback = (comment.avatar || comment.display_name || "?").slice(0, 1).toUpperCase();
+        return fallback.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function renderRankingComments(comments) {
+        const list = document.getElementById("ranking-comment-list");
+        if (!list) return;
+        if (!comments || comments.length === 0) {
+          list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
+          return;
+        }
+        list.innerHTML = comments.map((comment) => `
+          <div class="comment-item">
+            <div class="comment-item-header">
+              <div class="comment-item-avatar">${renderCommentAvatar(comment)}</div>
+              <div class="comment-item-meta">
+                <div class="comment-item-name">${comment.display_name || "ユーザー"}</div>
+                <div class="comment-item-time">${comment.created_label || ""}</div>
+              </div>
+            </div>
+            <div class="comment-item-body">${(comment.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
+          </div>
+        `).join("");
+      }
+
+      function updateRankingCommentCounts(pubmedId, count) {
+        document.querySelectorAll(`.ranking-social-btn.comment[data-pubmed-id="${pubmedId}"] .ranking-comment-count`).forEach((el) => {
+          el.textContent = String(count);
+        });
+      }
+
+      function updateRankingLikeCounts(pubmedId, liked, count) {
+        document.querySelectorAll(`.ranking-social-btn.like[data-pubmed-id="${pubmedId}"]`).forEach((button) => {
+          button.classList.toggle("liked", !!liked);
+          const label = button.querySelector(".ranking-like-count");
+          if (label && typeof count !== "undefined") label.textContent = String(count);
+        });
+      }
+
+      async function openRankingCommentSheet(paper) {
+        if (!paper || !paper.pubmed_id) return;
+        rankingCommentState.paper = { ...paper };
+        const titleEl = document.getElementById("ranking-comment-paper-title");
+        const listEl = document.getElementById("ranking-comment-list");
+        const inputEl = document.getElementById("ranking-comment-input");
+        const sheet = document.getElementById("ranking-comment-sheet");
+        if (titleEl) titleEl.textContent = paper.jp_title || paper.title || "論文";
+        if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントを読み込み中です…</div>';
+        if (inputEl) inputEl.value = "";
+        if (sheet) {
+          sheet.classList.add("open");
+          sheet.setAttribute("aria-hidden", "false");
+        }
+        document.body.classList.add("modal-open");
+        try {
+          const response = await fetch(`/paper/${encodeURIComponent(paper.pubmed_id)}/comments`);
+          const data = await response.json();
+          rankingCommentState.comments = data.comments || [];
+          renderRankingComments(rankingCommentState.comments);
+          updateRankingCommentCounts(paper.pubmed_id, data.count || rankingCommentState.comments.length);
+        } catch (error) {
+          if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントの読み込みに失敗しました。</div>';
+        }
+      }
+
+      function closeRankingCommentSheet() {
+        const sheet = document.getElementById("ranking-comment-sheet");
+        if (sheet) {
+          sheet.classList.remove("open");
+          sheet.setAttribute("aria-hidden", "true");
+        }
+        if (!document.getElementById("ranking-save-sheet")?.classList.contains("open")) {
+          document.body.classList.remove("modal-open");
+        }
+      }
+
+      async function submitRankingComment(event) {
+        event.preventDefault();
+        const paper = rankingCommentState.paper;
+        const input = document.getElementById("ranking-comment-input");
+        const submit = document.getElementById("ranking-comment-submit");
+        if (!paper || !input) return;
+        const content = (input.value || "").trim();
+        if (!content) {
+          showToast("コメントを入力してください");
+          return;
+        }
+        submit.disabled = true;
+        try {
+          const fd = new FormData();
+          fd.append("content", content);
+          fd.append("paper_title", paper.title || "");
+          fd.append("paper_jp_title", paper.jp_title || "");
+          const response = await fetch(`/paper/${encodeURIComponent(paper.pubmed_id)}/comments`, {
+            method: "POST",
+            body: fd,
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            showToast(data.message || "コメントに失敗しました");
+            return;
+          }
+          rankingCommentState.comments = data.comments || [];
+          renderRankingComments(rankingCommentState.comments);
+          updateRankingCommentCounts(paper.pubmed_id, data.count || rankingCommentState.comments.length);
+          input.value = "";
+          showToast("コメントしました");
+        } catch (error) {
+          showToast("コメントに失敗しました");
+        } finally {
+          submit.disabled = false;
+        }
+      }
+
+      async function toggleRankingLike(pubmedId, button) {
+        const countEl = button.querySelector(".ranking-like-count");
+        const current = parseInt(countEl?.textContent || "0", 10);
+        const wasLiked = button.classList.contains("liked");
+        updateRankingLikeCounts(pubmedId, !wasLiked, wasLiked ? current - 1 : current + 1);
+        try {
+          const response = await fetch(`/like/${pubmedId}`, { method: "POST" });
+          if (!response.ok) {
+            updateRankingLikeCounts(pubmedId, wasLiked, current);
+            showToast("いいねに失敗しました");
+            return;
+          }
+          const data = await response.json();
+          updateRankingLikeCounts(pubmedId, !!data.liked, data.likes);
+        } catch (error) {
+          updateRankingLikeCounts(pubmedId, wasLiked, current);
+          showToast("いいねに失敗しました");
+        }
+      }
+
+      async function shareRankingPaper(paper) {
+        if (!paper || !paper.pubmed_id) return;
+        const title = paper.jp_title || paper.title || "論文";
+        const url = `${window.location.origin}/paper?id=${encodeURIComponent(paper.pubmed_id)}`;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, text: title, url });
+            return;
+          }
+          await navigator.clipboard.writeText(url);
+          showToast("論文リンクをコピーしました");
+        } catch (error) {
+          showToast("共有に失敗しました");
+        }
+      }
+
+      function setupRankingCardNavigation() {
+        document.querySelectorAll(".ranking-item.clickable[data-paper-url]").forEach((card) => {
+          card.addEventListener("click", (event) => {
+            if (event.target.closest("button, a, input, textarea, select, label")) return;
+            window.location.href = card.dataset.paperUrl;
+          });
+          card.addEventListener("keydown", (event) => {
+            if (event.target !== card) return;
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            window.location.href = card.dataset.paperUrl;
+          });
+        });
       }
 
       // ── Search Tag Picker ──
@@ -1386,7 +2602,23 @@
         input.focus();
       }
 
-      document.addEventListener("DOMContentLoaded", initTagPicker);
+      document.addEventListener("DOMContentLoaded", function() {
+        initTagPicker();
+        setupRankingCardNavigation();
+      });
+
+      document.addEventListener("click", function(event) {
+        const saveSheet = document.getElementById("ranking-save-sheet");
+        if (saveSheet && event.target === saveSheet) closeRankingSaveSheet();
+        const commentSheet = document.getElementById("ranking-comment-sheet");
+        if (commentSheet && event.target === commentSheet) closeRankingCommentSheet();
+      });
+
+      document.addEventListener("keydown", function(event) {
+        if (event.key !== "Escape") return;
+        closeRankingSaveSheet();
+        closeRankingCommentSheet();
+      });
 
       function showSearchLoading(form) {
         const submitButton =

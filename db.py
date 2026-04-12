@@ -2,10 +2,74 @@ import os
 import sqlite3
 import hashlib
 import secrets
+import base64
+import json
 from datetime import datetime
+
+try:
+    from cryptography.fernet import Fernet, InvalidToken
+except Exception:  # pragma: no cover - optional dependency at deploy time
+    Fernet = None
+
+    class InvalidToken(Exception):
+        pass
 
 
 DB_NAME = os.getenv("DB_NAME", "papers.db")
+
+
+def _get_wordpress_secret_material() -> str:
+    return (
+        (os.getenv("WORDPRESS_SECRET_KEY", "") or "").strip()
+        or (os.getenv("SESSION_SECRET", "") or "").strip()
+    )
+
+
+def is_wordpress_encryption_available() -> bool:
+    return bool(Fernet and _get_wordpress_secret_material())
+
+
+def _get_wordpress_fernet():
+    secret_material = _get_wordpress_secret_material()
+    if not Fernet or not secret_material:
+        return None
+    derived_key = base64.urlsafe_b64encode(
+        hashlib.sha256(secret_material.encode("utf-8")).digest()
+    )
+    return Fernet(derived_key)
+
+
+def _is_encrypted_wordpress_secret(value: str) -> bool:
+    return (value or "").startswith("enc::")
+
+
+def encrypt_wordpress_secret(value: str) -> str:
+    normalized = (value or "").strip()
+    if not normalized:
+        return ""
+    if _is_encrypted_wordpress_secret(normalized):
+        return normalized
+    fernet = _get_wordpress_fernet()
+    if not fernet:
+        return normalized
+    return "enc::" + fernet.encrypt(normalized.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_wordpress_secret(value: str) -> tuple[str, bool]:
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return "", False
+    if not _is_encrypted_wordpress_secret(raw_value):
+        return raw_value, False
+
+    fernet = _get_wordpress_fernet()
+    if not fernet:
+        return "", True
+    try:
+        decrypted = fernet.decrypt(raw_value.removeprefix("enc::").encode("utf-8")).decode("utf-8")
+        return decrypted, True
+    except InvalidToken:
+        return "", True
 
 
 def get_connection():
@@ -67,6 +131,7 @@ def init_db():
             clinical_score TEXT DEFAULT '',
             clinical_reason TEXT DEFAULT '',
             folder_name TEXT DEFAULT '',
+            save_source TEXT DEFAULT 'auto',
             is_favorite INTEGER DEFAULT 0,
             likes INTEGER DEFAULT 0,
             is_public INTEGER DEFAULT 0,
@@ -75,6 +140,42 @@ def init_db():
         )
     """)
 
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS paper_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            pubmed_id TEXT NOT NULL,
+            title TEXT DEFAULT '',
+            jp_title TEXT DEFAULT '',
+            authors TEXT DEFAULT '',
+            journal TEXT DEFAULT '',
+            pubdate TEXT DEFAULT '',
+            abstract TEXT DEFAULT '',
+            summary_jp TEXT DEFAULT '',
+            clinical_score TEXT DEFAULT '',
+            clinical_reason TEXT DEFAULT '',
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, pubmed_id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS paper_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            pubmed_id TEXT NOT NULL,
+            paper_title TEXT DEFAULT '',
+            paper_jp_title TEXT DEFAULT '',
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
     conn.commit()
 
     # saved_papers migrations
@@ -90,6 +191,7 @@ def init_db():
         "ALTER TABLE saved_papers ADD COLUMN is_public INTEGER DEFAULT 0",
         "ALTER TABLE saved_papers ADD COLUMN custom_title TEXT DEFAULT ''",
         "ALTER TABLE saved_papers ADD COLUMN user_note TEXT DEFAULT ''",
+        "ALTER TABLE saved_papers ADD COLUMN save_source TEXT DEFAULT 'auto'",
     ]:
         try:
             cur.execute(sql)
@@ -130,6 +232,69 @@ def init_db():
             conn.commit()
         except sqlite3.OperationalError:
             pass
+
+    for sql in [
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_user_pubmed ON saved_papers(user_id, pubmed_id)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_user_folder ON saved_papers(user_id, folder_name)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_pubmed ON saved_papers(pubmed_id)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_user_created ON saved_papers(user_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_user_favorite ON saved_papers(user_id, is_favorite)",
+        "CREATE INDEX IF NOT EXISTS idx_saved_papers_user_source ON saved_papers(user_id, save_source, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_history_user_viewed ON paper_history(user_id, viewed_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_history_user_pubmed ON paper_history(user_id, pubmed_id)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_comments_pubmed_created ON paper_comments(pubmed_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_comments_user_created ON paper_comments(user_id, created_at DESC)",
+    ]:
+        cur.execute(sql)
+    conn.commit()
+
+    # saved_papers source normalization
+    cur.execute(
+        """
+        UPDATE saved_papers
+        SET save_source = 'cache'
+        WHERE user_id IS NULL
+          AND (save_source IS NULL OR TRIM(save_source) = '' OR save_source = 'auto')
+        """
+    )
+    cur.execute(
+        """
+        UPDATE saved_papers
+        SET save_source = 'manual_save'
+        WHERE user_id IS NOT NULL
+          AND (save_source IS NULL OR TRIM(save_source) = '' OR save_source = 'auto')
+          AND TRIM(COALESCE(folder_name, '')) != ''
+          AND folder_name NOT IN ('未分類', 'あとで見る')
+        """
+    )
+    cur.execute(
+        """
+        UPDATE saved_papers
+        SET save_source = 'manual_summary'
+        WHERE user_id IS NOT NULL
+          AND (save_source IS NULL OR TRIM(save_source) = '' OR save_source = 'auto')
+          AND (
+            TRIM(COALESCE(folder_name, '')) = ''
+            OR folder_name IN ('未分類', 'あとで見る')
+          )
+          AND (
+            COALESCE(summary_jp, '') != ''
+            OR COALESCE(jp, '') != ''
+            OR COALESCE(clinical_reason, '') != ''
+            OR COALESCE(clinical_score, '') != ''
+          )
+          AND COALESCE(likes, 0) = 0
+        """
+    )
+    cur.execute(
+        """
+        UPDATE saved_papers
+        SET save_source = 'auto'
+        WHERE user_id IS NOT NULL
+          AND (save_source IS NULL OR TRIM(save_source) = '')
+        """
+    )
+    conn.commit()
 
     # friend promo codes
     cur.execute("""
@@ -278,6 +443,18 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS memo_map_layouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            layout_json TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
     # paper likes (per-user)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS paper_likes (
@@ -396,6 +573,11 @@ def init_db():
     """)
 
     cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_memo_map_layouts_user
+        ON memo_map_layouts (user_id)
+    """)
+
+    cur.execute("""
         CREATE UNIQUE INDEX IF NOT EXISTS idx_master_wordpress_autopost_settings_user
         ON master_wordpress_autopost_settings (user_id)
     """)
@@ -414,6 +596,21 @@ def init_db():
     conn.close()
 
 
+MANUAL_SAVED_SOURCES = ("manual_save", "manual_summary")
+
+
+def _normalize_saved_sources(sources):
+    normalized = []
+    seen = set()
+    for source in sources or []:
+        clean = str(source or "").strip()
+        if not clean or clean in seen:
+            continue
+        seen.add(clean)
+        normalized.append(clean)
+    return normalized
+
+
 def save_paper(
     pubmed_id,
     title,
@@ -427,25 +624,38 @@ def save_paper(
     folder_name,
     clinical_score,
     clinical_reason,
-    user_id=None
+    user_id=None,
+    save_source=None,
 ):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
     if user_id is None:
         cur.execute("""
-            SELECT id
+            SELECT id, save_source
             FROM saved_papers
             WHERE user_id IS NULL AND pubmed_id = ?
         """, (pubmed_id,))
     else:
         cur.execute("""
-            SELECT id
+            SELECT id, save_source
             FROM saved_papers
             WHERE user_id = ? AND pubmed_id = ?
         """, (user_id, pubmed_id))
 
     existing = cur.fetchone()
+    existing_source = ""
+    if existing:
+        existing_source = str(existing[1] or "").strip()
+
+    resolved_source = str(save_source or "").strip()
+    if not resolved_source:
+        resolved_source = existing_source or ("cache" if user_id is None else "auto")
+
+    if existing_source == "manual_save" and resolved_source in {"manual_summary", "auto"}:
+        resolved_source = "manual_save"
+    elif existing_source == "manual_summary" and resolved_source == "auto":
+        resolved_source = "manual_summary"
 
     if existing:
         if user_id is None:
@@ -461,6 +671,7 @@ def save_paper(
                     jp = ?,
                     summary_jp = ?,
                     folder_name = ?,
+                    save_source = ?,
                     clinical_score = ?,
                     clinical_reason = ?
                 WHERE user_id IS NULL AND pubmed_id = ?
@@ -474,6 +685,7 @@ def save_paper(
                 jp,
                 summary_jp,
                 folder_name,
+                resolved_source,
                 clinical_score,
                 clinical_reason,
                 pubmed_id
@@ -491,6 +703,7 @@ def save_paper(
                     jp = ?,
                     summary_jp = ?,
                     folder_name = ?,
+                    save_source = ?,
                     clinical_score = ?,
                     clinical_reason = ?
                 WHERE user_id = ? AND pubmed_id = ?
@@ -504,6 +717,7 @@ def save_paper(
                 jp,
                 summary_jp,
                 folder_name,
+                resolved_source,
                 clinical_score,
                 clinical_reason,
                 user_id,
@@ -523,10 +737,11 @@ def save_paper(
                 jp,
                 summary_jp,
                 folder_name,
+                save_source,
                 clinical_score,
                 clinical_reason
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             user_id,
             pubmed_id,
@@ -539,6 +754,7 @@ def save_paper(
             jp,
             summary_jp,
             folder_name,
+            resolved_source,
             clinical_score,
             clinical_reason
         ))
@@ -547,28 +763,76 @@ def save_paper(
     conn.close()
 
 
-def get_saved_papers(user_id=None):
+def get_saved_papers(user_id=None, sources=None):
     conn = get_connection()
     cur = conn.cursor()
+    normalized_sources = _normalize_saved_sources(sources)
 
     if user_id is None:
-        cur.execute("""
+        sql = """
             SELECT *
             FROM saved_papers
             WHERE user_id IS NULL
-            ORDER BY folder_name ASC, created_at DESC
-        """)
+        """
+        params = []
     else:
-        cur.execute("""
+        sql = """
             SELECT *
             FROM saved_papers
             WHERE user_id = ?
-            ORDER BY folder_name ASC, created_at DESC
-        """, (user_id,))
+        """
+        params = [user_id]
+
+    if normalized_sources:
+        placeholders = ",".join(["?"] * len(normalized_sources))
+        sql += f" AND save_source IN ({placeholders})"
+        params.extend(normalized_sources)
+
+    sql += " ORDER BY folder_name ASC, created_at DESC"
+    cur.execute(sql, tuple(params))
 
     rows = cur.fetchall()
     conn.close()
 
+    return [dict(row) for row in rows]
+
+
+def get_saved_papers_by_pubmed_ids(pubmed_ids, user_id=None, sources=None):
+    ids = [str(pid).strip() for pid in (pubmed_ids or []) if str(pid).strip()]
+    if not ids:
+        return []
+
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join(["?"] * len(ids))
+    normalized_sources = _normalize_saved_sources(sources)
+
+    if user_id is None:
+        sql = f"""
+            SELECT *
+            FROM saved_papers
+            WHERE user_id IS NULL
+              AND pubmed_id IN ({placeholders})
+        """
+        params = ids
+    else:
+        sql = f"""
+            SELECT *
+            FROM saved_papers
+            WHERE user_id = ?
+              AND pubmed_id IN ({placeholders})
+        """
+        params = [user_id, *ids]
+
+    if normalized_sources:
+        source_placeholders = ",".join(["?"] * len(normalized_sources))
+        sql += f" AND save_source IN ({source_placeholders})"
+        params.extend(normalized_sources)
+
+    cur.execute(sql, params)
+
+    rows = cur.fetchall()
+    conn.close()
     return [dict(row) for row in rows]
 
 
@@ -628,29 +892,253 @@ def get_saved_paper_by_id(pubmed_id, user_id=None):
     return None
 
 
-def get_saved_papers_by_folder(folder_name, user_id=None):
+def get_best_cached_paper(pubmed_id: str) -> dict | None:
+    """Return the strongest cached paper row for this PMID across all users."""
     conn = get_connection()
     cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *,
+               (
+                   CASE WHEN COALESCE(summary_jp, '') != '' THEN 8 ELSE 0 END +
+                   CASE WHEN COALESCE(clinical_reason, '') != '' THEN 4 ELSE 0 END +
+                   CASE WHEN COALESCE(clinical_score, '') != '' THEN 2 ELSE 0 END +
+                   CASE WHEN COALESCE(jp, '') != '' THEN 2 ELSE 0 END +
+                   CASE WHEN COALESCE(jp_title, '') != '' THEN 1 ELSE 0 END
+               ) AS cache_strength
+        FROM saved_papers
+        WHERE pubmed_id = ?
+          AND (
+              COALESCE(jp_title, '') != ''
+              OR COALESCE(jp, '') != ''
+              OR COALESCE(summary_jp, '') != ''
+              OR COALESCE(clinical_reason, '') != ''
+              OR COALESCE(clinical_score, '') != ''
+          )
+        ORDER BY
+            cache_strength DESC,
+            CASE WHEN user_id IS NULL THEN 1 ELSE 0 END DESC,
+            created_at DESC
+        LIMIT 1
+        """,
+        (pubmed_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_saved_papers_by_folder(folder_name, user_id=None, sources=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    normalized_folder_name = (folder_name or "").strip()
+    is_default_folder = normalized_folder_name in {"", "未分類", "あとで見る"}
+    normalized_sources = _normalize_saved_sources(sources)
+    source_clause = ""
+    source_params = []
+    if normalized_sources:
+        placeholders = ",".join(["?"] * len(normalized_sources))
+        source_clause = f" AND save_source IN ({placeholders})"
+        source_params.extend(normalized_sources)
 
     if user_id is None:
-        cur.execute("""
-            SELECT *
-            FROM saved_papers
-            WHERE user_id IS NULL AND folder_name = ?
-            ORDER BY created_at DESC
-        """, (folder_name,))
+        if is_default_folder:
+            cur.execute(f"""
+                SELECT *
+                FROM saved_papers
+                WHERE user_id IS NULL
+                  AND (
+                    TRIM(COALESCE(folder_name, '')) = ''
+                    OR folder_name = '未分類'
+                    OR folder_name = 'あとで見る'
+                  )
+                  {source_clause}
+                ORDER BY created_at DESC
+            """, tuple(source_params))
+        else:
+            cur.execute(f"""
+                SELECT *
+                FROM saved_papers
+                WHERE user_id IS NULL AND folder_name = ?
+                {source_clause}
+                ORDER BY created_at DESC
+            """, (normalized_folder_name, *source_params))
     else:
-        cur.execute("""
-            SELECT *
-            FROM saved_papers
-            WHERE user_id = ? AND folder_name = ?
-            ORDER BY created_at DESC
-        """, (user_id, folder_name))
+        if is_default_folder:
+            cur.execute(f"""
+                SELECT *
+                FROM saved_papers
+                WHERE user_id = ?
+                  AND (
+                    TRIM(COALESCE(folder_name, '')) = ''
+                    OR folder_name = '未分類'
+                    OR folder_name = 'あとで見る'
+                  )
+                  {source_clause}
+                ORDER BY created_at DESC
+            """, (user_id, *source_params))
+        else:
+            cur.execute(f"""
+                SELECT *
+                FROM saved_papers
+                WHERE user_id = ? AND folder_name = ?
+                {source_clause}
+                ORDER BY created_at DESC
+            """, (user_id, normalized_folder_name, *source_params))
 
     rows = cur.fetchall()
     conn.close()
 
     return [dict(row) for row in rows]
+
+
+def upsert_paper_history(
+    user_id: int,
+    pubmed_id: str,
+    title: str = "",
+    jp_title: str = "",
+    authors: str = "",
+    journal: str = "",
+    pubdate: str = "",
+    abstract: str = "",
+    summary_jp: str = "",
+    clinical_score: str = "",
+    clinical_reason: str = "",
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO paper_history (
+            user_id, pubmed_id, title, jp_title, authors, journal, pubdate, abstract,
+            summary_jp, clinical_score, clinical_reason, viewed_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id, pubmed_id) DO UPDATE SET
+            title = excluded.title,
+            jp_title = excluded.jp_title,
+            authors = excluded.authors,
+            journal = excluded.journal,
+            pubdate = excluded.pubdate,
+            abstract = excluded.abstract,
+            summary_jp = excluded.summary_jp,
+            clinical_score = excluded.clinical_score,
+            clinical_reason = excluded.clinical_reason,
+            viewed_at = CURRENT_TIMESTAMP
+        """,
+        (
+            user_id,
+            pubmed_id,
+            title,
+            jp_title,
+            authors,
+            journal,
+            pubdate,
+            abstract,
+            summary_jp,
+            clinical_score,
+            clinical_reason,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_paper_history(user_id: int, limit: int | None = None):
+    conn = get_connection()
+    cur = conn.cursor()
+    sql = """
+        SELECT *
+        FROM paper_history
+        WHERE user_id = ?
+        ORDER BY viewed_at DESC
+    """
+    params: list = [user_id]
+    if limit:
+        sql += " LIMIT ?"
+        params.append(limit)
+    cur.execute(sql, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def create_paper_comment(
+    user_id: int,
+    pubmed_id: str,
+    content: str,
+    paper_title: str = "",
+    paper_jp_title: str = "",
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute(
+        """
+        INSERT INTO paper_comments (
+            user_id, pubmed_id, paper_title, paper_jp_title, content, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            user_id,
+            str(pubmed_id).strip(),
+            (paper_title or "").strip(),
+            (paper_jp_title or "").strip(),
+            (content or "").strip(),
+            now,
+            now,
+        ),
+    )
+    comment_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return comment_id
+
+
+def get_paper_comments(pubmed_id: str, limit: int = 50):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            paper_comments.*,
+            users.email AS user_email,
+            users.display_name AS user_display_name,
+            users.avatar AS user_avatar
+        FROM paper_comments
+        JOIN users ON users.id = paper_comments.user_id
+        WHERE paper_comments.pubmed_id = ?
+        ORDER BY paper_comments.created_at DESC, paper_comments.id DESC
+        LIMIT ?
+        """,
+        (str(pubmed_id).strip(), int(limit)),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_paper_comment_counts(pubmed_ids):
+    ids = [str(pid).strip() for pid in (pubmed_ids or []) if str(pid).strip()]
+    if not ids:
+        return {}
+
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join(["?"] * len(ids))
+    cur.execute(
+        f"""
+        SELECT pubmed_id, COUNT(*) AS comment_count
+        FROM paper_comments
+        WHERE pubmed_id IN ({placeholders})
+        GROUP BY pubmed_id
+        """,
+        ids,
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return {str(row["pubmed_id"]): int(row["comment_count"] or 0) for row in rows}
 
 
 def toggle_favorite(pubmed_id, user_id=None):
@@ -768,6 +1256,7 @@ def get_folder_name_suggestions(user_id=None):
             SELECT folder_name
             FROM saved_papers
             WHERE user_id IS NULL
+              AND save_source IN ('manual_save', 'manual_summary')
               AND folder_name IS NOT NULL
               AND TRIM(folder_name) != ''
               AND folder_name != '自動保存'
@@ -779,6 +1268,7 @@ def get_folder_name_suggestions(user_id=None):
             SELECT folder_name
             FROM saved_papers
             WHERE user_id = ?
+              AND save_source IN ('manual_save', 'manual_summary')
               AND folder_name IS NOT NULL
               AND TRIM(folder_name) != ''
               AND folder_name != '自動保存'
@@ -1035,8 +1525,6 @@ def count_user_saved_papers(user_id):
         SELECT COUNT(*)
         FROM saved_papers
         WHERE user_id = ?
-          AND folder_name IS NOT NULL
-          AND TRIM(folder_name) != ''
     """, (user_id,))
 
     count = cur.fetchone()[0]
@@ -1293,6 +1781,45 @@ def delete_paper_memo(memo_id, user_id):
     conn.close()
 
 
+def get_user_memo_map_layout(user_id: int) -> dict:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT layout_json FROM memo_map_layouts WHERE user_id = ?",
+        (user_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return {}
+    raw_value = row["layout_json"] if isinstance(row, sqlite3.Row) else row[0]
+    try:
+        parsed = json.loads(raw_value or "{}")
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def upsert_user_memo_map_layout(user_id: int, layout: dict):
+    normalized_layout = layout if isinstance(layout, dict) else {}
+    payload = json.dumps(normalized_layout, ensure_ascii=False)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO memo_map_layouts (user_id, layout_json, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+            layout_json = excluded.layout_json,
+            updated_at = excluded.updated_at
+        """,
+        (user_id, payload, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
 def set_trial_extend_days(user_id, days):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -1311,6 +1838,8 @@ def update_saved_paper_folder(pubmed_id, folder_name, user_id=None):
     cur = conn.cursor()
 
     clean_folder_name = (folder_name or "").strip()
+    if clean_folder_name in {"あとで見る", "未分類"}:
+        clean_folder_name = ""
 
     if user_id is None:
         cur.execute("""
@@ -2036,7 +2565,7 @@ def mark_master_article_wordpress_posted(draft_id: int, wordpress_post_id: str, 
     conn.close()
 
 
-def get_master_wordpress_settings(user_id: int):
+def _get_master_wordpress_settings_row(user_id: int):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -2053,6 +2582,19 @@ def get_master_wordpress_settings(user_id: int):
     return dict(row) if row else None
 
 
+def get_master_wordpress_settings(user_id: int):
+    row = _get_master_wordpress_settings_row(user_id)
+    if not row:
+        return None
+
+    decrypted_password, is_encrypted = decrypt_wordpress_secret(row.get("app_password") or "")
+    row["app_password_raw"] = row.get("app_password") or ""
+    row["app_password_is_encrypted"] = is_encrypted
+    row["app_password_unavailable"] = bool(is_encrypted and not decrypted_password)
+    row["app_password"] = decrypted_password
+    return row
+
+
 def upsert_master_wordpress_settings(
     user_id: int,
     site_url: str,
@@ -2061,9 +2603,16 @@ def upsert_master_wordpress_settings(
     app_base_url: str | None = None,
 ):
     existing = get_master_wordpress_settings(user_id)
+    existing_raw = _get_master_wordpress_settings_row(user_id)
     normalized_password = (app_password or "").strip()
-    if existing and not normalized_password:
-        normalized_password = existing.get("app_password") or ""
+    if existing_raw and not normalized_password:
+        existing_password_raw = (existing_raw.get("app_password") or "").strip()
+        if existing_password_raw and not _is_encrypted_wordpress_secret(existing_password_raw):
+            normalized_password = encrypt_wordpress_secret(existing_password_raw)
+        else:
+            normalized_password = existing_password_raw
+    elif normalized_password:
+        normalized_password = encrypt_wordpress_secret(normalized_password)
     normalized_app_base_url = (app_base_url or "").strip()
     if existing and not normalized_app_base_url:
         normalized_app_base_url = existing.get("app_base_url") or ""

@@ -7,15 +7,19 @@
 
     <style>
       :root {
-        --bg: #f5f7fb;
+        --bg: #f4f7fb;
         --card: #ffffff;
-        --text: #111827;
-        --subtext: #6b7280;
-        --line: #e5e7eb;
+        --text: #0f172a;
+        --subtext: #64748b;
+        --line: #dbe3ee;
         --blue: #2563eb;
+        --secondary: #16324f;
+        --secondary-soft: #eef4f8;
+        --accent: #f59e0b;
+        --accent-soft: #fff5db;
         --sidebar-bg: #ffffff;
-        --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-        --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
+        --shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+        --shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.06);
         --radius: 18px;
       }
 
@@ -23,7 +27,7 @@
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
+        background: radial-gradient(circle at top, rgba(37,99,235,0.06), transparent 28%), var(--bg);
         color: var(--text);
       }
 
@@ -36,20 +40,44 @@
         padding: 20px 16px 100px;
       }
 
-      .container { max-width: 680px; margin: 0 auto; }
+      .container { max-width: 760px; margin: 0 auto; }
 
       /* ── ヘッダー ── */
       .page-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        margin-bottom: 16px;
+        padding: 10px 14px 8px;
+        border-bottom: 1px solid rgba(22, 50, 79, 0.08);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.94));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 10px 28px rgba(15,23,42,0.04);
+      }
+
+      .page-header-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .page-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
       }
 
       .page-title {
-        font-size: 24px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        color: var(--secondary);
       }
 
       .memo-count-badge {
@@ -57,53 +85,50 @@
         color: var(--subtext);
         font-weight: 600;
         padding: 4px 10px;
-        background: #f1f5f9;
+        background: var(--secondary-soft);
         border-radius: 999px;
       }
 
-      /* ── タブ切り替え (月額/年額スタイル) ── */
-      .tab-toggle {
-        display: inline-flex;
-        background: #f1f5f9;
-        border-radius: 999px;
-        padding: 4px;
-        margin-bottom: 20px;
-        gap: 2px;
+      /* ── タブ切り替え ── */
+      .memo-tab-bar {
+        display: flex;
+        gap: 0;
       }
 
-      .tab-btn {
-        padding: 8px 18px;
-        border-radius: 999px;
+      .memo-tab-btn {
+        flex: 1;
+        padding: 8px 0;
+        min-height: 0;
         border: none;
         background: transparent;
         font-size: 14px;
-        font-weight: 700;
+        font-weight: 800;
         color: var(--subtext);
         cursor: pointer;
-        transition: all 0.18s ease;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
-        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s ease;
       }
 
-      .tab-btn.is-active {
-        background: linear-gradient(135deg, #111827, #1f2937);
-        color: #fff;
-        box-shadow: 0 10px 20px rgba(17, 24, 39, 0.14);
+      .memo-tab-btn.is-active {
+        color: var(--blue);
+        border-bottom-color: var(--blue);
       }
 
       /* ── 制限バナー ── */
       .limit-banner {
-        background: #fef3c7;
-        border: 1px solid #fcd34d;
+        background: var(--accent-soft);
+        border: 1px solid #f6d286;
         border-radius: 14px;
         padding: 14px 16px;
         margin-bottom: 20px;
         font-size: 14px;
         line-height: 1.7;
-        color: #92400e;
+        color: #9a6700;
       }
 
       .limit-banner a {
@@ -114,12 +139,13 @@
 
       /* ── ログインプロンプトカード ── */
       .login-prompt-card {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 16px;
+        background: linear-gradient(135deg, #f8fbff 0%, var(--primary-soft, #eaf2ff) 100%);
+        border: 1px solid rgba(37,99,235,0.18);
+        border-radius: 20px;
         padding: 20px 20px 18px;
         margin-top: 8px;
         text-align: center;
+        box-shadow: var(--shadow-soft);
       }
       .login-prompt-card-icon {
         font-size: 28px;
@@ -128,13 +154,13 @@
       }
       .login-prompt-card-title {
         font-size: 15px;
-        font-weight: 700;
-        color: #1e40af;
+        font-weight: 800;
+        color: var(--secondary);
         margin-bottom: 6px;
       }
       .login-prompt-card-desc {
         font-size: 13px;
-        color: #3b82f6;
+        color: var(--subtext);
         line-height: 1.6;
         margin-bottom: 16px;
       }
@@ -153,14 +179,14 @@
       }
       .login-prompt-card-btns a:active { opacity: 0.75; }
       .btn-login-primary {
-        background: #2563eb;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
         color: #fff;
         box-shadow: 0 10px 22px rgba(37,99,235,0.18);
       }
       .btn-login-secondary {
         background: #fff;
-        color: #2563eb;
-        border: 1.5px solid #bfdbfe;
+        color: var(--blue);
+        border: 1.5px solid rgba(37,99,235,0.18);
       }
 
       .utility-chip {
@@ -172,8 +198,8 @@
         font-size: 12px;
         font-weight: 700;
         text-decoration: none;
-        color: #4b5563;
-        background: #f3f4f6;
+        color: var(--secondary);
+        background: var(--secondary-soft);
         box-shadow: inset 0 0 0 1px rgba(229,231,235,0.9);
       }
 
@@ -185,6 +211,8 @@
       }
 
       .memo-card {
+        position: relative;
+        overflow: hidden;
         background: var(--card);
         border-radius: var(--radius);
         padding: 18px 20px;
@@ -196,9 +224,17 @@
         transition: box-shadow 0.15s ease, transform 0.15s ease;
       }
 
+      .memo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary), var(--blue));
+      }
+
       .memo-card:hover {
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
-        transform: translateY(-1px);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.10);
+        transform: translateY(-2px);
       }
 
       .memo-card-header {
@@ -262,6 +298,311 @@
         white-space: nowrap;
       }
 
+      /* ── マップ ── */
+      .memo-map-shell {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 20px 18px 18px;
+      }
+
+      .memo-map-toolbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .memo-map-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .memo-map-title {
+        margin-top: 5px;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--secondary);
+      }
+
+      .memo-map-sub {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--subtext);
+      }
+
+      .memo-map-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .memo-map-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .memo-map-action:hover {
+        border-color: rgba(37,99,235,0.18);
+        color: var(--blue);
+      }
+
+      .memo-map-stage {
+        position: relative;
+        min-height: 680px;
+        border-radius: 28px;
+        overflow: hidden;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background:
+          radial-gradient(circle at top, rgba(37,99,235,0.10), transparent 32%),
+          linear-gradient(180deg, #fbfdff 0%, #f4f8ff 52%, #eef4fb 100%);
+      }
+
+      .memo-map-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(rgba(148, 163, 184, 0.18) 0.7px, transparent 0.7px);
+        background-size: 22px 22px;
+        pointer-events: none;
+        opacity: 0.45;
+      }
+
+      .memo-map-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .memo-map-lines path {
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      .memo-map-lines .core-link {
+        stroke: rgba(22, 50, 79, 0.22);
+        stroke-width: 3;
+      }
+
+      .memo-map-lines .quick-link {
+        stroke: rgba(22, 50, 79, 0.18);
+        stroke-width: 2.5;
+      }
+
+      .memo-map-lines .paper-link {
+        stroke: rgba(37, 99, 235, 0.22);
+        stroke-width: 2.5;
+      }
+
+      .memo-map-node {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border: none;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 16px 32px rgba(15,23,42,0.10);
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+        font: inherit;
+        appearance: none;
+      }
+
+      .memo-map-node:focus-visible {
+        outline: 3px solid rgba(37,99,235,0.22);
+        outline-offset: 3px;
+      }
+
+      .memo-map-node.root {
+        width: min(260px, calc(100% - 40px));
+        padding: 18px 18px 16px;
+        border-radius: 26px;
+        background: linear-gradient(135deg, rgba(22,50,79,0.98), rgba(37,99,235,0.94));
+        color: #fff;
+        cursor: default;
+        text-align: center;
+        box-shadow: 0 22px 40px rgba(22,50,79,0.22);
+      }
+
+      .memo-map-node.branch {
+        width: 172px;
+        padding: 13px 14px 12px;
+        cursor: default;
+        text-align: center;
+        border: 1px solid rgba(22,50,79,0.08);
+        background: rgba(255,255,255,0.94);
+      }
+
+      .memo-map-node.branch.quick {
+        box-shadow: 0 14px 26px rgba(22,50,79,0.10);
+      }
+
+      .memo-map-node.branch.paper {
+        box-shadow: 0 14px 26px rgba(37,99,235,0.12);
+      }
+
+      .memo-map-node.note {
+        width: 190px;
+        padding: 14px 14px 13px;
+        border: 1px solid rgba(22,50,79,0.08);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        user-select: none;
+        touch-action: none;
+      }
+
+      .memo-map-node.note:hover {
+        border-color: rgba(37,99,235,0.18);
+        box-shadow: 0 18px 34px rgba(15,23,42,0.12);
+      }
+
+      .memo-map-node.note.quick {
+        border-top: 4px solid rgba(22,50,79,0.92);
+      }
+
+      .memo-map-node.note.paper {
+        border-top: 4px solid rgba(37,99,235,0.86);
+      }
+
+      .memo-map-node.note.is-dragging {
+        box-shadow: 0 22px 42px rgba(15,23,42,0.16);
+        z-index: 6;
+      }
+
+      .memo-map-node-kicker {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .memo-map-node.root .memo-map-node-kicker {
+        color: rgba(255,255,255,0.76);
+      }
+
+      .memo-map-node.branch.quick .memo-map-node-kicker,
+      .memo-map-node.note.quick .memo-map-node-kicker {
+        color: #16324f;
+      }
+
+      .memo-map-node.branch.paper .memo-map-node-kicker,
+      .memo-map-node.note.paper .memo-map-node-kicker {
+        color: #2563eb;
+      }
+
+      .memo-map-node-title {
+        margin-top: 5px;
+        font-size: 15px;
+        font-weight: 900;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+      }
+
+      .memo-map-node.root .memo-map-node-title {
+        font-size: 24px;
+        color: #fff;
+      }
+
+      .memo-map-node.root .memo-map-sub {
+        color: rgba(255,255,255,0.82);
+      }
+
+      .memo-map-node.branch .memo-map-node-title {
+        font-size: 16px;
+        color: var(--secondary);
+      }
+
+      .memo-map-node.note .memo-map-node-title.empty {
+        color: var(--subtext);
+        font-style: italic;
+        font-weight: 600;
+      }
+
+      .memo-map-node-meta {
+        margin-top: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--subtext);
+      }
+
+      .memo-map-node-preview {
+        margin-top: 8px;
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.62;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .memo-map-node-tag {
+        margin-top: 9px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .memo-map-node.note.quick .memo-map-node-tag {
+        background: rgba(22,50,79,0.08);
+        color: #16324f;
+      }
+
+      .memo-map-node.note.paper .memo-map-node-tag {
+        background: rgba(37,99,235,0.08);
+        color: #2563eb;
+      }
+
+      .memo-map-stage-hint {
+        position: absolute;
+        right: 14px;
+        bottom: 14px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.86);
+        color: var(--subtext);
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .memo-map-more {
+        margin-top: 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--subtext);
+      }
+
       /* ── 空の状態 ── */
       .empty-state {
         text-align: center;
@@ -296,14 +637,14 @@
         width: 56px;
         height: 56px;
         border-radius: 999px;
-        background: linear-gradient(135deg, #111827, #1f2937);
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
         color: #fff;
         border: none;
         font-size: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 16px 30px rgba(17, 24, 39, 0.24);
+        box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
         cursor: pointer;
         text-decoration: none;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -345,7 +686,7 @@
           font-size: 20px;
           font-weight: 800;
           letter-spacing: -0.02em;
-          color: #111827;
+          color: var(--secondary);
           line-height: 1.4;
         }
 
@@ -386,8 +727,8 @@
         }
 
         .sidebar-link.is-active {
-          background: #eff6ff;
-          color: #3730a3;
+          background: var(--primary-soft, #eaf2ff);
+          color: var(--blue);
         }
 
         .sidebar-icon {
@@ -430,7 +771,7 @@
           min-height: 38px;
           padding: 10px 12px;
           border-radius: 12px;
-          background: #111827;
+          background: linear-gradient(135deg, var(--secondary), var(--blue));
           color: white;
           text-decoration: none;
           font-weight: 700;
@@ -440,7 +781,27 @@
         .sidebar-auth-link:hover { opacity: 0.92; }
 
         .main-area { padding: 28px 32px 60px; }
-
+        .container { max-width: 920px; }
+        .page-header {
+          padding: 16px 22px 14px;
+          margin-bottom: 20px;
+        }
+        .page-header-top {
+          margin-bottom: 12px;
+        }
+        .page-title {
+          font-size: 22px;
+        }
+        .memo-count-badge {
+          font-size: 13px;
+          padding: 6px 12px;
+        }
+        .memo-tab-btn {
+          padding: 14px 0;
+          min-height: 54px;
+          font-size: 17px;
+          gap: 10px;
+        }
         .fab {
           bottom: 32px;
           right: 36px;
@@ -450,12 +811,73 @@
       @media (max-width: 979px) {
         .main-area { padding: 16px 12px 100px; }
 
+        .page-header {
+          padding: 10px 12px 8px;
+        }
+
+        .page-header-top {
+          margin-bottom: 6px;
+        }
+
         .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
         .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
-        .mobile-footer-link.is-active { color: #2563eb; }
+        .mobile-footer-link.is-active { color: var(--blue); }
         .mobile-footer-icon { font-size: 20px; line-height: 1; }
 
         .fab { bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; }
+        .memo-map-shell {
+          padding: 16px 12px 14px;
+          border-radius: 24px;
+        }
+        .memo-map-toolbar {
+          margin-bottom: 12px;
+        }
+        .memo-map-title {
+          font-size: 18px;
+        }
+        .memo-map-sub {
+          font-size: 12px;
+        }
+        .memo-map-action {
+          min-height: 34px;
+          padding: 0 12px;
+          font-size: 12px;
+        }
+        .memo-map-stage {
+          min-height: 620px;
+          border-radius: 24px;
+        }
+        .memo-map-node.root {
+          width: min(220px, calc(100% - 28px));
+          padding: 16px 14px 14px;
+        }
+        .memo-map-node.root .memo-map-node-title {
+          font-size: 21px;
+        }
+        .memo-map-node.branch {
+          width: 142px;
+          padding: 11px 12px;
+        }
+        .memo-map-node.branch .memo-map-node-title {
+          font-size: 14px;
+        }
+        .memo-map-node.note {
+          width: 156px;
+          padding: 12px 11px 11px;
+          border-radius: 18px;
+        }
+        .memo-map-node.note .memo-map-node-title {
+          font-size: 13px;
+        }
+        .memo-map-node-preview {
+          font-size: 12px;
+        }
+        .memo-map-stage-hint {
+          right: 10px;
+          bottom: 10px;
+          font-size: 11px;
+          padding: 7px 10px;
+        }
       }
     </style>
   </head>
@@ -482,7 +904,7 @@
           <a href="/saved" class="sidebar-link">
             <span class="sidebar-icon">📚</span><span>保存</span>
           </a>
-          <a href="/plans" class="sidebar-link">
+          <a href="/mypage" class="sidebar-link">
             <span class="sidebar-icon">👤</span><span>マイページ</span>
           </a>
         </nav>
@@ -502,25 +924,29 @@
 
           <!-- ヘッダー -->
           <div class="page-header">
-            <div class="page-title">メモ</div>
-            {% if memo_limit is not none %}
-            <div class="memo-count-badge">{{ total_count }} / {{ memo_limit }}件</div>
-            {% else %}
-            <div class="memo-count-badge">{{ total_count }}件</div>
-            {% endif %}
-            <a href="/memo/export?fmt=print" target="_blank" class="utility-chip" style="margin-left:auto;">📥 エクスポート</a>
-          </div>
-
-          <!-- タブ切り替え -->
-          <div>
-            <div class="tab-toggle">
+            <div class="page-header-top">
+              <div class="page-title-wrap">
+                <div class="page-title">メモ</div>
+                {% if memo_limit is not none %}
+                <div class="memo-count-badge">{{ total_count }} / {{ memo_limit }}件</div>
+                {% else %}
+                <div class="memo-count-badge">{{ total_count }}件</div>
+                {% endif %}
+              </div>
+              <a href="/memo/export?fmt=print" target="_blank" class="utility-chip">📥 エクスポート</a>
+            </div>
+            <div class="memo-tab-bar">
               <a href="/memo?tab=quick"
-                 class="tab-btn {% if tab == 'quick' %}is-active{% endif %}">
+                 class="memo-tab-btn {% if tab == 'quick' %}is-active{% endif %}">
                 ✏️ クイックメモ
               </a>
               <a href="/memo?tab=paper"
-                 class="tab-btn {% if tab == 'paper' %}is-active{% endif %}">
+                 class="memo-tab-btn {% if tab == 'paper' %}is-active{% endif %}">
                 📄 論文メモ
+              </a>
+              <a href="/memo?tab=map"
+                 class="memo-tab-btn {% if tab == 'map' %}is-active{% endif %}">
+                🧠 マップ
               </a>
             </div>
           </div>
@@ -556,14 +982,14 @@
               <a href="/memo/{{ memo.id }}" class="memo-card">
                 <div class="memo-card-header">
                   <div class="memo-card-title {% if not memo.title and not memo.body %}empty{% endif %}">
-                    {% if memo.title %}{{ memo.title }}{% elif memo.body %}{{ memo.body[:40] }}{% endif %}
+                    {% if memo.title %}{{ memo.title }}{% elif memo.body_preview %}{{ memo.body_preview[:40] }}{% endif %}
                   </div>
                   <div class="memo-card-date">
                     {{ memo.updated_at[:10] }}
                   </div>
                 </div>
                 {% if memo.title and memo.body %}
-                <div class="memo-card-preview">{{ memo.body }}</div>
+                <div class="memo-card-preview">{{ memo.body_preview }}</div>
                 {% endif %}
               </a>
               {% endfor %}
@@ -581,7 +1007,7 @@
             {% endif %}
 
           <!-- 論文メモタブ -->
-          {% else %}
+          {% elif tab == 'paper' %}
             {% if paper_memos %}
             <div class="memo-list">
               {% for memo in paper_memos %}
@@ -595,7 +1021,7 @@
                   </div>
                 </div>
                 {% if memo.body %}
-                <div class="memo-card-preview">{{ memo.body }}</div>
+                <div class="memo-card-preview">{{ memo.body_preview }}</div>
                 {% endif %}
                 <div class="memo-paper-tag">
                   📄 PMID: {{ memo.pubmed_id }}
@@ -613,6 +1039,49 @@
 
             {% if can_add %}
             <a href="/memo/paper/new" class="fab">+</a>
+            {% endif %}
+          {% else %}
+            {% if map_quick_memos or map_paper_memos %}
+            <div class="memo-map-shell">
+              <div class="memo-map-toolbar">
+                <div>
+                  <div class="memo-map-kicker">mind map</div>
+                  <div class="memo-map-title">メモのつながり</div>
+                  <div class="memo-map-sub">中心テーマから枝をたどって、気になるメモをそのまま開けます。ノードはドラッグで整理できます。</div>
+                </div>
+                <div class="memo-map-actions">
+                  <button type="button" class="memo-map-action" onclick="resetMemoMindMap()">配置を整える</button>
+                </div>
+              </div>
+
+              <div class="memo-map-stage" id="memo-map-stage">
+                <svg class="memo-map-svg" id="memo-map-svg" aria-hidden="true">
+                  <g class="memo-map-lines" id="memo-map-lines"></g>
+                </svg>
+                <div class="memo-map-stage-hint">ドラッグで整理</div>
+              </div>
+
+              {% if map_more_quick_count > 0 or map_more_paper_count > 0 %}
+              <div class="memo-map-more">
+                {% if map_more_quick_count > 0 %}+ クイックメモ {{ map_more_quick_count }} 件{% endif %}
+                {% if map_more_quick_count > 0 and map_more_paper_count > 0 %} / {% endif %}
+                {% if map_more_paper_count > 0 %}+ 論文メモ {{ map_more_paper_count }} 件{% endif %}
+              </div>
+              {% endif %}
+            </div>
+
+            {% if can_add %}
+            <a href="#" class="fab" id="fab-map" onclick="createQuickMemo(event)">+</a>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">🧠</div>
+              <div class="empty-title">マップに出せるメモはまだありません</div>
+              <div class="empty-sub">クイックメモや論文メモを作ると、ここでつながりを見渡せるようになります</div>
+            </div>
+            {% if can_add %}
+            <a href="#" class="fab" id="fab-map" onclick="createQuickMemo(event)">+</a>
+            {% endif %}
             {% endif %}
           {% endif %}
 
@@ -654,6 +1123,305 @@
         form.action = "/memo/create";
         document.body.appendChild(form);
         form.submit();
+      }
+
+      const memoMindMapData = {
+        quickNodes: {{ memo_map_quick_nodes | default([]) | tojson | safe }},
+        paperNodes: {{ memo_map_paper_nodes | default([]) | tojson | safe }},
+        layout: {{ memo_map_layout | default({}) | tojson | safe }},
+      };
+
+      const memoMapStage = document.getElementById("memo-map-stage");
+      const memoMapLines = document.getElementById("memo-map-lines");
+      let memoMapLayout = { ...(memoMindMapData.layout || {}) };
+      let memoMapNodeElements = new Map();
+      let memoMapDragState = null;
+      let memoMapSaveTimer = null;
+
+      function getMemoMapAnchors() {
+        if (!memoMapStage) return null;
+        const rect = memoMapStage.getBoundingClientRect();
+        const compact = rect.width < 700;
+        return {
+          root: { x: 0.5, y: compact ? 0.15 : 0.16 },
+          quick: { x: compact ? 0.25 : 0.29, y: compact ? 0.31 : 0.35 },
+          paper: { x: compact ? 0.75 : 0.71, y: compact ? 0.31 : 0.35 },
+          compact,
+        };
+      }
+
+      function getDefaultMemoMapNodePosition(node, index) {
+        const anchors = getMemoMapAnchors();
+        const compact = anchors ? anchors.compact : false;
+        const isQuick = node.type === "quick";
+        const columns = compact ? 1 : 2;
+        const row = Math.floor(index / columns);
+        const col = index % columns;
+        const xBase = isQuick
+          ? (compact ? 0.2 : 0.15)
+          : (compact ? 0.8 : 0.63);
+        const xGap = compact ? 0 : 0.14;
+        const yBase = compact ? 0.48 : 0.52;
+        const yGap = compact ? 0.12 : 0.14;
+        return {
+          x: Math.max(0.08, Math.min(0.92, xBase + (isQuick ? col * xGap : col * xGap))),
+          y: Math.max(0.16, Math.min(0.9, yBase + row * yGap)),
+        };
+      }
+
+      function getMemoMapNodePosition(node, index) {
+        const saved = memoMapLayout[node.node_key];
+        if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
+          return saved;
+        }
+        return getDefaultMemoMapNodePosition(node, index);
+      }
+
+      function getMemoMapPoint(position) {
+        const rect = memoMapStage.getBoundingClientRect();
+        return {
+          x: position.x * rect.width,
+          y: position.y * rect.height,
+        };
+      }
+
+      function memoMapPath(start, end) {
+        const midX = (start.x + end.x) / 2;
+        return `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`;
+      }
+
+      function createMemoMapNodeElement(type, html, position, options = {}) {
+        const el = document.createElement(options.tagName || "div");
+        el.className = `memo-map-node ${type}${options.extraClass ? ` ${options.extraClass}` : ""}`;
+        el.innerHTML = html;
+        placeMemoMapElement(el, position);
+        if (options.nodeKey) el.dataset.nodeKey = options.nodeKey;
+        if (options.href) el.dataset.href = options.href;
+        if (options.draggable) {
+          el.addEventListener("pointerdown", startMemoMapNodeDrag);
+          el.addEventListener("click", handleMemoMapNodeClick);
+          el.addEventListener("keydown", handleMemoMapNodeKeydown);
+          el.tabIndex = 0;
+          el.setAttribute("role", "link");
+        }
+        memoMapStage.appendChild(el);
+        return el;
+      }
+
+      function placeMemoMapElement(el, position) {
+        el.style.left = `${position.x * 100}%`;
+        el.style.top = `${position.y * 100}%`;
+      }
+
+      function renderMemoMapLines(anchors, quickNodes, paperNodes) {
+        if (!memoMapLines || !anchors) return;
+        const rootPoint = getMemoMapPoint(anchors.root);
+        const quickPoint = getMemoMapPoint(anchors.quick);
+        const paperPoint = getMemoMapPoint(anchors.paper);
+        const fragments = [
+          `<path class="core-link" d="${memoMapPath(rootPoint, quickPoint)}"></path>`,
+          `<path class="core-link" d="${memoMapPath(rootPoint, paperPoint)}"></path>`,
+        ];
+
+        quickNodes.forEach((node, index) => {
+          const point = getMemoMapPoint(getMemoMapNodePosition(node, index));
+          fragments.push(`<path class="quick-link" d="${memoMapPath(quickPoint, point)}"></path>`);
+        });
+        paperNodes.forEach((node, index) => {
+          const point = getMemoMapPoint(getMemoMapNodePosition(node, index));
+          fragments.push(`<path class="paper-link" d="${memoMapPath(paperPoint, point)}"></path>`);
+        });
+        memoMapLines.innerHTML = fragments.join("");
+      }
+
+      function renderMemoMindMap() {
+        if (!memoMapStage || !memoMapLines) return;
+        memoMapStage.querySelectorAll(".memo-map-node").forEach((node) => node.remove());
+        memoMapNodeElements = new Map();
+
+        const anchors = getMemoMapAnchors();
+        const quickNodes = memoMindMapData.quickNodes || [];
+        const paperNodes = memoMindMapData.paperNodes || [];
+
+        createMemoMapNodeElement(
+          "root",
+          `
+            <div class="memo-map-node-kicker">mind map</div>
+            <div class="memo-map-node-title">メモの地図</div>
+            <div class="memo-map-sub">学びのつながりを中心から広げる</div>
+          `,
+          anchors.root
+        );
+
+        createMemoMapNodeElement(
+          "branch quick",
+          `
+            <div class="memo-map-node-kicker">quick memo</div>
+            <div class="memo-map-node-title">クイックメモ</div>
+          `,
+          anchors.quick
+        );
+
+        createMemoMapNodeElement(
+          "branch paper",
+          `
+            <div class="memo-map-node-kicker">paper memo</div>
+            <div class="memo-map-node-title">論文メモ</div>
+          `,
+          anchors.paper
+        );
+
+        quickNodes.forEach((node, index) => {
+          const title = (node.title || "").trim() || "タイトルなし";
+          const preview = (node.preview || "").trim();
+          const position = getMemoMapNodePosition(node, index);
+          const el = createMemoMapNodeElement(
+            "note quick",
+            `
+              <div class="memo-map-node-kicker">quick</div>
+              <div class="memo-map-node-title ${!title ? "empty" : ""}">${title}</div>
+              <div class="memo-map-node-meta">
+                <span>${node.updated_at || ""}</span>
+                <span>クイック</span>
+              </div>
+              ${preview ? `<div class="memo-map-node-preview">${preview}</div>` : ""}
+            `,
+            position,
+            { tagName: "button", nodeKey: node.node_key, href: node.url, draggable: true }
+          );
+          memoMapNodeElements.set(node.node_key, el);
+        });
+
+        paperNodes.forEach((node, index) => {
+          const title = (node.title || "").trim() || "論文メモ";
+          const preview = (node.preview || "").trim();
+          const position = getMemoMapNodePosition(node, index);
+          const el = createMemoMapNodeElement(
+            "note paper",
+            `
+              <div class="memo-map-node-kicker">paper</div>
+              <div class="memo-map-node-title">${title}</div>
+              <div class="memo-map-node-meta">
+                <span>${node.updated_at || ""}</span>
+                <span>論文</span>
+              </div>
+              ${preview ? `<div class="memo-map-node-preview">${preview}</div>` : ""}
+              ${node.pubmed_id ? `<div class="memo-map-node-tag">PMID ${node.pubmed_id}</div>` : ""}
+            `,
+            position,
+            { tagName: "button", nodeKey: node.node_key, href: node.url, draggable: true }
+          );
+          memoMapNodeElements.set(node.node_key, el);
+        });
+
+        renderMemoMapLines(anchors, quickNodes, paperNodes);
+      }
+
+      function scheduleMemoMapSave() {
+        if (!memoMapStage) return;
+        clearTimeout(memoMapSaveTimer);
+        memoMapSaveTimer = setTimeout(async () => {
+          try {
+            await fetch("/memo/map/layout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ layout: memoMapLayout }),
+            });
+          } catch (error) {
+            // silent fallback
+          }
+        }, 450);
+      }
+
+      function startMemoMapNodeDrag(event) {
+        if (!memoMapStage) return;
+        const node = event.currentTarget;
+        const nodeKey = node.dataset.nodeKey;
+        if (!nodeKey) return;
+        const stageRect = memoMapStage.getBoundingClientRect();
+        const position = memoMapLayout[nodeKey] || { x: 0.5, y: 0.5 };
+        memoMapDragState = {
+          node,
+          nodeKey,
+          pointerId: event.pointerId,
+          stageRect,
+          startX: event.clientX,
+          startY: event.clientY,
+          originX: position.x,
+          originY: position.y,
+          moved: false,
+        };
+        node.classList.add("is-dragging");
+        node.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+      }
+
+      function handleMemoMapNodeClick(event) {
+        if (event.currentTarget.dataset.justDragged === "1") {
+          event.currentTarget.dataset.justDragged = "0";
+          event.preventDefault();
+          return;
+        }
+        const href = event.currentTarget.dataset.href;
+        if (href) {
+          window.location.href = href;
+        }
+      }
+
+      function handleMemoMapNodeKeydown(event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          const href = event.currentTarget.dataset.href;
+          if (href) window.location.href = href;
+        }
+      }
+
+      function updateMemoMapDrag(event) {
+        if (!memoMapDragState) return;
+        const { stageRect, originX, originY, startX, startY, nodeKey, node } = memoMapDragState;
+        const dx = (event.clientX - startX) / stageRect.width;
+        const dy = (event.clientY - startY) / stageRect.height;
+        const nextX = Math.max(0.08, Math.min(0.92, originX + dx));
+        const nextY = Math.max(0.12, Math.min(0.9, originY + dy));
+        memoMapLayout[nodeKey] = { x: nextX, y: nextY };
+        placeMemoMapElement(node, memoMapLayout[nodeKey]);
+        renderMemoMapLines(getMemoMapAnchors(), memoMindMapData.quickNodes || [], memoMindMapData.paperNodes || []);
+        if (Math.abs(event.clientX - startX) > 4 || Math.abs(event.clientY - startY) > 4) {
+          memoMapDragState.moved = true;
+        }
+      }
+
+      function endMemoMapDrag() {
+        if (!memoMapDragState) return;
+        const { node, moved } = memoMapDragState;
+        node.classList.remove("is-dragging");
+        if (moved) {
+          node.dataset.justDragged = "1";
+          scheduleMemoMapSave();
+          setTimeout(() => {
+            if (node) node.dataset.justDragged = "0";
+          }, 180);
+        }
+        memoMapDragState = null;
+      }
+
+      function resetMemoMindMap() {
+        memoMapLayout = {};
+        renderMemoMindMap();
+        scheduleMemoMapSave();
+      }
+
+      window.resetMemoMindMap = resetMemoMindMap;
+
+      document.addEventListener("pointermove", updateMemoMapDrag);
+      document.addEventListener("pointerup", endMemoMapDrag);
+      document.addEventListener("pointercancel", endMemoMapDrag);
+      window.addEventListener("resize", () => {
+        if (memoMapStage) renderMemoMindMap();
+      });
+
+      if (memoMapStage) {
+        renderMemoMindMap();
       }
     </script>
   </body>

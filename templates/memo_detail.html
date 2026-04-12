@@ -7,26 +7,38 @@
 
     <style>
       :root {
-        --bg: #f5f7fb;
+        --bg: #f4f7fb;
         --card: #ffffff;
-        --text: #111827;
-        --subtext: #6b7280;
-        --line: #e5e7eb;
+        --editor-bg: rgba(255, 255, 255, 0.94);
+        --text: #0f172a;
+        --subtext: #64748b;
+        --line: #dbe3ee;
         --blue: #2563eb;
+        --secondary: #16324f;
+        --secondary-soft: #edf4fb;
+        --accent: #d4a84f;
+        --accent-soft: #fff6df;
+        --success: #15803d;
+        --danger: #dc2626;
         --sidebar-bg: #ffffff;
-        --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.06);
-        --radius: 18px;
+        --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.08);
+        --shadow-strong: 0 24px 60px rgba(15, 23, 42, 0.12);
+        --radius: 22px;
       }
 
       * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
+        background:
+          radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 28%),
+          linear-gradient(180deg, rgba(255,255,255,0.75), rgba(244,247,251,0.95)),
+          var(--bg);
         color: var(--text);
       }
 
       .app-layout { min-height: 100vh; }
+      body.modal-open { overflow: hidden; }
       .sidebar { display: none; }
 
       .main-area {
@@ -39,7 +51,7 @@
         position: sticky;
         top: 0;
         z-index: 100;
-        background: rgba(245, 247, 251, 0.92);
+        background: rgba(244, 247, 251, 0.9);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border-bottom: 1px solid var(--line);
@@ -52,12 +64,41 @@
       .back-btn {
         display: flex;
         align-items: center;
-        gap: 6px;
-        color: var(--blue);
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        color: var(--secondary);
         text-decoration: none;
-        font-size: 15px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 800;
         flex-shrink: 0;
+      }
+
+      .top-bar-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .top-bar-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--blue);
+        text-transform: uppercase;
+      }
+
+      .top-bar-meta {
+        font-size: 14px;
+        color: var(--secondary);
+        font-weight: 700;
+        line-height: 1.4;
       }
 
       .top-bar-actions {
@@ -65,37 +106,139 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .top-mini-btns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .top-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: rgba(255,255,255,0.92);
+        color: var(--secondary);
+        font-size: 16px;
+        font-weight: 800;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+        cursor: pointer;
+        transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .top-icon-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, 0.18);
+        color: var(--blue);
+      }
+
+      .top-icon-btn.is-active {
+        background: var(--secondary-soft);
+        color: var(--blue);
+        border-color: rgba(37, 99, 235, 0.18);
+      }
+
+      .top-icon-btn:disabled,
+      .top-icon-btn.is-disabled {
+        cursor: default;
+        opacity: 0.4;
+        transform: none;
+        color: var(--subtext);
+      }
+
+      .quick-actions-popover {
+        position: fixed;
+        top: 68px;
+        right: 16px;
+        z-index: 120;
+        width: min(320px, calc(100vw - 32px));
+        padding: 14px;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.98);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 26px 70px rgba(15, 23, 42, 0.16);
+        display: none;
+      }
+
+      .quick-actions-popover.show {
+        display: block;
+      }
+
+      .quick-actions-title {
+        font-size: 12px;
+        color: var(--subtext);
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .quick-actions-item {
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.07);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
       }
 
       .save-indicator {
-        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(15,23,42,0.06);
+        font-size: 12px;
         color: var(--subtext);
-        font-weight: 500;
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: all 0.2s ease;
       }
 
       .save-indicator.show { opacity: 1; }
+      .save-indicator.is-saved { color: var(--success); background: #effaf3; border-color: rgba(21, 128, 61, 0.12); }
+      .save-indicator.is-saving { color: #475569; background: #eef2f7; }
+      .save-indicator.is-dirty { color: #9a6700; background: var(--accent-soft); border-color: rgba(212, 168, 79, 0.25); }
+      .save-indicator.is-error { color: var(--danger); background: #fff1f2; border-color: rgba(220, 38, 38, 0.15); }
 
       .save-btn {
         display: flex;
         align-items: center;
         gap: 5px;
-        padding: 7px 14px;
-        border-radius: 10px;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
         border: none;
-        background: #2563eb;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
         color: #fff;
+        box-shadow: 0 14px 24px rgba(37, 99, 235, 0.18);
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 800;
         cursor: pointer;
         transition: background 0.15s, transform 0.1s;
         white-space: nowrap;
       }
-      .save-btn:hover { background: #1d4ed8; }
+      .save-btn:hover { filter: brightness(1.02); }
       .save-btn:active { transform: scale(0.96); }
       .save-btn.saved {
-        background: #16a34a;
+        background: linear-gradient(135deg, #0f8a43, #16a34a);
       }
       .save-btn.saving {
         background: #9ca3af;
@@ -108,14 +251,15 @@
       /* ── 論文リンクバナー ── */
       .paper-banner {
         margin: 16px 16px 0;
-        padding: 14px 16px;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 14px;
+        padding: 16px 18px;
+        background: linear-gradient(135deg, rgba(238, 244, 248, 0.96), rgba(247, 250, 252, 0.98));
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        border-radius: 18px;
         display: flex;
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
+        box-shadow: var(--shadow-soft);
       }
 
       .paper-banner-icon { font-size: 18px; flex-shrink: 0; }
@@ -125,7 +269,7 @@
       .paper-banner-title {
         font-size: 14px;
         font-weight: 700;
-        color: #1e40af;
+        color: var(--secondary);
         line-height: 1.5;
         overflow: hidden;
         display: -webkit-box;
@@ -135,13 +279,13 @@
 
       .paper-banner-pmid {
         font-size: 12px;
-        color: #3b82f6;
+        color: var(--subtext);
         margin-top: 2px;
       }
 
       .paper-banner-link {
-        padding: 6px 14px;
-        background: #2563eb;
+        padding: 8px 14px;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
         color: #fff;
         border-radius: 999px;
         font-size: 13px;
@@ -153,11 +297,465 @@
 
       .paper-banner-link:hover { opacity: 0.88; }
 
+      .paper-banner-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+
+      .paper-summary-open {
+        padding: 8px 14px;
+        background: #fff;
+        color: var(--secondary);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .paper-summary-open:hover {
+        border-color: rgba(37, 99, 235, 0.18);
+        color: var(--blue);
+      }
+
+      .paper-note-layout { display: block; }
+      .paper-reference-panel { display: none; }
+
+      .paper-reference-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        border-radius: 28px;
+        box-shadow: var(--shadow-strong);
+        padding: 20px 18px;
+      }
+
+      .paper-reference-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .paper-reference-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--blue);
+        text-transform: uppercase;
+      }
+
+      .paper-reference-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: #936c12;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .paper-reference-title {
+        font-size: 16px;
+        line-height: 1.55;
+        font-weight: 800;
+        color: var(--secondary);
+      }
+
+      .paper-reference-original {
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .paper-reference-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .paper-reference-meta span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .paper-reference-section {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(15, 23, 42, 0.06);
+      }
+
+      .paper-reference-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--subtext);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .paper-reference-body {
+        font-size: 13px;
+        line-height: 1.8;
+        color: #334155;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .paper-reference-empty {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: var(--subtext);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .paper-summary-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.34);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 220;
+        padding: 18px 16px calc(86px + env(safe-area-inset-bottom));
+      }
+
+      .paper-summary-sheet-backdrop.open { display: flex; }
+
+      .paper-summary-sheet {
+        width: min(100%, 560px);
+        max-height: min(82vh, 760px);
+        overflow-y: auto;
+        background: rgba(255,255,255,0.98);
+        border-radius: 26px 26px 20px 20px;
+        box-shadow: 0 28px 56px rgba(15,23,42,0.24);
+        padding: 18px 16px 18px;
+      }
+
+      .paper-summary-sheet-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .paper-summary-sheet-close {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: #f3f4f6;
+        color: #475569;
+        font-size: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .paper-summary-sheet-close:hover { background: #e5e7eb; }
+
+      .paper-banner-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+
+      .paper-summary-open {
+        padding: 8px 14px;
+        background: #fff;
+        color: var(--secondary);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .paper-summary-open:hover {
+        border-color: rgba(37, 99, 235, 0.18);
+        color: var(--blue);
+      }
+
+      .paper-note-layout {
+        display: block;
+      }
+
+      .paper-reference-panel {
+        display: none;
+      }
+
+      .paper-reference-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        border-radius: 28px;
+        box-shadow: var(--shadow-strong);
+        padding: 20px 18px;
+      }
+
+      .paper-reference-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .paper-reference-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--blue);
+        text-transform: uppercase;
+      }
+
+      .paper-reference-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: #936c12;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .paper-reference-title {
+        font-size: 16px;
+        line-height: 1.55;
+        font-weight: 800;
+        color: var(--secondary);
+      }
+
+      .paper-reference-original {
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .paper-reference-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .paper-reference-meta span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .paper-reference-section {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(15, 23, 42, 0.06);
+      }
+
+      .paper-reference-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--subtext);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .paper-reference-body {
+        font-size: 13px;
+        line-height: 1.8;
+        color: #334155;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .paper-reference-empty {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: var(--subtext);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .paper-summary-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.34);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 220;
+        padding: 18px 16px calc(86px + env(safe-area-inset-bottom));
+      }
+
+      .paper-summary-sheet-backdrop.open {
+        display: flex;
+      }
+
+      .paper-summary-sheet {
+        width: min(100%, 560px);
+        max-height: min(82vh, 760px);
+        overflow-y: auto;
+        background: rgba(255,255,255,0.98);
+        border-radius: 26px 26px 20px 20px;
+        box-shadow: 0 28px 56px rgba(15,23,42,0.24);
+        padding: 18px 16px 18px;
+      }
+
+      .paper-summary-sheet-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .paper-summary-sheet-close {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: #f3f4f6;
+        color: #475569;
+        font-size: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .paper-summary-sheet-close:hover {
+        background: #e5e7eb;
+      }
+
+      .paper-reference-body {
+        cursor: text;
+      }
+
+      .paper-highlight {
+        display: inline;
+        border-radius: 4px;
+        padding: 0 1px;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+      }
+
+      .paper-highlight.color-yellow { background: rgba(255, 224, 102, 0.68); }
+      .paper-highlight.color-pink { background: rgba(251, 182, 206, 0.72); }
+      .paper-highlight.color-blue { background: rgba(179, 229, 252, 0.76); }
+      .paper-highlight.color-green { background: rgba(209, 250, 179, 0.82); }
+
+      .paper-selection-toolbar {
+        position: fixed;
+        z-index: 260;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.94);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.28);
+      }
+
+      .paper-selection-toolbar.open {
+        display: inline-flex;
+      }
+
+      .paper-selection-btn {
+        border: none;
+        background: transparent;
+        color: #f8fafc;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+      }
+
+      .paper-selection-btn:hover {
+        background: rgba(255,255,255,0.12);
+        transform: translateY(-1px);
+      }
+
+      .paper-selection-btn.quote {
+        padding: 0 12px;
+        min-width: auto;
+      }
+
+      .paper-selection-btn.clear {
+        padding: 0 12px;
+        min-width: auto;
+      }
+
+      .paper-selection-swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.10);
+      }
+
+      .paper-selection-swatch.color-yellow { background: #ffe066; }
+      .paper-selection-swatch.color-pink { background: #fbb6ce; }
+      .paper-selection-swatch.color-blue { background: #b3e5fc; }
+      .paper-selection-swatch.color-green { background: #d1fa8b; }
+
       /* ── エディタ本体 ── */
       .editor-wrap {
-        padding: 20px 16px 80px;
+        padding: 20px 16px 132px;
         max-width: 720px;
         margin: 0 auto;
+      }
+
+      .editor-card {
+        background: var(--editor-bg);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        border-radius: 28px;
+        box-shadow: var(--shadow-strong);
+        padding: 22px 18px 18px;
       }
 
       .title-input {
@@ -185,6 +783,143 @@
         margin-bottom: 16px;
       }
 
+      .quick-template-section {
+        margin-bottom: 14px;
+      }
+
+      .template-heading {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--subtext);
+        margin-bottom: 8px;
+      }
+
+      .template-chip-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .template-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+
+      .template-chip:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, 0.18);
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.08);
+      }
+
+      .editor-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,252,0.96));
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        border-radius: 18px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+      }
+
+      .desktop-toolbar {
+        display: flex;
+      }
+
+      .toolbar-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar-divider {
+        width: 1px;
+        height: 24px;
+        background: rgba(15, 23, 42, 0.08);
+      }
+
+      .toolbar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 38px;
+        min-width: 38px;
+        padding: 8px 12px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 14px;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease,
+          transform 0.15s ease,
+          color 0.15s ease;
+      }
+
+      .toolbar-btn:hover {
+        border-color: rgba(37,99,235,0.25);
+        background: #eff6ff;
+        color: var(--blue);
+        transform: translateY(-1px);
+      }
+
+      .toolbar-btn.is-active {
+        border-color: rgba(37,99,235,0.28);
+        background: #eff6ff;
+        color: var(--blue);
+      }
+
+      .toolbar-btn:active {
+        transform: scale(0.98);
+      }
+
+      .toolbar-btn strong {
+        font-size: 14px;
+      }
+
+      .toolbar-btn.is-wide {
+        min-width: auto;
+      }
+
+      .toolbar-btn.is-primary {
+        background: var(--secondary-soft);
+        color: var(--secondary);
+      }
+
+      .toolbar-hint {
+        font-size: 12px;
+        color: var(--subtext);
+        line-height: 1.6;
+      }
+
+      .body-stage {
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,252,255,0.92));
+        border: 1px solid rgba(15, 23, 42, 0.05);
+        padding: 18px 16px 16px;
+        min-height: 360px;
+        margin-bottom: 14px;
+      }
+
       /* ── タグ ── */
       .tag-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
       .tag-label { font-size: 12px; font-weight: 700; color: var(--subtext); margin-bottom: 8px; }
@@ -203,6 +938,8 @@
         margin-top: 18px;
         display: flex;
         justify-content: flex-end;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
       }
 
       .delete-link-btn {
@@ -217,7 +954,7 @@
 
       .delete-link-btn:hover { color: #dc2626; }
 
-      .body-input {
+      .body-editor {
         width: 100%;
         border: none;
         outline: none;
@@ -225,19 +962,138 @@
         font-size: 16px;
         line-height: 1.8;
         color: var(--text);
-        resize: none;
-        overflow: hidden;
         padding: 0;
-        min-height: 300px;
+        min-height: 320px;
         font-family: inherit;
+        word-break: break-word;
       }
 
-      .body-input::placeholder { color: #d1d5db; }
+      .body-editor:empty::before {
+        content: attr(data-placeholder);
+        color: #d1d5db;
+      }
+
+      .body-editor h2,
+      .body-editor h3,
+      .body-editor blockquote,
+      .body-editor ul,
+      .body-editor ol,
+      .body-editor p,
+      .body-editor div {
+        margin: 0 0 10px;
+      }
+
+      .body-editor ul,
+      .body-editor ol {
+        padding-left: 1.4em;
+      }
+
+      .body-editor blockquote {
+        padding-left: 12px;
+        border-left: 3px solid rgba(37, 99, 235, 0.24);
+        color: #334155;
+      }
+
+      .body-editor a {
+        color: var(--blue);
+        text-decoration: underline;
+      }
+
+      .body-hidden {
+        display: none;
+      }
+
+      .editor-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+        margin-bottom: 10px;
+      }
+
+      .editor-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .editor-stat strong {
+        font-weight: 800;
+      }
+
+      .note-helper {
+        font-size: 12px;
+        color: var(--subtext);
+        line-height: 1.7;
+        margin-top: 6px;
+      }
+
+      .mobile-toolbar-shell {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 110;
+        padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+        background: linear-gradient(180deg, rgba(244,247,251,0.1), rgba(244,247,251,0.95) 18%, rgba(244,247,251,0.98));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .mobile-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 12px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.96);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-strong);
+        scrollbar-width: none;
+      }
+
+      .mobile-toolbar::-webkit-scrollbar { display: none; }
+
+      .mobile-toolbar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 15px;
+        font-weight: 800;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .mobile-toolbar-btn.is-active {
+        background: var(--secondary-soft);
+        color: var(--blue);
+      }
+
+      .mobile-toolbar-btn.is-text {
+        min-width: 40px;
+        font-size: 17px;
+      }
 
       /* ── メタ情報 ── */
       .meta-row {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 16px;
         font-size: 13px;
@@ -245,6 +1101,18 @@
       }
 
       .meta-dot { width: 3px; height: 3px; background: #d1d5db; border-radius: 50%; }
+
+      .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(15,23,42,0.05);
+        box-shadow: 0 8px 18px rgba(15,23,42,0.04);
+      }
 
       /* ── 削除確認モーダル ── */
       .modal-overlay {
@@ -405,14 +1273,148 @@
         .top-bar { padding: 14px 32px; }
 
         .paper-banner { margin: 20px 32px 0; }
+        .paper-note-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 360px;
+          gap: 20px;
+          max-width: 1320px;
+          margin: 0 auto;
+          padding: 24px 32px 80px;
+          align-items: start;
+        }
+        .paper-note-layout .editor-wrap { padding: 0; margin: 0; max-width: none; }
+        .paper-reference-panel {
+          display: block;
+          position: sticky;
+          top: 96px;
+        }
+        .paper-summary-sheet-backdrop,
+        .paper-summary-open { display: none; }
 
-        .editor-wrap { padding: 24px 32px 80px; margin: 0; max-width: 800px; }
+        .editor-wrap { padding: 24px 32px 80px; margin: 0; max-width: 920px; }
+
+        .editor-card {
+          padding: 28px 28px 22px;
+          border-radius: 32px;
+        }
 
         .title-input { font-size: 30px; }
+
+        .mobile-toolbar-shell { display: none; }
       }
 
       @media (max-width: 640px) {
+        body {
+          background: #ffffff;
+        }
         .title-input { font-size: 22px; }
+        .top-bar {
+          background: rgba(255,255,255,0.96);
+          border-bottom: none;
+          padding: 12px 14px 8px;
+        }
+        .top-bar-copy {
+          display: none;
+        }
+        .top-bar-meta { font-size: 13px; }
+        .top-mini-btns { gap: 6px; }
+        .top-icon-btn {
+          min-width: 38px;
+          min-height: 38px;
+          font-size: 16px;
+          background: #fff;
+          box-shadow: none;
+          border: none;
+        }
+        .save-indicator { display: none; }
+        .save-btn {
+          min-width: 42px;
+          min-height: 42px;
+          padding: 0;
+          justify-content: center;
+          border-radius: 999px;
+          background: #e0b326;
+          color: #fff;
+          box-shadow: none;
+        }
+        .save-btn .save-btn-label { display: none; }
+        .paper-banner {
+          align-items: flex-start;
+        }
+        .paper-banner-actions {
+          width: 100%;
+          margin-left: 0;
+          margin-top: 8px;
+        }
+        .paper-summary-open,
+        .paper-banner-link {
+          flex: 1;
+          justify-content: center;
+          text-align: center;
+        }
+        .editor-wrap {
+          padding: 6px 16px 132px;
+          max-width: none;
+        }
+        .editor-card {
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+        }
+        .meta-row {
+          margin-bottom: 10px;
+        }
+        .meta-pill {
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          padding: 0;
+          min-height: auto;
+          color: #94a3b8;
+        }
+        .quick-template-section {
+          display: none;
+        }
+        .desktop-toolbar { display: none; }
+        .body-stage {
+          padding: 0;
+          border-radius: 0;
+          background: transparent;
+          border: none;
+          min-height: auto;
+          margin-bottom: 8px;
+        }
+        .title-input {
+          margin-bottom: 10px;
+        }
+        .divider {
+          margin-bottom: 12px;
+        }
+        .body-editor {
+          min-height: 58vh;
+          font-size: 17px;
+          line-height: 1.9;
+        }
+        .editor-stats {
+          display: none;
+        }
+        .note-helper {
+          display: none;
+        }
+        .tag-section {
+          margin-top: 20px;
+          padding-top: 16px;
+        }
+        .quick-actions-popover {
+          top: 62px;
+          right: 14px;
+        }
+      }
+
+      @media (min-width: 641px) {
+        .mobile-toolbar-shell { display: none; }
       }
     </style>
   </head>
@@ -430,7 +1432,7 @@
           <a href="/learn" class="sidebar-link"><span class="sidebar-icon">📖</span><span>学ぶ</span></a>
           <a href="/memo" class="sidebar-link is-active"><span class="sidebar-icon">📝</span><span>メモ</span></a>
           <a href="/saved" class="sidebar-link"><span class="sidebar-icon">📚</span><span>保存</span></a>
-          <a href="/plans" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
+          <a href="/mypage" class="sidebar-link"><span class="sidebar-icon">👤</span><span>マイページ</span></a>
         </nav>
         <div class="sidebar-footer">
           <div class="sidebar-plan">現在のプラン：<b>{{ current_plan }}</b></div>
@@ -446,11 +1448,41 @@
 
         <!-- トップバー -->
         <div class="top-bar">
-          <a href="/memo?tab={{ memo_type }}" class="back-btn">← メモ</a>
-          <div class="top-bar-actions">
-            <span class="save-indicator" id="save-indicator">保存しました</span>
-            <button class="save-btn" id="save-btn" onclick="manualSave()">💾 保存</button>
+          <a href="{{ return_to or ('/memo?tab=' ~ memo_type) }}" class="back-btn">← メモ</a>
+          <div class="top-bar-copy">
+            <div class="top-bar-label">{% if memo_type == 'paper' %}Paper Note{% else %}Quick Memo{% endif %}</div>
+            <div class="top-bar-meta">{% if memo_type == 'paper' %}論文から学びを残すメモ{% else %}気づきをすぐ残せるドキュメントメモ{% endif %}</div>
           </div>
+          <div class="top-bar-actions">
+            <div class="top-mini-btns">
+              <button type="button" class="top-icon-btn" id="undo-btn" onclick="undoBodyChange()" title="1つ戻る">↶</button>
+              <button type="button" class="top-icon-btn" id="redo-btn" onclick="redoBodyChange()" title="1つ進む">↷</button>
+              <button type="button" class="top-icon-btn" id="quick-actions-btn" onclick="toggleQuickActions()" title="挿入メニュー">＋</button>
+            </div>
+            <span class="save-indicator is-saved" id="save-indicator">✓ 自動保存済み</span>
+            <button class="save-btn saved" id="save-btn" onclick="manualSave()"><span>✓</span><span class="save-btn-label">保存済み</span></button>
+          </div>
+        </div>
+
+        <div class="quick-actions-popover" id="quick-actions-popover">
+          <div class="quick-actions-title">クイック挿入</div>
+          <div class="quick-actions-grid">
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('clinical')">臨床メモ</button>
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('study')">座学メモ</button>
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('todo')">ToDo</button>
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('review')">ふり返り</button>
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('timestamp')">日時を入れる</button>
+            <button type="button" class="quick-actions-item" onclick="handleQuickAction('link')">リンクを入れる</button>
+          </div>
+        </div>
+
+        <div class="paper-selection-toolbar" id="paper-selection-toolbar">
+          <button type="button" class="paper-selection-btn quote" onclick="quoteSelectedReference()" title="選択文を引用して貼る">引用</button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('yellow')" title="黄色マーカー"><span class="paper-selection-swatch color-yellow"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('pink')" title="ピンクマーカー"><span class="paper-selection-swatch color-pink"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('blue')" title="水色マーカー"><span class="paper-selection-swatch color-blue"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('green')" title="黄緑マーカー"><span class="paper-selection-swatch color-green"></span></button>
+          <button type="button" class="paper-selection-btn clear" onclick="clearPaperHighlightSelection()" title="マーカーを解除">解除</button>
         </div>
 
         <!-- 論文バナー（論文メモのみ） -->
@@ -461,54 +1493,218 @@
             <div class="paper-banner-title">{{ memo.paper_title if memo.paper_title else "論文" }}</div>
             <div class="paper-banner-pmid">PMID: {{ memo.pubmed_id }}</div>
           </div>
-          <a href="/paper?id={{ memo.pubmed_id }}&from=paper_memo" class="paper-banner-link">論文を見る</a>
+          <div class="paper-banner-actions">
+            {% if paper_reference %}
+            <button type="button" class="paper-summary-open" onclick="openPaperSummarySheet()">要約を見る</button>
+            {% endif %}
+            <a href="/paper?id={{ memo.pubmed_id }}&from=paper_memo" class="paper-banner-link">論文を見る</a>
+          </div>
         </div>
         {% endif %}
 
         <!-- エディタ -->
+        {% if memo_type == 'paper' and paper_reference %}
+        <div class="paper-note-layout">
+        {% endif %}
         <div class="editor-wrap">
+          <div class="editor-card">
+            <div class="meta-row">
+              <span class="meta-pill">✍ {{ memo.updated_at[:10] }} 更新</span>
+              <span class="meta-pill">🗂 {{ memo.created_at[:10] }} 作成</span>
+              <span class="meta-pill">{% if memo_type == 'paper' %}論文メモ{% else %}クイックメモ{% endif %}</span>
+            </div>
 
-          <div class="meta-row">
-            <span>{{ memo.updated_at[:10] }} 更新</span>
-            <span class="meta-dot"></span>
-            <span>{{ memo.created_at[:10] }} 作成</span>
+            {% if memo_type == 'quick' %}
+            <textarea
+              class="title-input"
+              id="title-input"
+              placeholder="タイトルなし"
+              rows="1"
+            >{{ memo.title }}</textarea>
+            <div class="divider"></div>
+
+            <div class="quick-template-section">
+              <div class="template-heading">よく使う型から始める</div>
+              <div class="template-chip-row">
+                <button type="button" class="template-chip" onclick="insertTemplate('clinical')">臨床メモ</button>
+                <button type="button" class="template-chip" onclick="insertTemplate('study')">座学メモ</button>
+                <button type="button" class="template-chip" onclick="insertTemplate('todo')">ToDo</button>
+                <button type="button" class="template-chip" onclick="insertTemplate('review')">ふり返り</button>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="editor-toolbar desktop-toolbar">
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" onclick="insertBold()" title="太字"><strong>B</strong></button>
+              <button type="button" class="toolbar-btn" onclick="insertItalic()" title="斜体"><em>I</em></button>
+              <button type="button" class="toolbar-btn" onclick="insertUnderline()" title="下線"><span style="text-decoration: underline;">U</span></button>
+              <button type="button" class="toolbar-btn" onclick="insertStrike()" title="取り消し線"><span style="text-decoration: line-through;">S</span></button>
+              <button type="button" class="toolbar-btn" id="heading-toggle-btn" onclick="insertHeading(2)" title="見出し">H2</button>
+              <button type="button" class="toolbar-btn" onclick="insertBulletList()" title="箇条書き">•</button>
+              <button type="button" class="toolbar-btn" onclick="insertNumberedList()" title="番号付き">1.</button>
+              <button type="button" class="toolbar-btn" onclick="insertChecklist()" title="チェックリスト">☑</button>
+              <button type="button" class="toolbar-btn" onclick="insertQuoteBlock()" title="引用">❝</button>
+              <button type="button" class="toolbar-btn" onclick="insertLinkTemplate()" title="リンク">🔗</button>
+              <button type="button" class="toolbar-btn" onclick="insertTimestamp()" title="日時">🕒</button>
+            </div>
           </div>
 
-          {% if memo_type == 'quick' %}
-          <textarea
-            class="title-input"
-            id="title-input"
-            placeholder="タイトル"
-            rows="1"
-          >{{ memo.title }}</textarea>
-          <div class="divider"></div>
-          {% endif %}
-
-          <textarea
-            class="body-input"
-            id="body-input"
-            placeholder="ここにメモを書く..."
-            rows="10"
-          >{{ memo.body }}</textarea>
-
-          <!-- タグセクション -->
-          <div class="tag-section">
-            <div class="tag-label">🏷 タグ</div>
-            <div class="tag-chips" id="tag-chips"></div>
-            <div class="tag-quick-row">
-              {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
-              <button type="button" class="tag-quick-btn" onclick="addTag('{{ tag }}')">{{ tag }}</button>
-              {% endfor %}
+            <div class="body-stage">
+              <div
+                class="body-editor"
+                id="body-editor"
+                contenteditable="true"
+                spellcheck="true"
+                data-placeholder="{% if memo_type == 'paper' %}論文を読んで気づいたこと、臨床への落とし込み、次に確認したいことを書く…{% else %}臨床で使える気づき、座学メモ、次に試すことを残す…{% endif %}"
+              >{{ memo.editor_body_html | safe }}</div>
+              <textarea class="body-hidden" id="body-input">{{ memo.body }}</textarea>
             </div>
-            <div class="tag-input-wrap">
-              <input type="text" class="tag-text-input" id="tag-text-input" placeholder="カスタムタグを追加…"
-                onkeydown="if(event.key==='Enter'){event.preventDefault();addTagFromInput();}">
-              <button type="button" class="tag-add-btn" onclick="addTagFromInput()">追加</button>
+
+            <div class="editor-stats">
+              <span class="editor-stat">文字数 <strong id="char-count">0</strong></span>
+              <span class="editor-stat">行数 <strong id="line-count">0</strong></span>
+              <span class="editor-stat">タグ <strong id="tag-count">0</strong></span>
+            </div>
+            <div class="note-helper">太字・斜体・下線・リンクはそのまま見た目付きで保存されます。PCでは <code>⌘/Ctrl + B</code>、<code>⌘/Ctrl + I</code>、<code>⌘/Ctrl + U</code>、<code>⌘/Ctrl + Z</code> も使えます。</div>
+
+            <!-- タグセクション -->
+            <div class="tag-section">
+              <div class="tag-label">🏷 タグ</div>
+              <div class="tag-chips" id="tag-chips"></div>
+              <div class="tag-quick-row">
+                {% for tag in ["整形","中枢","脳神経","呼吸器","循環器","フレイル","高齢者","骨折","歩行","上肢","ADL","嚥下・認知","リスク管理","離床","多職種連携","教育","研究デザイン"] %}
+                <button type="button" class="tag-quick-btn" onclick="addTag('{{ tag }}')">{{ tag }}</button>
+                {% endfor %}
+              </div>
+              <div class="tag-input-wrap">
+                <input type="text" class="tag-text-input" id="tag-text-input" placeholder="カスタムタグを追加…"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();addTagFromInput();}">
+                <button type="button" class="tag-add-btn" onclick="addTagFromInput()">追加</button>
+              </div>
+            </div>
+
+            <div class="editor-actions">
+              <button type="button" class="delete-link-btn" onclick="showDeleteModal()">このメモを削除</button>
             </div>
           </div>
+        </div>
+        {% if memo_type == 'paper' and paper_reference %}
+        <aside class="paper-reference-panel">
+          <div class="paper-reference-card">
+            <div class="paper-reference-top">
+              <div class="paper-reference-kicker">論文要約</div>
+              {% if paper_reference.clinical_score %}
+              <div class="paper-reference-score">参考度 {{ paper_reference.clinical_score }}</div>
+              {% endif %}
+            </div>
+            <div class="paper-reference-title">{{ paper_reference.display_title }}</div>
+            {% if paper_reference.original_title and paper_reference.original_title != paper_reference.display_title %}
+            <div class="paper-reference-original">{{ paper_reference.original_title }}</div>
+            {% endif %}
+            <div class="paper-reference-meta">
+              {% if paper_reference.journal %}<span>{{ paper_reference.journal }}</span>{% endif %}
+              {% if paper_reference.pubdate %}<span>{{ paper_reference.pubdate }}</span>{% endif %}
+              <span>PMID {{ paper_reference.pubmed_id }}</span>
+            </div>
 
-          <div class="editor-actions">
-            <button type="button" class="delete-link-btn" onclick="showDeleteModal()">このメモを削除</button>
+            {% if paper_reference.summary_jp %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">一言要約</div>
+              <div class="paper-reference-body" data-ref-section="summary_jp">{{ paper_reference.summary_jp }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.clinical_reason %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">臨床で見るポイント</div>
+              <div class="paper-reference-body" data-ref-section="clinical_reason">{{ paper_reference.clinical_reason }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.jp %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">日本語抄録</div>
+              <div class="paper-reference-body" data-ref-section="jp">{{ paper_reference.jp }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.abstract %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">原文 abstract</div>
+              <div class="paper-reference-body" data-ref-section="abstract">{{ paper_reference.abstract }}</div>
+            </div>
+            {% endif %}
+
+            {% if not paper_reference.has_content %}
+            <div class="paper-reference-empty">この論文はまだ要約がありません。論文詳細で要約を表示すると、ここにも内容が出るようになります。</div>
+            {% endif %}
+          </div>
+        </aside>
+        </div>
+
+        <div class="paper-summary-sheet-backdrop" id="paper-summary-sheet-backdrop" onclick="closePaperSummarySheet(event)">
+          <div class="paper-summary-sheet" role="dialog" aria-modal="true" aria-label="論文要約">
+            <div class="paper-summary-sheet-head">
+              <div>
+                <div class="paper-reference-kicker">論文要約</div>
+                <div class="paper-reference-title">{{ paper_reference.display_title }}</div>
+              </div>
+              <button type="button" class="paper-summary-sheet-close" onclick="closePaperSummarySheet()">×</button>
+            </div>
+
+            <div class="paper-reference-meta">
+              {% if paper_reference.journal %}<span>{{ paper_reference.journal }}</span>{% endif %}
+              {% if paper_reference.pubdate %}<span>{{ paper_reference.pubdate }}</span>{% endif %}
+              {% if paper_reference.clinical_score %}<span>参考度 {{ paper_reference.clinical_score }}</span>{% endif %}
+              <span>PMID {{ paper_reference.pubmed_id }}</span>
+            </div>
+
+            {% if paper_reference.summary_jp %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">一言要約</div>
+              <div class="paper-reference-body" data-ref-section="summary_jp">{{ paper_reference.summary_jp }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.clinical_reason %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">臨床で見るポイント</div>
+              <div class="paper-reference-body" data-ref-section="clinical_reason">{{ paper_reference.clinical_reason }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.jp %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">日本語抄録</div>
+              <div class="paper-reference-body" data-ref-section="jp">{{ paper_reference.jp }}</div>
+            </div>
+            {% endif %}
+
+            {% if paper_reference.abstract %}
+            <div class="paper-reference-section">
+              <div class="paper-reference-label">原文 abstract</div>
+              <div class="paper-reference-body" data-ref-section="abstract">{{ paper_reference.abstract }}</div>
+            </div>
+            {% endif %}
+
+            {% if not paper_reference.has_content %}
+            <div class="paper-reference-empty">この論文はまだ要約がありません。論文詳細で要約を表示すると、ここにも内容が出るようになります。</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="mobile-toolbar-shell">
+          <div class="mobile-toolbar">
+            <button type="button" class="mobile-toolbar-btn is-text" onclick="insertBold()" title="太字">B</button>
+            <button type="button" class="mobile-toolbar-btn is-text" onclick="insertItalic()" title="斜体">I</button>
+            <button type="button" class="mobile-toolbar-btn is-text" onclick="insertUnderline()" title="下線"><span style="text-decoration: underline;">U</span></button>
+            <button type="button" class="mobile-toolbar-btn is-text" onclick="insertStrike()" title="取り消し線"><span style="text-decoration: line-through;">S</span></button>
+            <button type="button" class="mobile-toolbar-btn" onclick="insertLinkTemplate()" title="リンク">🔗</button>
+            <button type="button" class="mobile-toolbar-btn" onclick="insertBulletList()" title="箇条書き">•</button>
+            <button type="button" class="mobile-toolbar-btn" onclick="insertNumberedList()" title="番号付き">1.</button>
+            <button type="button" class="mobile-toolbar-btn" onclick="insertChecklist()" title="チェックリスト">☑</button>
           </div>
         </div>
 
@@ -532,38 +1728,598 @@
     </div>
 
     <script>
-      // テキストエリア自動リサイズ
       function autoResize(el) {
+        if (!el) return;
         el.style.height = "auto";
         el.style.height = el.scrollHeight + "px";
       }
 
-      document.querySelectorAll("textarea").forEach(el => {
-        autoResize(el);
-        el.addEventListener("input", () => autoResize(el));
-      });
-
-      // ── 自動保存 + 手動保存 ──
-      let saveTimer = null;
-      let isSaving = false;
-      let needsSave = false;
-      let lastSavedTitle = document.getElementById("title-input") ? document.getElementById("title-input").value : "";
-      let lastSavedBody = document.getElementById("body-input") ? document.getElementById("body-input").value : "";
       const indicator = document.getElementById("save-indicator");
       const saveBtn = document.getElementById("save-btn");
-      const bodyInput = document.getElementById("body-input");
       const titleInput = document.getElementById("title-input");
+      const bodyInput = document.getElementById("body-input");
+      const bodyEditor = document.getElementById("body-editor");
+      const undoBtn = document.getElementById("undo-btn");
+      const redoBtn = document.getElementById("redo-btn");
+      const quickActionsBtn = document.getElementById("quick-actions-btn");
+      const quickActionsPopover = document.getElementById("quick-actions-popover");
+      const paperSelectionToolbar = document.getElementById("paper-selection-toolbar");
+      const charCountEl = document.getElementById("char-count");
+      const lineCountEl = document.getElementById("line-count");
+      const tagCountEl = document.getElementById("tag-count");
       const memoType = "{{ memo_type }}";
       const memoId = {{ memo.id }};
-
+      const paperReferenceBodies = Array.from(document.querySelectorAll(".paper-reference-body[data-ref-section]"));
+      const paperHighlightStorageKey = `paper-memo-highlights:${memoId}`;
       const saveUrl = memoType === "paper"
         ? `/memo/paper/${memoId}/update`
         : `/memo/${memoId}/update`;
 
+      let saveTimer = null;
+      let isSaving = false;
+      let needsSave = false;
+      let lastEditorRange = null;
+      let activePaperSelection = null;
+      let paperHighlights = [];
+
+      if (titleInput) autoResize(titleInput);
+
+      function syncBodyField() {
+        if (!bodyEditor || !bodyInput) return;
+        let html = bodyEditor.innerHTML
+          .replace(/<div><br><\/div>/gi, "<div><br></div>")
+          .replace(/&nbsp;/g, " ");
+        if (html === "<br>") html = "";
+        bodyInput.value = html.trim();
+      }
+
+      function getPlainBodyText() {
+        if (!bodyEditor) return "";
+        return (bodyEditor.innerText || bodyEditor.textContent || "").replace(/\u00a0/g, " ").trim();
+      }
+
+      let lastSavedTitle = titleInput ? titleInput.value : "";
+      syncBodyField();
+      let lastSavedBody = bodyInput ? bodyInput.value : "";
+
+      function setSaveState(state, customText = "") {
+        indicator.classList.add("show");
+        indicator.classList.remove("is-saving", "is-saved", "is-dirty", "is-error");
+        saveBtn.className = "save-btn";
+
+        if (state === "saving") {
+          indicator.textContent = customText || "保存中…";
+          indicator.classList.add("is-saving");
+          saveBtn.classList.add("saving");
+          saveBtn.innerHTML = '<span>…</span><span class="save-btn-label">保存中</span>';
+          return;
+        }
+        if (state === "dirty") {
+          indicator.textContent = customText || "未保存の変更";
+          indicator.classList.add("is-dirty");
+          saveBtn.innerHTML = '<span>↑</span><span class="save-btn-label">保存する</span>';
+          return;
+        }
+        if (state === "error") {
+          indicator.textContent = customText || "保存に失敗しました";
+          indicator.classList.add("is-error");
+          saveBtn.classList.add("error");
+          saveBtn.innerHTML = '<span>!</span><span class="save-btn-label">再保存</span>';
+          return;
+        }
+
+        indicator.textContent = customText || "✓ 自動保存済み";
+        indicator.classList.add("is-saved");
+        saveBtn.classList.add("saved");
+        saveBtn.innerHTML = '<span>✓</span><span class="save-btn-label">保存済み</span>';
+      }
+
+      function updateEditorStats() {
+        const titleValue = titleInput ? titleInput.value : "";
+        const bodyText = getPlainBodyText();
+        const combinedText = [titleValue, bodyText].filter(Boolean).join("\n");
+        const normalized = combinedText.replace(/\r/g, "");
+        const lineCount = normalized.trim() ? normalized.split("\n").length : 0;
+        if (charCountEl) charCountEl.textContent = String(normalized.length);
+        if (lineCountEl) lineCountEl.textContent = String(lineCount);
+      }
+
+      function saveEditorSelection() {
+        if (!bodyEditor) return;
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        const range = selection.getRangeAt(0);
+        if (!bodyEditor.contains(range.commonAncestorContainer)) return;
+        lastEditorRange = range.cloneRange();
+      }
+
+      function focusEditor() {
+        if (!bodyEditor) return;
+        bodyEditor.focus();
+        const selection = window.getSelection();
+        if (selection && lastEditorRange) {
+          selection.removeAllRanges();
+          selection.addRange(lastEditorRange);
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function exec(command, value = null) {
+        focusEditor();
+        document.execCommand(command, false, value);
+        syncBodyField();
+        updateEditorStats();
+        markDirty();
+        updateHeadingButtonsState();
+      }
+
+      function insertHTML(html) {
+        focusEditor();
+        document.execCommand("insertHTML", false, html);
+        syncBodyField();
+        updateEditorStats();
+        markDirty();
+      }
+
+      function undoBodyChange() {
+        focusEditor();
+        document.execCommand("undo", false, null);
+        syncBodyField();
+        updateEditorStats();
+        markDirty();
+      }
+
+      function redoBodyChange() {
+        focusEditor();
+        document.execCommand("redo", false, null);
+        syncBodyField();
+        updateEditorStats();
+        markDirty();
+      }
+
+      function insertBold() { exec("bold"); }
+      function insertItalic() { exec("italic"); }
+      function insertUnderline() { exec("underline"); }
+      function insertStrike() { exec("strikeThrough"); }
+      function insertBulletList() { exec("insertUnorderedList"); }
+      function insertNumberedList() { exec("insertOrderedList"); }
+
+      function insertChecklist() {
+        insertHTML("<div>☐ 確認事項</div><div>☐ 次に試すこと</div>");
+      }
+
+      function getCurrentBlockElement() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || !bodyEditor) return null;
+
+        let node = selection.anchorNode;
+        if (!node || !bodyEditor.contains(node)) return null;
+        if (node.nodeType === Node.TEXT_NODE) {
+          node = node.parentElement;
+        }
+
+        while (node && node !== bodyEditor) {
+          if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            /^(H1|H2|H3|DIV|P|LI|BLOCKQUOTE)$/i.test(node.tagName)
+          ) {
+            return node;
+          }
+          node = node.parentElement;
+        }
+
+        return null;
+      }
+
+      function updateHeadingButtonsState() {
+        const headingButton = document.getElementById("heading-toggle-btn");
+        if (!headingButton) return;
+        const block = getCurrentBlockElement();
+        const isHeading = !!block && block.tagName === "H2";
+        headingButton.classList.toggle("is-active", isHeading);
+      }
+
+      function insertHeading(level = 2) {
+        const tag = level >= 3 ? "h3" : "h2";
+        const block = getCurrentBlockElement();
+        const isSameHeading = !!block && block.tagName === tag.toUpperCase();
+        exec("formatBlock", isSameHeading ? "div" : tag);
+      }
+
+      function insertQuoteBlock() {
+        exec("formatBlock", "blockquote");
+      }
+
+      function insertTimestamp() {
+        const now = new Date();
+        const stamp = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        insertHTML(`<h2>${stamp}</h2><div>• </div>`);
+      }
+
+      function insertLinkTemplate() {
+        focusEditor();
+        const url = window.prompt("リンクURLを入力してください", "https://");
+        if (!url) return;
+        const label = window.prompt("表示名を入力してください", "参考リンク");
+        if (label === null) return;
+        document.execCommand("createLink", false, url.trim());
+        const selection = window.getSelection();
+        if (selection && selection.anchorNode && selection.anchorNode.parentElement && selection.anchorNode.parentElement.tagName === "A") {
+          selection.anchorNode.parentElement.textContent = (label || "参考リンク").trim();
+          selection.anchorNode.parentElement.setAttribute("target", "_blank");
+          selection.anchorNode.parentElement.setAttribute("rel", "noopener noreferrer");
+        } else {
+          insertHTML(`<a href="${url.trim()}" target="_blank" rel="noopener noreferrer">${(label || "参考リンク").trim()}</a>`);
+        }
+        syncBodyField();
+        updateEditorStats();
+        markDirty();
+      }
+
+      function insertTemplate(type) {
+        const templates = {
+          clinical: "<h2>今日の気づき</h2><div>• </div><h2>臨床への落とし込み</h2><div>• </div><h2>次回確認</h2><div>• </div>",
+          study: "<h2>要点</h2><div>• </div><h2>用語・概念</h2><div>• </div><h2>明日使うこと</h2><div>• </div>",
+          todo: "<div>☐ </div><div>☐ </div><div>☐ </div>",
+          review: "<h2>うまくいったこと</h2><div>• </div><h2>詰まったこと</h2><div>• </div><h2>次に試すこと</h2><div>• </div>",
+        };
+        if (!templates[type]) return;
+        insertHTML(templates[type]);
+      }
+
+      function toggleQuickActions(forceOpen = null) {
+        if (!quickActionsPopover) return;
+        const shouldOpen = forceOpen === null ? !quickActionsPopover.classList.contains("show") : forceOpen;
+        quickActionsPopover.classList.toggle("show", shouldOpen);
+        if (quickActionsBtn) quickActionsBtn.classList.toggle("is-active", shouldOpen);
+      }
+
+      function handleQuickAction(type) {
+        if (type === "timestamp") {
+          insertTimestamp();
+        } else if (type === "link") {
+          insertLinkTemplate();
+        } else {
+          insertTemplate(type);
+        }
+        toggleQuickActions(false);
+      }
+
+      function loadPaperHighlights() {
+        if (!paperReferenceBodies.length) return [];
+        try {
+          const parsed = JSON.parse(localStorage.getItem(paperHighlightStorageKey) || "[]");
+          if (!Array.isArray(parsed)) return [];
+          return parsed.filter(item =>
+            item &&
+            typeof item.section === "string" &&
+            Number.isInteger(item.start) &&
+            Number.isInteger(item.end) &&
+            item.end > item.start &&
+            ["yellow", "pink", "blue", "green"].includes(item.color)
+          );
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function persistPaperHighlights() {
+        if (!paperReferenceBodies.length) return;
+        localStorage.setItem(paperHighlightStorageKey, JSON.stringify(paperHighlights));
+      }
+
+      function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+        return Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
+      }
+
+      function createHighlightRecord(section, start, end, color) {
+        return {
+          id: `${section}-${start}-${end}-${color}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          section,
+          start,
+          end,
+          color,
+        };
+      }
+
+      function mergeHighlights(items) {
+        if (!Array.isArray(items) || !items.length) return [];
+        const sorted = items
+          .filter((item) => item && item.end > item.start)
+          .slice()
+          .sort((a, b) => {
+            if (a.section !== b.section) return a.section.localeCompare(b.section);
+            if (a.color !== b.color) return a.color.localeCompare(b.color);
+            if (a.start !== b.start) return a.start - b.start;
+            return a.end - b.end;
+          });
+
+        const merged = [];
+        sorted.forEach((item) => {
+          const previous = merged[merged.length - 1];
+          if (
+            previous &&
+            previous.section === item.section &&
+            previous.color === item.color &&
+            item.start <= previous.end
+          ) {
+            previous.end = Math.max(previous.end, item.end);
+            return;
+          }
+          merged.push({ ...item });
+        });
+        return merged;
+      }
+
+      function subtractRangeFromHighlight(item, start, end) {
+        if (!rangesOverlap(item.start, item.end, start, end)) {
+          return [{ ...item }];
+        }
+        const pieces = [];
+        if (item.start < start) {
+          pieces.push(createHighlightRecord(item.section, item.start, Math.min(start, item.end), item.color));
+        }
+        if (item.end > end) {
+          pieces.push(createHighlightRecord(item.section, Math.max(end, item.start), item.end, item.color));
+        }
+        return pieces;
+      }
+
+      function replaceHighlightRange(section, start, end, color = null) {
+        const nextHighlights = [];
+        paperHighlights.forEach((item) => {
+          if (item.section !== section) {
+            nextHighlights.push(item);
+            return;
+          }
+          nextHighlights.push(...subtractRangeFromHighlight(item, start, end));
+        });
+        if (color) {
+          nextHighlights.push(createHighlightRecord(section, start, end, color));
+        }
+        paperHighlights = mergeHighlights(nextHighlights);
+      }
+
+      function renderSectionHighlights(rawText, highlights) {
+        if (!highlights.length) {
+          return escapeHtml(rawText).replace(/\n/g, "<br>");
+        }
+
+        const parts = [];
+        let cursor = 0;
+        highlights
+          .slice()
+          .sort((a, b) => a.start - b.start)
+          .forEach((highlight) => {
+            const start = Math.max(cursor, highlight.start);
+            const end = Math.min(rawText.length, highlight.end);
+            if (end <= start) return;
+            if (start > cursor) {
+              parts.push(escapeHtml(rawText.slice(cursor, start)).replace(/\n/g, "<br>"));
+            }
+            const highlightedText = escapeHtml(rawText.slice(start, end)).replace(/\n/g, "<br>");
+            parts.push(`<mark class="paper-highlight color-${highlight.color}" data-highlight-id="${highlight.id}">${highlightedText}</mark>`);
+            cursor = end;
+          });
+        if (cursor < rawText.length) {
+          parts.push(escapeHtml(rawText.slice(cursor)).replace(/\n/g, "<br>"));
+        }
+        return parts.join("");
+      }
+
+      function getNodePlainTextLength(node) {
+        if (!node) return 0;
+        if (node.nodeType === Node.TEXT_NODE) {
+          return node.textContent.length;
+        }
+        if (node.nodeName === "BR") {
+          return 1;
+        }
+        let total = 0;
+        node.childNodes.forEach((child) => {
+          total += getNodePlainTextLength(child);
+        });
+        return total;
+      }
+
+      function getRangeBoundaryOffset(root, container, offset) {
+        let resolved = null;
+
+        function walk(node, total) {
+          if (resolved !== null) return total;
+
+          if (node === container) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              resolved = total + offset;
+              return total + node.textContent.length;
+            }
+
+            let childTotal = total;
+            const children = Array.from(node.childNodes);
+            for (let i = 0; i < Math.min(offset, children.length); i += 1) {
+              childTotal += getNodePlainTextLength(children[i]);
+            }
+            resolved = childTotal;
+            return total + getNodePlainTextLength(node);
+          }
+
+          if (node.nodeType === Node.TEXT_NODE) {
+            return total + node.textContent.length;
+          }
+
+          if (node.nodeName === "BR") {
+            return total + 1;
+          }
+
+          let nextTotal = total;
+          node.childNodes.forEach((child) => {
+            nextTotal = walk(child, nextTotal);
+          });
+          return nextTotal;
+        }
+
+        walk(root, 0);
+        return resolved;
+      }
+
+      function renderPaperHighlights() {
+        if (!paperReferenceBodies.length) return;
+        let highlightsChanged = false;
+        paperReferenceBodies.forEach((element) => {
+          if (!element.dataset.rawText) {
+            element.dataset.rawText = element.textContent || "";
+          }
+          const section = element.dataset.refSection || "";
+          const rawText = element.dataset.rawText || "";
+          const sectionHighlights = paperHighlights.filter((item) => item.section === section && item.start >= 0 && item.end <= rawText.length && item.end > item.start);
+          if (sectionHighlights.length !== paperHighlights.filter((item) => item.section === section).length) {
+            highlightsChanged = true;
+          }
+          element.innerHTML = renderSectionHighlights(rawText, sectionHighlights);
+        });
+        if (highlightsChanged) {
+          paperHighlights = paperHighlights.filter((item) => {
+            const target = paperReferenceBodies.find((element) => (element.dataset.refSection || "") === item.section);
+            const rawText = target ? (target.dataset.rawText || target.textContent || "") : "";
+            return item.start >= 0 && item.end <= rawText.length && item.end > item.start;
+          });
+          persistPaperHighlights();
+        }
+      }
+
+      function getPaperReferenceSelection() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+        const range = selection.getRangeAt(0);
+        const startRoot = range.startContainer.nodeType === Node.ELEMENT_NODE
+          ? range.startContainer.closest?.(".paper-reference-body[data-ref-section]")
+          : range.startContainer.parentElement?.closest(".paper-reference-body[data-ref-section]");
+        const endRoot = range.endContainer.nodeType === Node.ELEMENT_NODE
+          ? range.endContainer.closest?.(".paper-reference-body[data-ref-section]")
+          : range.endContainer.parentElement?.closest(".paper-reference-body[data-ref-section]");
+        if (!startRoot || !endRoot || startRoot !== endRoot) return null;
+        const root = startRoot;
+        const text = selection.toString();
+        if (!text || !text.trim()) return null;
+        const start = getRangeBoundaryOffset(root, range.startContainer, range.startOffset);
+        const end = getRangeBoundaryOffset(root, range.endContainer, range.endOffset);
+        if (
+          start === null ||
+          end === null ||
+          !Number.isInteger(start) ||
+          !Number.isInteger(end) ||
+          end <= start
+        ) {
+          return null;
+        }
+
+        return {
+          root,
+          range: range.cloneRange(),
+          section: root.dataset.refSection || "",
+          text,
+          start,
+          end,
+        };
+      }
+
+      function hidePaperSelectionToolbar() {
+        activePaperSelection = null;
+        if (!paperSelectionToolbar) return;
+        paperSelectionToolbar.classList.remove("open");
+      }
+
+      function positionPaperSelectionToolbar(rect) {
+        if (!paperSelectionToolbar || !rect) return;
+        const toolbarRect = paperSelectionToolbar.getBoundingClientRect();
+        const top = Math.max(12, rect.top - toolbarRect.height - 10);
+        const left = Math.min(
+          window.innerWidth - toolbarRect.width - 12,
+          Math.max(12, rect.left + (rect.width / 2) - (toolbarRect.width / 2))
+        );
+        paperSelectionToolbar.style.top = `${top}px`;
+        paperSelectionToolbar.style.left = `${left}px`;
+      }
+
+      function showPaperSelectionToolbar(selectionInfo) {
+        if (!paperSelectionToolbar || !selectionInfo) return;
+        activePaperSelection = selectionInfo;
+        paperSelectionToolbar.classList.add("open");
+        requestAnimationFrame(() => {
+          positionPaperSelectionToolbar(selectionInfo.range.getBoundingClientRect());
+        });
+      }
+
+      function refreshPaperSelectionToolbar() {
+        const selectionInfo = getPaperReferenceSelection();
+        if (!selectionInfo) {
+          hidePaperSelectionToolbar();
+          return;
+        }
+        showPaperSelectionToolbar(selectionInfo);
+      }
+
+      function quoteSelectedReference() {
+        if (!activePaperSelection) return;
+        const plainText = activePaperSelection.text.replace(/\u00a0/g, " ").trim();
+        if (!plainText) return;
+        const quotedText = escapeHtml(plainText).replace(/\n/g, "<br>");
+        insertHTML(`<div>${quotedText}</div><div><br></div>`);
+        hidePaperSelectionToolbar();
+        const selection = window.getSelection();
+        if (selection) selection.removeAllRanges();
+      }
+
+      function applyPaperHighlight(color) {
+        if (!activePaperSelection) return;
+        const { section, start, end } = activePaperSelection;
+        replaceHighlightRange(section, start, end, color);
+        persistPaperHighlights();
+        renderPaperHighlights();
+        hidePaperSelectionToolbar();
+        const selection = window.getSelection();
+        if (selection) selection.removeAllRanges();
+      }
+
+      function clearPaperHighlightSelection() {
+        if (!activePaperSelection) return;
+        const { section, start, end } = activePaperSelection;
+        replaceHighlightRange(section, start, end, null);
+        persistPaperHighlights();
+        renderPaperHighlights();
+        hidePaperSelectionToolbar();
+        const selection = window.getSelection();
+        if (selection) selection.removeAllRanges();
+      }
+
+      function openPaperSummarySheet() {
+        const sheet = document.getElementById("paper-summary-sheet-backdrop");
+        if (!sheet) return;
+        hidePaperSelectionToolbar();
+        sheet.classList.add("open");
+        document.body.classList.add("modal-open");
+      }
+
+      function closePaperSummarySheet(event = null) {
+        if (event && event.target !== event.currentTarget) return;
+        const sheet = document.getElementById("paper-summary-sheet-backdrop");
+        if (!sheet) return;
+        sheet.classList.remove("open");
+        document.body.classList.remove("modal-open");
+        hidePaperSelectionToolbar();
+      }
+
       function markDirty() {
         needsSave = true;
-        saveBtn.textContent = "💾 保存";
-        saveBtn.className = "save-btn";
+        setSaveState("dirty");
         clearTimeout(saveTimer);
         saveTimer = setTimeout(doSave, 1500);
       }
@@ -579,56 +2335,40 @@
       }
 
       async function doSave() {
+        syncBodyField();
         if (isSaving) { needsSave = true; return; }
         const body = bodyInput ? bodyInput.value : "";
         const title = titleInput ? titleInput.value : "";
 
         if (!needsSave && title === lastSavedTitle && body === lastSavedBody) {
-          saveBtn.textContent = "✓ 保存済み";
-          saveBtn.className = "save-btn saved";
+          setSaveState("saved");
           return;
         }
 
         isSaving = true;
         needsSave = false;
-
-        saveBtn.textContent = "保存中...";
-        saveBtn.className = "save-btn saving";
+        setSaveState("saving");
 
         const fd = new FormData();
         fd.append("body", body);
         if (memoType === "quick") fd.append("title", title);
 
         try {
-          console.log("[memo] saving to", saveUrl, "body length:", body.length, "title:", title);
           const res = await fetch(saveUrl, { method: "POST", body: fd });
-          console.log("[memo] response status:", res.status);
           if (!res.ok) {
-            const text = await res.text();
-            console.error("[memo] save failed:", res.status, text);
-            saveBtn.textContent = "⚠ 保存失敗";
-            saveBtn.className = "save-btn error";
+            setSaveState("error");
             return;
           }
           const data = await res.json();
-          console.log("[memo] save result:", data);
           if (data.ok) {
             lastSavedTitle = title;
             lastSavedBody = body;
-            saveBtn.textContent = "✓ 保存済み";
-            saveBtn.className = "save-btn saved";
-            indicator.textContent = "✓ 保存しました";
-            indicator.classList.add("show");
-            setTimeout(() => indicator.classList.remove("show"), 2000);
+            setSaveState("saved", "✓ 自動保存済み");
           } else {
-            saveBtn.textContent = "⚠ 保存失敗";
-            saveBtn.className = "save-btn error";
-            console.error("[memo] server returned ok:false", data);
+            setSaveState("error");
           }
         } catch (e) {
-          console.error("[memo] save error:", e);
-          saveBtn.textContent = "⚠ 保存失敗";
-          saveBtn.className = "save-btn error";
+          setSaveState("error");
         } finally {
           isSaving = false;
           if (needsSave) {
@@ -638,21 +2378,70 @@
         }
       }
 
-      if (bodyInput) {
-        bodyInput.addEventListener("input", markDirty);
-        bodyInput.addEventListener("blur", saveNow);
+      document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+          closePaperSummarySheet();
+          hidePaperSelectionToolbar();
+        }
+        const isModifier = event.metaKey || event.ctrlKey;
+        if (!isModifier || document.activeElement !== bodyEditor) return;
+        const key = event.key.toLowerCase();
+        if (key === "b") {
+          event.preventDefault();
+          insertBold();
+        } else if (key === "i") {
+          event.preventDefault();
+          insertItalic();
+        } else if (key === "u") {
+          event.preventDefault();
+          insertUnderline();
+        } else if (key === "k") {
+          event.preventDefault();
+          insertLinkTemplate();
+        } else if (key === "z" && event.shiftKey) {
+          event.preventDefault();
+          redoBodyChange();
+        } else if (key === "z") {
+          event.preventDefault();
+          undoBodyChange();
+        }
+      });
+
+      if (bodyEditor) {
+        bodyEditor.addEventListener("mouseup", saveEditorSelection);
+        bodyEditor.addEventListener("keyup", saveEditorSelection);
+        bodyEditor.addEventListener("input", () => {
+          syncBodyField();
+          updateEditorStats();
+          saveEditorSelection();
+          updateHeadingButtonsState();
+          markDirty();
+        });
+        bodyEditor.addEventListener("blur", () => {
+          saveEditorSelection();
+          updateHeadingButtonsState();
+          saveNow();
+        });
+        bodyEditor.addEventListener("paste", (event) => {
+          event.preventDefault();
+          const text = (event.clipboardData || window.clipboardData).getData("text/plain");
+          document.execCommand("insertText", false, text);
+        });
       }
+
       if (titleInput) {
-        titleInput.addEventListener("input", markDirty);
+        titleInput.addEventListener("input", () => {
+          autoResize(titleInput);
+          updateEditorStats();
+          markDirty();
+        });
         titleInput.addEventListener("blur", saveNow);
       }
 
-      // タブ切り替え・バックグラウンド移動時にも保存
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) saveNow();
       });
 
-      // 削除モーダル
       function showDeleteModal() {
         document.getElementById("delete-modal").classList.add("show");
       }
@@ -665,8 +2454,51 @@
         if (e.target === this) hideDeleteModal();
       });
 
-      // ── タグ ──
+      document.addEventListener("click", function(event) {
+        if (!quickActionsPopover || !quickActionsBtn) return;
+        if (quickActionsPopover.contains(event.target) || quickActionsBtn.contains(event.target)) return;
+        toggleQuickActions(false);
+      });
+
+      document.addEventListener("selectionchange", function() {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && bodyEditor && bodyEditor.contains(selection.anchorNode)) {
+          saveEditorSelection();
+        }
+        updateHeadingButtonsState();
+      });
+
+      updateHeadingButtonsState();
+
+      if (paperSelectionToolbar) {
+        paperSelectionToolbar.addEventListener("mousedown", function(event) {
+          event.preventDefault();
+        });
+        paperSelectionToolbar.addEventListener("touchstart", function(event) {
+          event.preventDefault();
+        }, { passive: false });
+      }
+
+      document.addEventListener("mouseup", refreshPaperSelectionToolbar);
+      document.addEventListener("touchend", () => {
+        setTimeout(refreshPaperSelectionToolbar, 30);
+      });
+      document.addEventListener("scroll", hidePaperSelectionToolbar, true);
+      window.addEventListener("resize", hidePaperSelectionToolbar);
+      document.addEventListener("click", function(event) {
+        if (!paperSelectionToolbar) return;
+        if (paperSelectionToolbar.contains(event.target)) return;
+        const inReference = event.target.closest && event.target.closest(".paper-reference-body[data-ref-section]");
+        if (!inReference) {
+          hidePaperSelectionToolbar();
+        }
+      });
+
       let currentTags = {{ (memo.tags or "") | tojson | safe }}.split(",").filter(t => t.trim());
+
+      function updateTagCount() {
+        if (tagCountEl) tagCountEl.textContent = String(currentTags.length);
+      }
 
       function renderTagChips() {
         const container = document.getElementById("tag-chips");
@@ -678,6 +2510,7 @@
           span.innerHTML = `${tag} <button class="tag-chip-remove" onclick="removeTag('${tag.replace(/'/g,"\\'")}')">×</button>`;
           container.appendChild(span);
         });
+        updateTagCount();
       }
 
       function addTag(tag) {
@@ -709,14 +2542,21 @@
         try { await fetch(url, { method: "POST", body: fd }); } catch(e) {}
       }
 
+      paperHighlights = loadPaperHighlights();
+      renderPaperHighlights();
       renderTagChips();
+      updateEditorStats();
+      saveEditorSelection();
+      setSaveState("saved");
 
       async function flushSaveForExit() {
+        syncBodyField();
         const currentBody = bodyInput ? bodyInput.value : "";
         const currentTitle = titleInput ? titleInput.value : "";
+        const plainBody = getPlainBodyText();
         const isEmpty = memoType === "paper"
-          ? !currentBody.trim()
-          : (!currentBody.trim() && !currentTitle.trim());
+          ? !plainBody.trim()
+          : (!plainBody.trim() && !currentTitle.trim());
 
         if (isEmpty) {
           const deleteUrl = memoType === "paper"
@@ -737,19 +2577,12 @@
         if (memoType === "quick") exitFd.append("title", currentTitle);
 
         try {
-          await fetch(saveUrl, {
-            method: "POST",
-            body: exitFd,
-            keepalive: true,
-          });
+          await fetch(saveUrl, { method: "POST", body: exitFd, keepalive: true });
         } catch (e) {
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon(saveUrl, exitFd);
-          }
+          if (navigator.sendBeacon) navigator.sendBeacon(saveUrl, exitFd);
         }
       }
 
-      // ページを離れるとき: 空なら削除、内容があれば保存を確定
       window.addEventListener("pagehide", function() {
         clearTimeout(saveTimer);
         flushSaveForExit();

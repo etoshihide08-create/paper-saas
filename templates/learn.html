@@ -6,26 +6,38 @@
   <title>学ぶ – リハエビデンスナビ</title>
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f4f7fb;
       --card: #ffffff;
-      --text: #111827;
-      --subtext: #6b7280;
-      --line: #e5e7eb;
+      --text: #0f172a;
+      --subtext: #64748b;
+      --line: #dbe3ee;
+      --primary: #2563eb;
       --blue: #2563eb;
-      --blue-soft: #eff6ff;
+      --primary-soft: #eaf2ff;
+      --blue-soft: #eaf2ff;
+      --secondary: #16324f;
+      --secondary-soft: #eef4f8;
+      --accent: #f59e0b;
+      --accent-soft: #fff5db;
+      --sidebar-bg: #ffffff;
       --radius: 18px;
-      --shadow: 0 4px 16px rgba(15,23,42,0.07);
+      --shadow: 0 12px 32px rgba(15,23,42,0.08);
+      --shadow-soft: 0 8px 22px rgba(15,23,42,0.06);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top, rgba(37,99,235,0.06), transparent 28%), var(--bg); color: var(--text); }
 
-    .page-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); padding: 14px 16px; }
-    .page-header h1 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+    .app-layout { min-height: 100vh; }
+    .sidebar { display: none; }
+    .main-area { min-height: 100vh; padding-bottom: 100px; }
+
+    .page-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.94)); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(22,50,79,0.08); padding: 14px 16px; box-shadow: 0 10px 28px rgba(15,23,42,0.04); }
+    .page-header h1 { font-size: 18px; font-weight: 900; margin-bottom: 10px; color: var(--secondary); letter-spacing: -0.02em; }
 
     /* Tab toggle */
     .tab-bar { display: flex; gap: 0; }
-    .tab-btn { flex: 1; padding: 8px 0; font-size: 14px; font-weight: 700; border: none; background: none; cursor: pointer; color: var(--subtext); border-bottom: 2px solid transparent; transition: all 0.15s; }
-    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-btn { flex: 1; padding: 8px 0; font-size: 14px; font-weight: 800; border: none; background: none; cursor: pointer; color: var(--subtext); border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
     .container { max-width: 640px; margin: 0 auto; padding: 16px; }
 
@@ -37,22 +49,30 @@
     .rec-section { margin-bottom: 26px; }
     .rec-section-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .rec-section-title { font-size: 18px; font-weight: 900; line-height: 1.35; }
-    .rec-section-subtitle { font-size: 13px; color: var(--subtext); line-height: 1.7; margin-top: 4px; }
-    .rec-more-wrap { display: flex; justify-content: center; margin-top: 12px; }
-    .rec-more-wrap.hidden { display: none; }
-    .rec-more-btn { border: none; background: #eef2ff; color: #4338ca; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; }
-    .rec-more-btn:hover { background: #e0e7ff; }
+    .rec-section-subtitle { display: none; }
     .rec-feed { display: grid; gap: 12px; }
-    .rec-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .rec-card { position: relative; overflow: hidden; background: var(--card); border: 1px solid rgba(37,99,235,0.08); border-radius: calc(var(--radius) + 2px); box-shadow: var(--shadow); padding: 16px; }
+    .rec-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--secondary), var(--primary)); }
+    .rec-card.clickable { cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+    .rec-card.clickable:hover { transform: translateY(-2px); border-color: rgba(37,99,235,0.2); box-shadow: 0 18px 36px rgba(15,23,42,0.09); }
+    .rec-card.clickable:focus-visible { outline: 3px solid rgba(37,99,235,0.22); outline-offset: 2px; }
     .rec-card.hidden { display: none; }
-    .rec-reason { font-size: 11px; font-weight: 700; color: #7c3aed; background: #f5f3ff; padding: 3px 9px; border-radius: 999px; display: inline-block; margin-bottom: 10px; }
-    .rec-title { font-size: 15px; font-weight: 800; line-height: 1.5; margin-bottom: 6px; color: var(--text); }
+    .rec-title { font-size: 15px; font-weight: 900; line-height: 1.5; margin-bottom: 6px; color: var(--secondary); }
     .rec-meta { font-size: 12px; color: var(--subtext); margin-bottom: 10px; }
-    .rec-summary { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .rec-tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-    .rec-tag-chip { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 800; text-decoration: none; }
-    .rec-tag-chip:hover { background: #e0e7ff; }
-    .rec-inline-actions { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+    .rec-summary { font-size: 13px; color: #334155; line-height: 1.7; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .rec-social-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; }
+    .rec-social-btn { border: none; background: transparent; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; min-height: 32px; font-size: 12px; font-weight: 700; transition: color 0.15s ease, transform 0.15s ease; }
+    .rec-social-btn:hover { transform: translateY(-1px); }
+    .rec-social-btn:active { transform: translateY(0); }
+    .rec-social-btn.comment:hover,
+    .rec-social-btn.share:hover { color: var(--primary); }
+    .rec-social-btn.save.saved,
+    .rec-social-btn.save:hover { color: #1d4ed8; }
+    .rec-social-btn.liked,
+    .rec-social-btn.like:hover { color: #f91880; }
+    .rec-social-icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .rec-social-btn.liked .rec-social-icon.like-fill { fill: currentColor; stroke: currentColor; }
+    .rec-social-label { line-height: 1; }
     .rec-inline-btn,
     .btn-like,
     .btn-reply-toggle,
@@ -76,7 +96,7 @@
     .btn-like-sm:active .action-chip-glyph,
     .btn-attach:active .action-chip-glyph { transform: scale(0.94); }
     .rec-inline-btn:hover .action-chip-glyph,
-    .btn-attach:hover .action-chip-glyph { background: #e5e7eb; }
+    .btn-attach:hover .action-chip-glyph { background: #e8eef5; }
     .rec-inline-btn.saved { color: #166534; }
     .rec-inline-btn.saved .action-chip-glyph { background: #dcfce7; box-shadow: inset 0 0 0 1px rgba(34,197,94,0.12); }
     .rec-inline-btn.liked,
@@ -89,29 +109,72 @@
     .btn-like-sm:hover { color: #f91880; }
     .btn-like:hover .action-chip-glyph,
     .btn-like-sm:hover .action-chip-glyph { background: rgba(249,24,128,0.12); }
-    .btn-reply-toggle:hover { color: #2563eb; }
+    .btn-reply-toggle:hover { color: var(--primary); }
     .btn-reply-toggle:hover .action-chip-glyph { background: #dbeafe; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.12); }
-    .rec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .rec-btn { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; text-decoration: none; display: inline-block; }
-    .rec-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
-    .rec-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .rec-btn.primary:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    .rec-btn.primary { background: linear-gradient(135deg, var(--secondary), var(--primary)); border-color: var(--primary); color: #fff; box-shadow: 0 12px 24px rgba(37,99,235,0.18); }
+    .rec-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .rec-btn.primary:hover { background: linear-gradient(135deg, #102843, #1d4ed8); border-color: var(--primary); color: #fff; }
+    .rec-autoload-sentinel { height: 1px; margin-top: -1px; }
 
     .rec-empty { text-align: center; padding: 60px 20px; color: var(--subtext); }
     .rec-empty .icon { font-size: 48px; margin-bottom: 12px; }
     .rec-empty p { font-size: 15px; line-height: 1.7; }
 
+    .save-sheet-backdrop { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(15,23,42,0.34); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 210; padding: 18px 16px calc(86px + env(safe-area-inset-bottom)); }
+    .save-sheet-backdrop.open { display: flex; }
+    .save-sheet { width: min(100%, 520px); background: rgba(255,255,255,0.98); border-radius: 26px 26px 20px 20px; box-shadow: 0 28px 56px rgba(15,23,42,0.24); padding: 18px 16px 16px; }
+    .save-sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .save-sheet-title { font-size: 16px; font-weight: 900; color: var(--secondary); }
+    .save-sheet-subtitle { font-size: 12px; color: var(--subtext); margin-top: 4px; line-height: 1.6; }
+    .save-sheet-close { width: 36px; height: 36px; border: none; border-radius: 50%; background: #f3f4f6; color: #475569; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+    .save-sheet-close:hover { background: #e5e7eb; }
+    .save-sheet-paper { padding: 12px 13px; border-radius: 16px; background: #f8fbff; border: 1px solid rgba(37,99,235,0.08); font-size: 13px; font-weight: 700; line-height: 1.6; color: var(--secondary); margin-bottom: 12px; }
+    .save-sheet-label { font-size: 12px; font-weight: 800; color: #64748b; margin: 12px 0 8px; }
+    .save-sheet-options { display: grid; gap: 8px; }
+    .save-sheet-option { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid #dbe3ee; border-radius: 16px; background: #fff; color: var(--text); cursor: pointer; text-align: left; transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
+    .save-sheet-option:hover { border-color: rgba(37,99,235,0.24); background: #f8fbff; transform: translateY(-1px); }
+    .save-sheet-option.active { border-color: rgba(37,99,235,0.32); background: #eef4ff; color: var(--secondary); }
+    .save-sheet-option-main { display: flex; flex-direction: column; gap: 3px; }
+    .save-sheet-option-name { font-size: 14px; font-weight: 800; }
+    .save-sheet-option-meta { font-size: 11px; color: var(--subtext); }
+    .save-sheet-option-check { width: 24px; height: 24px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(37,99,235,0.1); color: var(--primary); font-size: 13px; font-weight: 900; opacity: 0; }
+    .save-sheet-option.active .save-sheet-option-check { opacity: 1; }
+    .save-sheet-new-row { display: flex; gap: 8px; margin-top: 8px; }
+    .save-sheet-input { flex: 1; border: 1px solid #dbe3ee; border-radius: 14px; padding: 11px 13px; font-size: 13px; outline: none; }
+    .save-sheet-input:focus { border-color: rgba(37,99,235,0.28); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+    .save-sheet-submit { border: none; border-radius: 14px; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; font-size: 13px; font-weight: 800; padding: 0 16px; cursor: pointer; white-space: nowrap; }
+    .save-sheet-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .comment-sheet-backdrop { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(15,23,42,0.34); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 215; padding: 18px 16px calc(86px + env(safe-area-inset-bottom)); }
+    .comment-sheet-backdrop.open { display: flex; }
+    .comment-sheet { width: min(100%, 560px); background: rgba(255,255,255,0.98); border-radius: 26px 26px 20px 20px; box-shadow: 0 28px 56px rgba(15,23,42,0.24); padding: 18px 16px 16px; max-height: min(80vh, 760px); display: flex; flex-direction: column; }
+    .comment-sheet-list { display: grid; gap: 10px; overflow-y: auto; padding-right: 2px; margin: 2px 0 14px; }
+    .comment-sheet-empty { padding: 14px; border-radius: 16px; background: #f8fafc; color: var(--subtext); font-size: 13px; line-height: 1.7; text-align: center; }
+    .comment-item { padding: 12px 13px; border-radius: 16px; background: #fff; border: 1px solid rgba(37,99,235,0.08); box-shadow: var(--shadow-soft); }
+    .comment-item-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .comment-item-avatar { width: 34px; height: 34px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; overflow: hidden; flex-shrink: 0; }
+    .comment-item-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-item-meta { min-width: 0; }
+    .comment-item-name { font-size: 13px; font-weight: 800; color: var(--secondary); }
+    .comment-item-time { font-size: 11px; color: var(--subtext); margin-top: 2px; }
+    .comment-item-body { font-size: 14px; line-height: 1.7; color: #334155; white-space: pre-wrap; word-break: break-word; }
+    .comment-sheet-form { display: grid; gap: 10px; margin-top: auto; }
+    .comment-sheet-textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid #dbe3ee; border-radius: 16px; padding: 12px 14px; font: inherit; font-size: 14px; line-height: 1.7; outline: none; }
+    .comment-sheet-textarea:focus { border-color: rgba(37,99,235,0.28); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+    .comment-sheet-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .comment-sheet-note { font-size: 12px; color: var(--subtext); line-height: 1.6; }
+
     /* Tag filter bar */
-    .tag-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+    .tag-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: rgba(255,255,255,0.96); border-bottom: 1px solid var(--line); scrollbar-width: none; box-shadow: 0 8px 24px rgba(15,23,42,0.03); }
     .tag-filter-bar::-webkit-scrollbar { display: none; }
     .filter-chip { flex-shrink: 0; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; text-decoration: none; white-space: nowrap; }
-    .filter-chip:hover { border-color: var(--blue); color: var(--blue); }
-    .filter-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     /* Composer */
-    .composer { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .composer { background: var(--card); border: 1px solid rgba(37,99,235,0.08); border-radius: calc(var(--radius) + 2px); box-shadow: var(--shadow); padding: 16px; }
     .composer-top { display: flex; gap: 12px; align-items: flex-start; }
-    .composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
     .composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .composer-body { flex: 1; }
     textarea.composer-input { width: 100%; border: none; outline: none; resize: none; font-size: 15px; line-height: 1.6; min-height: 72px; background: transparent; font-family: inherit; color: var(--text); }
@@ -119,37 +182,37 @@
 
     .tag-btn-wrapper { position: relative; display: inline-block; margin-top: 8px; }
     .tag-open-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
-    .tag-open-btn.has-tags { border-color: #6366f1; color: #4338ca; background: #eef2ff; }
-    .tag-open-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .tag-open-btn.has-tags { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+    .tag-open-btn:hover { border-color: var(--primary); color: var(--primary); }
     .tag-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.12); padding: 12px; width: min(360px, calc(100vw - 56px)); max-height: min(420px, calc(100vh - 240px)); overflow-y: auto; }
     .tag-dropdown.open { display: block; }
     .tag-dropdown-grid { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag-toggle { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid #d1d5db; background: #fff; color: var(--subtext); cursor: pointer; }
-    .tag-toggle.on { background: #eef2ff; border-color: #6366f1; color: #4338ca; }
+    .tag-toggle.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
     .tag-section-label { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
     .tag-custom-input-row { display: flex; gap: 6px; margin-top: 4px; }
     .tag-custom-input { flex: 1; padding: 5px 10px; border: 1.5px solid #d1d5db; border-radius: 999px; font-size: 12px; outline: none; }
-    .tag-custom-input:focus { border-color: #6366f1; }
-    .tag-custom-add-btn { padding: 5px 12px; border-radius: 999px; border: none; background: #6366f1; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .tag-custom-input:focus { border-color: var(--primary); }
+    .tag-custom-add-btn { padding: 5px 12px; border-radius: 999px; border: none; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .tag-selected-preview { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; min-height: 0; }
-    .tag-selected-chip { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; }
+    .tag-selected-chip { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--primary-soft); color: var(--primary); }
 
     .paper-attach-box { margin-top: 10px; padding: 10px 12px; background: var(--blue-soft); border-radius: 12px; display: none; position: relative; }
     .paper-attach-box.visible { display: block; }
     .paper-attach-label { font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 6px; }
     .paper-attach-helper { font-size: 12px; color: var(--subtext); margin-bottom: 10px; line-height: 1.6; }
-    .paper-picker-search { width: 100%; border: 1px solid #bfdbfe; border-radius: 10px; padding: 9px 10px; font-size: 13px; background: #fff; outline: none; margin-bottom: 8px; }
+    .paper-picker-search { width: 100%; border: 1px solid rgba(37,99,235,0.18); border-radius: 10px; padding: 9px 10px; font-size: 13px; background: #fff; outline: none; margin-bottom: 8px; }
     .paper-picker-search:focus { border-color: var(--blue); }
     .paper-picker-list { display: grid; gap: 8px; max-height: 220px; overflow-y: auto; margin-bottom: 10px; }
     .paper-picker-item { width: 100%; text-align: left; border: 1px solid #dbeafe; background: #fff; border-radius: 12px; padding: 10px 11px; cursor: pointer; }
     .paper-picker-item:hover { border-color: var(--blue); background: #f8fbff; }
     .paper-picker-title { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 3px; }
     .paper-picker-meta { font-size: 11px; color: var(--subtext); line-height: 1.5; }
-    .paper-picker-empty { font-size: 12px; color: var(--subtext); background: #fff; border: 1px dashed #bfdbfe; border-radius: 12px; padding: 12px; text-align: center; }
+    .paper-picker-empty { font-size: 12px; color: var(--subtext); background: #fff; border: 1px dashed rgba(37,99,235,0.18); border-radius: 12px; padding: 12px; text-align: center; }
     .paper-manual-toggle { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; color: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 8px; }
     .paper-manual-fields { display: none; margin-top: 4px; }
     .paper-manual-fields.open { display: block; }
-    .paper-attach-input { width: 100%; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 10px; font-size: 13px; background: #fff; outline: none; }
+    .paper-attach-input { width: 100%; border: 1px solid rgba(37,99,235,0.18); border-radius: 8px; padding: 8px 10px; font-size: 13px; background: #fff; outline: none; }
     .paper-attach-input:focus { border-color: var(--blue); }
     .attach-clear { position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--subtext); font-size: 16px; cursor: pointer; }
 
@@ -161,7 +224,7 @@
     .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
     .char-count { font-size: 12px; color: var(--subtext); }
     .char-count.over { color: #dc2626; }
-    .board-fab { position: fixed; right: 18px; bottom: 84px; width: 58px; height: 58px; border: none; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-size: 32px; line-height: 1; box-shadow: 0 16px 30px rgba(37,99,235,0.32); cursor: pointer; z-index: 180; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+    .board-fab { position: fixed; right: 18px; bottom: 84px; width: 58px; height: 58px; border: none; border-radius: 50%; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; font-size: 32px; line-height: 1; box-shadow: 0 16px 30px rgba(37,99,235,0.32); cursor: pointer; z-index: 180; display: flex; align-items: center; justify-content: center; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
     .board-fab:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 18px 34px rgba(37,99,235,0.38); }
     .board-fab.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
     .composer-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.34); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 190; padding: 20px 16px 88px; overflow-y: auto; }
@@ -179,18 +242,47 @@
     .login-prompt { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; text-align: center; margin-bottom: 20px; font-size: 14px; color: var(--subtext); }
     .login-prompt a { color: var(--blue); font-weight: 700; text-decoration: none; }
 
+    .official-post-card { background: var(--card); }
+    .post-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .official-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 18px; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 800; letter-spacing: 0.03em; }
+    .official-badge.editorial { background: rgba(37,99,235,0.08); color: #3665ba; }
+    .official-note-body { display: grid; gap: 6px; margin-bottom: 10px; }
+    .official-note-preview.hidden { display: none; }
+    .official-note-line { color: #334155; font-size: 14px; line-height: 1.75; }
+    .official-note-line strong { color: var(--secondary); }
+    .official-note-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .official-note-hidden { display: none; margin-top: 6px; }
+    .official-note-hidden.open { display: grid; gap: 6px; }
+    .official-note-more {
+      border: none;
+      background: transparent;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 800;
+      padding: 0;
+      cursor: pointer;
+      margin: -2px 0 10px;
+    }
+    .official-note-more:hover { text-decoration: underline; }
+    .official-note-disclosure {
+      color: var(--subtext);
+      font-size: 12px;
+      line-height: 1.7;
+      padding-top: 2px;
+    }
+
     /* Posts */
-    .post-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
+    .post-card { background: var(--card); border: 1px solid rgba(37,99,235,0.08); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ff; color: #3730a3; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
     .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .post-meta { flex: 1; min-width: 0; }
     .post-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .post-time { font-size: 12px; color: var(--subtext); }
     .post-content { font-size: 15px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; margin-bottom: 10px; }
     .post-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-    .post-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; text-decoration: none; }
-    .post-tag:hover { background: #e0e7ff; }
+    .post-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--primary-soft); color: var(--primary); text-decoration: none; }
+    .post-tag:hover { background: #dbeafe; }
     .paper-cite { margin-bottom: 10px; padding: 10px 12px; background: var(--blue-soft); border-left: 3px solid var(--blue); border-radius: 10px; }
     .paper-cite-label { font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
     .paper-cite-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; line-height: 1.4; }
@@ -221,29 +313,211 @@
     .empty-state { text-align: center; padding: 60px 20px; color: var(--subtext); }
     .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { font-size: 15px; }
-    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111827; color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 200; white-space: nowrap; }
+    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--secondary); color: #fff; padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 200; white-space: nowrap; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #fff; border-top: 1px solid var(--line); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -2px 12px rgba(15,23,42,0.06); }
-    .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--subtext); text-decoration: none; }
-    .mobile-footer-link.is-active { color: var(--blue); }
-    .mobile-footer-icon { font-size: 20px; line-height: 1; }
+    .mobile-footer { display: none; }
 
     @media (min-width: 760px) {
       .composer-modal { align-items: center; padding: 32px; }
       .composer-sheet { border-radius: 26px; }
       .board-fab { right: 28px; bottom: 28px; }
+      .save-sheet-backdrop { align-items: center; padding: 32px; }
+      .save-sheet { border-radius: 24px; }
+      .comment-sheet-backdrop { align-items: center; padding: 32px; }
+      .comment-sheet { border-radius: 24px; }
+    }
+
+    @media (min-width: 980px) {
+      .app-layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 18px 16px;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--line);
+      }
+
+      .sidebar-brand { padding: 8px 10px 20px; }
+
+      .sidebar-title {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--secondary);
+        line-height: 1.4;
+      }
+
+      .sidebar-subtext {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .sidebar-link {
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        color: #374151;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .sidebar-link:hover {
+        background: #f8fafc;
+        color: #111827;
+      }
+
+      .sidebar-link.is-active {
+        background: var(--primary-soft);
+        color: var(--blue);
+      }
+
+      .sidebar-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding: 14px 10px 8px;
+        border-top: 1px solid var(--line);
+      }
+
+      .sidebar-plan {
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+        margin-bottom: 10px;
+      }
+
+      .sidebar-auth {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .sidebar-auth-text {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .sidebar-auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .sidebar-auth-link:hover { opacity: 0.92; }
+
+      .sidebar-auth-link.secondary {
+        background: #fff;
+        color: var(--blue);
+        border: 1.5px solid rgba(37,99,235,0.18);
+        box-shadow: inset 0 0 0 1px rgba(37,99,235,0.04);
+      }
+
+      .main-area { padding: 0 32px 60px; }
+      .page-header { padding: 18px 0 14px; background: transparent; backdrop-filter: none; border-bottom: none; box-shadow: none; }
+      .tag-filter-bar { border-radius: 18px; border: 1px solid rgba(37,99,235,0.08); margin: 0 auto 18px; max-width: 640px; padding-inline: 12px; }
+      .board-fab { right: 36px; bottom: 32px; }
+    }
+
+    @media (max-width: 979px) {
+      .main-area { padding-bottom: 100px; }
+      .mobile-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(226,232,240,0.8); display: flex; align-items: stretch; z-index: 150; box-shadow: 0 -8px 32px rgba(15,23,42,0.08); }
+      .mobile-footer-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 700; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+      .mobile-footer-link.is-active { color: var(--blue); }
+      .mobile-footer-icon { font-size: 20px; line-height: 1; }
+      .board-fab { bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; }
     }
   </style>
 </head>
 <body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-title">リハエビデンスナビ</div>
+        <div class="sidebar-subtext">臨床で使える論文と知見を、探す・学ぶ・貯める流れで一つにつなげます。</div>
+      </div>
 
-  <div class="page-header">
-    <h1>📖 学ぶ</h1>
-    <div class="tab-bar">
-      <button class="tab-btn {% if tab != 'board' %}active{% endif %}" onclick="switchTab('recommend')">おすすめ論文</button>
-      <button class="tab-btn {% if tab == 'board' %}active{% endif %}" onclick="switchTab('board')">学習掲示板</button>
-    </div>
-  </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="sidebar-link">
+          <span class="sidebar-icon">🏠</span><span>検索</span>
+        </a>
+        <a href="/learn" class="sidebar-link is-active">
+          <span class="sidebar-icon">📖</span><span>学ぶ</span>
+        </a>
+        <a href="/memo" class="sidebar-link">
+          <span class="sidebar-icon">📝</span><span>メモ</span>
+        </a>
+        <a href="/saved" class="sidebar-link">
+          <span class="sidebar-icon">📚</span><span>保存</span>
+        </a>
+        <a href="/mypage" class="sidebar-link">
+          <span class="sidebar-icon">👤</span><span>マイページ</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        {% if current_user %}
+        <div class="sidebar-plan">現在のプラン：<b>{{ current_plan | upper }}</b></div>
+        <div class="sidebar-auth">
+          <div class="sidebar-auth-text">{{ current_user.email }}</div>
+          <a href="/logout" class="sidebar-auth-link">ログアウト</a>
+        </div>
+        {% else %}
+        <div class="sidebar-plan">ログインすると、おすすめ精度や学習履歴が育ちます。</div>
+        <div class="sidebar-auth">
+          <a href="/login?from=learn" class="sidebar-auth-link">ログイン</a>
+          <a href="/register" class="sidebar-auth-link secondary">新規登録</a>
+        </div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <div class="page-header">
+        <h1>📖 学ぶ</h1>
+        <div class="tab-bar">
+          <button class="tab-btn {% if tab != 'board' %}active{% endif %}" onclick="switchTab('recommend')">おすすめ論文</button>
+          <button class="tab-btn {% if tab == 'board' %}active{% endif %}" onclick="switchTab('board')">学習掲示板</button>
+        </div>
+      </div>
 
   <!-- ── Tab: おすすめ論文 ── -->
   <div id="tab-recommend" class="tab-panel {% if tab != 'board' %}active{% endif %}">
@@ -257,10 +531,13 @@
               <div class="rec-section-subtitle">{{ section["subtitle"] }}</div>
             </div>
           </div>
-          <div class="rec-feed" id="rec-section-{{ loop.index0 }}" data-batch-size="5" data-auto-batches="0" data-max-auto-batches="3">
+          <div class="rec-feed" id="rec-section-{{ loop.index0 }}" data-batch-size="10">
             {% for item in section["items"] %}
-            <div class="rec-card {% if loop.index > 5 %}hidden{% endif %}">
-              <span class="rec-reason">{{ item.reason }}</span>
+            <div class="rec-card clickable {% if loop.index > 10 %}hidden{% endif %}"
+              data-paper-url="/paper?id={{ item.paper.pubmed_id }}"
+              tabindex="0"
+              role="link"
+              aria-label="{{ item.paper.display_title or item.paper.jp_title or item.paper.title or '論文詳細' }}の詳細を開く">
               <div class="rec-title">{{ item.paper.display_title or item.paper.jp_title or item.paper.title or "（タイトル不明）" }}</div>
               {% if item.paper.journal or item.paper.pubdate %}
               <div class="rec-meta">{{ item.paper.journal }}{% if item.paper.pubdate %} · {{ item.paper.pubdate }}{% endif %}</div>
@@ -268,17 +545,24 @@
               {% if item.paper.summary_jp %}
               <div class="rec-summary">{{ item.paper.summary_jp }}</div>
               {% endif %}
-              {% if item.matched_tags %}
-              <div class="rec-tag-row">
-                {% for tag in item.matched_tags %}
-                <a href="/search?keyword={{ tag }}" class="rec-tag-chip">{{ tag }}</a>
-                {% endfor %}
-              </div>
-              {% endif %}
-              <div class="rec-inline-actions">
+              <div class="rec-social-row">
                 <button type="button"
-                  class="rec-inline-btn {% if item.paper.is_saved %}saved{% endif %}"
-                  onclick='saveRecommendPaper(this, {{ {
+                  class="rec-social-btn comment"
+                  data-pubmed-id="{{ item.paper.pubmed_id }}"
+                  onclick='openRecommendCommentSheet({{ {
+                    "pubmed_id": item.paper.pubmed_id,
+                    "title": item.paper.title or "",
+                    "jp_title": item.paper.jp_title or item.paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文のコメントを見る">
+                  <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path>
+                  </svg>
+                  <span class="rec-social-label rec-comment-count">{{ item.paper.comment_count or 0 }}</span>
+                </button>
+                <button type="button"
+                  class="rec-social-btn save {% if item.paper.is_saved %}saved{% endif %}"
+                  onclick='openRecommendSaveSheet(this, {{ {
                     "pubmed_id": item.paper.pubmed_id,
                     "title": item.paper.title or "",
                     "jp_title": item.paper.jp_title or "",
@@ -288,41 +572,55 @@
                     "abstract": item.paper.abstract or "",
                     "jp": item.paper.jp or "",
                     "summary_jp": item.paper.summary_jp or "",
-                    "folder_name": item.paper.folder_name or "未分類",
+                    "folder_name": item.paper.folder_name or default_saved_folder_label,
                     "clinical_score": item.paper.clinical_score or "",
                     "clinical_reason": item.paper.clinical_reason or "",
                   } | tojson | safe }})'>
-                  <span class="action-chip-glyph"><span>{% if item.paper.is_saved %}✓{% else %}+{% endif %}</span></span>
-                  <span class="action-chip-copy">{% if item.paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+                  <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path>
+                  </svg>
+                  <span class="rec-social-label">{% if item.paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
                 </button>
                 <button type="button"
-                  class="rec-inline-btn {% if item.paper.liked %}liked{% endif %}"
+                  class="rec-social-btn like {% if item.paper.liked %}liked{% endif %}"
                   data-pubmed-id="{{ item.paper.pubmed_id }}"
                   onclick="toggleRecommendLike('{{ item.paper.pubmed_id }}', this)">
-                  <span class="action-chip-glyph">❤</span>
-                  <span class="action-chip-copy rec-like-count">{{ item.paper.likes or 0 }}</span>
+                  <svg class="rec-social-icon like-fill" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20.5s-7-4.35-7-10.18C5 7.4 6.96 5.5 9.35 5.5c1.54 0 2.97.83 3.65 2.13.68-1.3 2.11-2.13 3.65-2.13C19.04 5.5 21 7.4 21 10.32 21 16.15 14 20.5 14 20.5H12Z"></path>
+                  </svg>
+                  <span class="rec-social-label rec-like-count">{{ item.paper.likes or 0 }}</span>
                 </button>
-              </div>
-              <div class="rec-actions">
-                <a href="/paper?id={{ item.paper.pubmed_id }}" class="rec-btn primary">{{ item.cta_label or "詳細を見る" }} →</a>
-                {% if item.matched_tags %}
-                <a href="/search?keyword={{ item.matched_tags[0] }}" class="rec-btn">同じテーマを探す</a>
-                {% endif %}
+                <button type="button"
+                  class="rec-social-btn share"
+                  onclick='shareRecommendPaper({{ {
+                    "pubmed_id": item.paper.pubmed_id,
+                    "title": item.paper.title or "",
+                    "jp_title": item.paper.jp_title or item.paper.display_title or "",
+                  } | tojson | safe }})'
+                  aria-label="この論文を共有する">
+                  <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 12v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7"></path>
+                    <path d="M12 16V4"></path>
+                    <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                  </svg>
+                  <span class="rec-social-label">共有</span>
+                </button>
               </div>
             </div>
             {% endfor %}
           </div>
-          {% if section["items"]|length > 5 %}
-          <div class="rec-more-wrap" id="rec-more-wrap-{{ loop.index0 }}">
-            <button type="button" class="rec-more-btn" data-target="rec-section-{{ loop.index0 }}" onclick="toggleRecommendSection(this)">さらに見る</button>
-          </div>
+          {% if section["items"]|length > 10 %}
+          <div class="rec-autoload-sentinel" data-target="rec-section-{{ loop.index0 }}"></div>
           {% endif %}
         </section>
         {% endfor %}
       {% elif recommended %}
         {% for item in recommended %}
-        <div class="rec-card">
-          <span class="rec-reason">{{ item.reason }}</span>
+        <div class="rec-card clickable"
+          data-paper-url="/paper?id={{ item.paper.pubmed_id }}"
+          tabindex="0"
+          role="link"
+          aria-label="{{ item.paper.jp_title or item.paper.title or '論文詳細' }}の詳細を開く">
           <div class="rec-title">{{ item.paper.jp_title or item.paper.title or "（タイトル不明）" }}</div>
           {% if item.paper.journal or item.paper.pubdate %}
           <div class="rec-meta">{{ item.paper.journal }}{% if item.paper.pubdate %} · {{ item.paper.pubdate }}{% endif %}</div>
@@ -330,8 +628,68 @@
           {% if item.paper.summary_jp %}
           <div class="rec-summary">{{ item.paper.summary_jp }}</div>
           {% endif %}
-          <div class="rec-actions">
-            <a href="/paper?id={{ item.paper.pubmed_id }}" class="rec-btn primary">詳細を見る →</a>
+          <div class="rec-social-row">
+            <button type="button"
+              class="rec-social-btn comment"
+              data-pubmed-id="{{ item.paper.pubmed_id }}"
+              onclick='openRecommendCommentSheet({{ {
+                "pubmed_id": item.paper.pubmed_id,
+                "title": item.paper.title or "",
+                "jp_title": item.paper.jp_title or item.paper.display_title or "",
+              } | tojson | safe }})'
+              aria-label="この論文のコメントを見る">
+              <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.3 0-2.5-.28-3.58-.78L3 21l1.9-5.1A8.46 8.46 0 0 1 4 11.5 8.5 8.5 0 1 1 21 11.5Z"></path>
+              </svg>
+              <span class="rec-social-label rec-comment-count">{{ item.paper.comment_count or 0 }}</span>
+            </button>
+            <button type="button"
+              class="rec-social-btn save {% if item.paper.is_saved %}saved{% endif %}"
+              onclick='openRecommendSaveSheet(this, {{ {
+                "pubmed_id": item.paper.pubmed_id,
+                "title": item.paper.title or "",
+                "jp_title": item.paper.jp_title or "",
+                "authors": item.paper.authors or "",
+                "journal": item.paper.journal or "",
+                "pubdate": item.paper.pubdate or "",
+                "abstract": item.paper.abstract or "",
+                "jp": item.paper.jp or "",
+                "summary_jp": item.paper.summary_jp or "",
+                "folder_name": item.paper.folder_name or default_saved_folder_label,
+                "clinical_score": item.paper.clinical_score or "",
+                "clinical_reason": item.paper.clinical_reason or "",
+              } | tojson | safe }})'
+              aria-label="この論文を保存する">
+              <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z"></path>
+              </svg>
+              <span class="rec-social-label">{% if item.paper.is_saved %}保存済み{% else %}保存{% endif %}</span>
+            </button>
+            <button type="button"
+              class="rec-social-btn like {% if item.paper.liked %}liked{% endif %}"
+              data-pubmed-id="{{ item.paper.pubmed_id }}"
+              onclick="toggleRecommendLike('{{ item.paper.pubmed_id }}', this)"
+              aria-label="この論文にいいねする">
+              <svg class="rec-social-icon like-fill" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 20.5s-7-4.35-7-10.18C5 7.4 6.96 5.5 9.35 5.5c1.54 0 2.97.83 3.65 2.13.68-1.3 2.11-2.13 3.65-2.13C19.04 5.5 21 7.4 21 10.32 21 16.15 14 20.5 14 20.5H12Z"></path>
+              </svg>
+              <span class="rec-social-label rec-like-count">{{ item.paper.likes or 0 }}</span>
+            </button>
+            <button type="button"
+              class="rec-social-btn share"
+              onclick='shareRecommendPaper({{ {
+                "pubmed_id": item.paper.pubmed_id,
+                "title": item.paper.title or "",
+                "jp_title": item.paper.jp_title or item.paper.display_title or "",
+              } | tojson | safe }})'
+              aria-label="この論文を共有する">
+              <svg class="rec-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 12v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7"></path>
+                <path d="M12 16V4"></path>
+                <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+              </svg>
+              <span class="rec-social-label">共有</span>
+            </button>
           </div>
         </div>
         {% endfor %}
@@ -365,9 +723,78 @@
       {% if active_tag %}
       <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">🏷 「{{ active_tag }}」の投稿</p>
       {% endif %}
+      {% if board_feed %}
+        {% for feed_item in board_feed %}
+        {% if feed_item.kind == "official" %}
+        {% set note = feed_item.item %}
+        <div class="post-card official-post-card {% if note.badge_tone %}{{ note.badge_tone }}{% endif %}">
+          <div class="post-header">
+            <div class="post-avatar" style="background:rgba(37,99,235,0.08);color:#3665ba;">
+              {{ note.icon }}
+            </div>
+            <div class="post-meta">
+              <div class="post-name-row">
+                <div class="post-name">{{ note.display_name }}</div>
+                <span class="official-badge {{ note.badge_tone }}">{{ note.badge }}</span>
+              </div>
+              <div class="post-time">{{ note.created_label }}</div>
+            </div>
+          </div>
 
-      {% if posts %}
-        {% for post in posts %}
+          {% if note.has_more %}
+          <div class="official-note-body official-note-preview" id="official-note-preview-{{ note.id }}">
+            {% for line in note.preview_lines %}
+            <div class="official-note-line">{{ line }}</div>
+            {% endfor %}
+          </div>
+
+          <button type="button" class="official-note-more" onclick="toggleOfficialNote('{{ note.id }}', this)">続きを読む</button>
+          <div class="official-note-hidden" id="official-note-hidden-{{ note.id }}">
+            {% for line in note.full_lines %}
+            <div class="official-note-line">{{ line }}</div>
+            {% endfor %}
+            {% if note.disclosure %}
+            <div class="official-note-disclosure">{{ note.disclosure }}</div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="official-note-body">
+            {% for line in note.full_lines %}
+            <div class="official-note-line">{{ line }}</div>
+            {% endfor %}
+            {% if note.disclosure %}
+            <div class="official-note-disclosure">{{ note.disclosure }}</div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {% if note.tags %}
+          <div class="post-tags">
+            {% for t in note.tags %}
+            <a href="/learn?tab=board&tag={{ t }}" class="post-tag">{{ t }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if note.pubmed_id %}
+          <div class="paper-cite">
+            <div class="paper-cite-label">📄 参照論文</div>
+            <div class="paper-cite-title">{{ note.paper_title }}</div>
+            <a href="/paper?id={{ note.pubmed_id }}" class="paper-cite-link">論文を見る →</a>
+          </div>
+          {% endif %}
+
+          <div class="official-note-actions">
+            {% if note.pubmed_id %}
+            <a href="/paper?id={{ note.pubmed_id }}" class="rec-btn primary">詳細を見る →</a>
+            {% endif %}
+            {% if note.tags %}
+            <a href="/search?keyword={{ note.tags[0] }}" class="rec-btn">同じテーマ</a>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        {% set post = feed_item.item %}
         <div class="post-card" id="post-{{ post.id }}">
           <div class="post-header">
             <div class="post-avatar">
@@ -431,6 +858,7 @@
             {% endif %}
           </div>
         </div>
+        {% endif %}
         {% endfor %}
       {% else %}
         <div class="empty-state">
@@ -444,6 +872,49 @@
   <div class="toast" id="toast"></div>
 
   {% if current_user %}
+  <div class="comment-sheet-backdrop" id="recommend-comment-sheet" aria-hidden="true">
+    <div class="comment-sheet" role="dialog" aria-modal="true" aria-labelledby="recommend-comment-sheet-title">
+      <div class="save-sheet-header">
+        <div>
+          <div class="save-sheet-title" id="recommend-comment-sheet-title">論文コメント</div>
+          <div class="save-sheet-subtitle">ひとこと感想や、臨床で使えるポイントを残せます。</div>
+        </div>
+        <button type="button" class="save-sheet-close" onclick="closeRecommendCommentSheet()" aria-label="閉じる">✕</button>
+      </div>
+      <div class="save-sheet-paper" id="recommend-comment-paper-title"></div>
+      <div class="comment-sheet-list" id="recommend-comment-list">
+        <div class="comment-sheet-empty">コメントを読み込み中です…</div>
+      </div>
+      <form class="comment-sheet-form" onsubmit="submitRecommendComment(event)">
+        <textarea class="comment-sheet-textarea" id="recommend-comment-input" placeholder="この論文で気づいたことをひとこと書く"></textarea>
+        <div class="comment-sheet-actions">
+          <div class="comment-sheet-note">あとで論文詳細からも見返せます。</div>
+          <button type="submit" class="save-sheet-submit" id="recommend-comment-submit">コメントする</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="save-sheet-backdrop" id="recommend-save-sheet" aria-hidden="true">
+    <div class="save-sheet" role="dialog" aria-modal="true" aria-labelledby="recommend-save-sheet-title">
+      <div class="save-sheet-header">
+        <div>
+          <div class="save-sheet-title" id="recommend-save-sheet-title">保存先を選ぶ</div>
+          <div class="save-sheet-subtitle">おすすめ論文を、使いたいフォルダにそのまま入れられます。</div>
+        </div>
+        <button type="button" class="save-sheet-close" onclick="closeRecommendSaveSheet()" aria-label="閉じる">✕</button>
+      </div>
+      <div class="save-sheet-paper" id="recommend-save-paper-title"></div>
+      <div class="save-sheet-label">保存先</div>
+      <div class="save-sheet-options" id="recommend-folder-options"></div>
+      <div class="save-sheet-label">新しいフォルダを作る</div>
+      <div class="save-sheet-new-row">
+        <input type="text" class="save-sheet-input" id="recommend-save-new-folder" placeholder="例: 脳卒中 / 歩行 / 勉強会">
+        <button type="button" class="save-sheet-submit" id="recommend-save-submit" onclick="submitRecommendSaveSelection()">保存</button>
+      </div>
+    </div>
+  </div>
+
   <button type="button" class="board-fab {% if tab != 'board' %}hidden{% endif %}" id="board-fab" onclick="openComposerModal()" aria-label="新規投稿">+</button>
 
   <div class="composer-modal" id="composer-modal" aria-hidden="true">
@@ -534,6 +1005,8 @@
     <a href="/saved" class="mobile-footer-link"><span class="mobile-footer-icon">📚</span><span>保存</span></a>
     <a href="/mypage" class="mobile-footer-link"><span class="mobile-footer-icon">👤</span><span>マイページ</span></a>
   </nav>
+    </main>
+  </div>
 
   <script>
     // ── Tab switching ──
@@ -553,9 +1026,30 @@
       if (tab !== "board") closeComposerModal();
     }
 
+    function toggleOfficialNote(noteId, button) {
+      const preview = document.getElementById("official-note-preview-" + noteId);
+      const hidden = document.getElementById("official-note-hidden-" + noteId);
+      if (!hidden) return;
+      const isOpen = hidden.classList.toggle("open");
+      if (preview) preview.classList.toggle("hidden", isOpen);
+      if (button) button.textContent = isOpen ? "閉じる" : "続きを読む";
+    }
+
     // ── Composer ──
     let selectedTags = [];
     let attachFetchTimer = null;
+    const defaultRecommendFolder = {{ default_saved_folder_label | tojson | safe }};
+    const recommendFolderChoices = {{ save_folder_choices | tojson | safe }};
+    const recommendSaveState = {
+      button: null,
+      paper: null,
+      selectedFolder: defaultRecommendFolder,
+      wasSaved: false,
+    };
+    const recommendCommentState = {
+      paper: null,
+      comments: [],
+    };
 
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("post-form");
@@ -584,7 +1078,9 @@
       if (!modal) return;
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
-      document.body.classList.remove("modal-open");
+      if (!document.getElementById("recommend-save-sheet")?.classList.contains("open")) {
+        document.body.classList.remove("modal-open");
+      }
       const dropdown = document.getElementById("tag-dropdown");
       if (dropdown) dropdown.classList.remove("open");
     }
@@ -731,6 +1227,16 @@
       showToast("引用論文をセットしました");
     }
 
+    function presetComposerPaper(paper) {
+      if (!paper) return;
+      const box = document.getElementById("paper-attach-box");
+      if (box) box.classList.add("visible");
+      document.getElementById("attach-pmid").value = paper.pubmed_id || "";
+      document.getElementById("attach-title").value = paper.title || "";
+      document.getElementById("attach-jp-title").value = paper.jp_title || "";
+      document.getElementById("attach-preview").textContent = paper.jp_title || paper.title || "";
+    }
+
     function renderAttachablePapers(items) {
       const list = document.getElementById("attach-paper-list");
       if (!list) return;
@@ -759,6 +1265,41 @@
         button.appendChild(title);
         button.appendChild(meta);
         list.appendChild(button);
+      });
+    }
+
+    function renderCommentAvatar(comment) {
+      if (comment.avatar && comment.avatar.length > 4) {
+        return `<img src="${comment.avatar}" alt="avatar">`;
+      }
+      const fallback = (comment.avatar || comment.display_name || "?").slice(0, 1).toUpperCase();
+      return fallback;
+    }
+
+    function renderRecommendComments(comments) {
+      const list = document.getElementById("recommend-comment-list");
+      if (!list) return;
+      if (!comments || comments.length === 0) {
+        list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
+        return;
+      }
+      list.innerHTML = comments.map((comment) => `
+        <div class="comment-item">
+          <div class="comment-item-header">
+            <div class="comment-item-avatar">${renderCommentAvatar(comment)}</div>
+            <div class="comment-item-meta">
+              <div class="comment-item-name">${comment.display_name || "ユーザー"}</div>
+              <div class="comment-item-time">${comment.created_label || ""}</div>
+            </div>
+          </div>
+          <div class="comment-item-body">${(comment.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
+        </div>
+      `).join("");
+    }
+
+    function updateRecommendCommentCounts(pubmedId, count) {
+      document.querySelectorAll(`.rec-social-btn.comment[data-pubmed-id="${pubmedId}"] .rec-comment-count`).forEach((el) => {
+        el.textContent = String(count || 0);
       });
     }
 
@@ -883,15 +1424,178 @@
       setTimeout(() => t.classList.remove("show"), 2200);
     }
 
-    async function saveRecommendPaper(button, paper) {
+    function renderRecommendFolderOptions() {
+      const wrap = document.getElementById("recommend-folder-options");
+      if (!wrap) return;
+      wrap.innerHTML = "";
+      recommendFolderChoices.forEach((folderName) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "save-sheet-option";
+        if (folderName === recommendSaveState.selectedFolder) option.classList.add("active");
+        option.addEventListener("click", () => selectRecommendFolder(folderName));
+
+        const main = document.createElement("span");
+        main.className = "save-sheet-option-main";
+
+        const name = document.createElement("span");
+        name.className = "save-sheet-option-name";
+        name.textContent = folderName;
+
+        const meta = document.createElement("span");
+        meta.className = "save-sheet-option-meta";
+        meta.textContent = folderName === defaultRecommendFolder ? "迷ったときにまず入れるフォルダ" : "このフォルダにそのまま整理";
+
+        const check = document.createElement("span");
+        check.className = "save-sheet-option-check";
+        check.textContent = "✓";
+
+        main.appendChild(name);
+        main.appendChild(meta);
+        option.appendChild(main);
+        option.appendChild(check);
+        wrap.appendChild(option);
+      });
+    }
+
+    function ensureRecommendFolderChoice(folderName) {
+      const clean = (folderName || "").trim();
+      if (!clean || recommendFolderChoices.includes(clean)) return;
+      recommendFolderChoices.push(clean);
+    }
+
+    function openRecommendSaveSheet(button, paper) {
       if (!paper || !paper.pubmed_id) return;
-      if (button.classList.contains("saved")) {
-        showToast("すでに保存されています");
+      recommendSaveState.button = button;
+      recommendSaveState.paper = { ...paper };
+      recommendSaveState.wasSaved = button.classList.contains("saved");
+      recommendSaveState.selectedFolder = (paper.folder_name || "").trim() || defaultRecommendFolder;
+      ensureRecommendFolderChoice(recommendSaveState.selectedFolder);
+      renderRecommendFolderOptions();
+
+      const titleEl = document.getElementById("recommend-save-paper-title");
+      const input = document.getElementById("recommend-save-new-folder");
+      const sheet = document.getElementById("recommend-save-sheet");
+      if (titleEl) titleEl.textContent = paper.jp_title || paper.display_title || paper.title || "論文";
+      if (input) input.value = "";
+      if (sheet) {
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+      }
+      document.body.classList.add("modal-open");
+    }
+
+    async function openRecommendCommentSheet(paper) {
+      if (!paper || !paper.pubmed_id) return;
+      recommendCommentState.paper = { ...paper };
+      const titleEl = document.getElementById("recommend-comment-paper-title");
+      const listEl = document.getElementById("recommend-comment-list");
+      const inputEl = document.getElementById("recommend-comment-input");
+      const sheet = document.getElementById("recommend-comment-sheet");
+      if (titleEl) titleEl.textContent = paper.jp_title || paper.title || "論文";
+      if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントを読み込み中です…</div>';
+      if (inputEl) inputEl.value = "";
+      if (sheet) {
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+      }
+      document.body.classList.add("modal-open");
+      try {
+        const response = await fetch(`/paper/${encodeURIComponent(paper.pubmed_id)}/comments`);
+        const data = await response.json();
+        recommendCommentState.comments = data.comments || [];
+        renderRecommendComments(recommendCommentState.comments);
+        updateRecommendCommentCounts(paper.pubmed_id, data.count || recommendCommentState.comments.length);
+      } catch (error) {
+        if (listEl) listEl.innerHTML = '<div class="comment-sheet-empty">コメントの読み込みに失敗しました。</div>';
+      }
+    }
+
+    function closeRecommendCommentSheet() {
+      const sheet = document.getElementById("recommend-comment-sheet");
+      if (sheet) {
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+      if (!document.getElementById("composer-modal")?.classList.contains("open") &&
+          !document.getElementById("recommend-save-sheet")?.classList.contains("open")) {
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+    async function submitRecommendComment(event) {
+      event.preventDefault();
+      const paper = recommendCommentState.paper;
+      const input = document.getElementById("recommend-comment-input");
+      const submit = document.getElementById("recommend-comment-submit");
+      if (!paper || !input) return;
+      const content = (input.value || "").trim();
+      if (!content) {
+        showToast("コメントを入力してください");
         return;
       }
-      button.disabled = true;
+      submit.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append("content", content);
+        fd.append("paper_title", paper.title || "");
+        fd.append("paper_jp_title", paper.jp_title || "");
+        const response = await fetch(`/paper/${encodeURIComponent(paper.pubmed_id)}/comments`, {
+          method: "POST",
+          body: fd,
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          showToast(data.message || "コメントに失敗しました");
+          return;
+        }
+        recommendCommentState.comments = data.comments || [];
+        renderRecommendComments(recommendCommentState.comments);
+        updateRecommendCommentCounts(paper.pubmed_id, data.count || recommendCommentState.comments.length);
+        input.value = "";
+        showToast("コメントしました");
+      } catch (error) {
+        showToast("コメントに失敗しました");
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    function closeRecommendSaveSheet() {
+      const sheet = document.getElementById("recommend-save-sheet");
+      if (sheet) {
+        sheet.classList.remove("open");
+        sheet.setAttribute("aria-hidden", "true");
+      }
+      if (!document.getElementById("composer-modal")?.classList.contains("open")) {
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+    function selectRecommendFolder(folderName) {
+      recommendSaveState.selectedFolder = folderName;
+      const input = document.getElementById("recommend-save-new-folder");
+      if (input) input.value = "";
+      renderRecommendFolderOptions();
+    }
+
+    function markRecommendButtonSaved(button) {
+      if (!button) return;
+      button.classList.add("saved");
+      button.innerHTML = '<span class="action-chip-glyph"><span>✓</span></span><span class="action-chip-copy">保存済み</span>';
+    }
+
+    async function submitRecommendSave(folderName) {
+      if (!recommendSaveState.paper || !recommendSaveState.paper.pubmed_id) return;
+      const button = recommendSaveState.button;
+      const submitButton = document.getElementById("recommend-save-submit");
+      const cleanFolderName = (folderName || "").trim() || defaultRecommendFolder;
+      ensureRecommendFolderChoice(cleanFolderName);
+      if (button) button.disabled = true;
+      if (submitButton) submitButton.disabled = true;
       const fd = new FormData();
-      Object.entries(paper).forEach(([key, value]) => fd.append(key, value || ""));
+      Object.entries(recommendSaveState.paper).forEach(([key, value]) => fd.append(key, value || ""));
+      fd.set("folder_name", cleanFolderName === defaultRecommendFolder ? "" : cleanFolderName);
       try {
         const response = await fetch("/save", { method: "POST", body: fd });
         if (!response.ok) {
@@ -903,14 +1607,23 @@
           showToast(data.message || "保存に失敗しました");
           return;
         }
-        button.classList.add("saved");
-        button.innerHTML = '<span class="action-chip-glyph"><span>✓</span></span><span class="action-chip-copy">保存済み</span>';
-        showToast("保存しました");
+        recommendSaveState.paper.folder_name = cleanFolderName;
+        markRecommendButtonSaved(button);
+        closeRecommendSaveSheet();
+        showToast(recommendSaveState.wasSaved ? `保存先を「${cleanFolderName}」に変更しました` : `「${cleanFolderName}」に保存しました`);
       } catch (error) {
         showToast("保存に失敗しました");
       } finally {
-        button.disabled = false;
+        if (button) button.disabled = false;
+        if (submitButton) submitButton.disabled = false;
       }
+    }
+
+    function submitRecommendSaveSelection() {
+      const input = document.getElementById("recommend-save-new-folder");
+      const customFolder = (input?.value || "").trim();
+      const selectedFolder = customFolder || recommendSaveState.selectedFolder || defaultRecommendFolder;
+      submitRecommendSave(selectedFolder);
     }
 
     async function toggleRecommendLike(pubmedId, button) {
@@ -937,80 +1650,94 @@
       }
     }
 
+    async function shareRecommendPaper(paper) {
+      if (!paper || !paper.pubmed_id) return;
+      const title = paper.jp_title || paper.title || "論文";
+      const url = `${window.location.origin}/paper?id=${encodeURIComponent(paper.pubmed_id)}`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, text: title, url });
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        showToast("論文リンクをコピーしました");
+      } catch (error) {
+        showToast("共有に失敗しました");
+      }
+    }
+
     function revealRecommendBatch(section) {
       if (!section) return false;
       const hiddenCards = Array.from(section.querySelectorAll(".rec-card.hidden"));
       if (hiddenCards.length === 0) return false;
-      const batchSize = parseInt(section.dataset.batchSize || "5", 10);
+      const batchSize = parseInt(section.dataset.batchSize || "10", 10);
       hiddenCards.slice(0, batchSize).forEach((card) => card.classList.remove("hidden"));
       return section.querySelectorAll(".rec-card.hidden").length > 0;
     }
 
-    function syncRecommendControls(section) {
-      if (!section) return;
-      const wrap = document.getElementById(`rec-more-wrap-${section.id.split("-").pop()}`);
-      const hasHidden = section.querySelectorAll(".rec-card.hidden").length > 0;
-      if (wrap) wrap.classList.toggle("hidden", !hasHidden);
+    function setupRecommendCardNavigation() {
+      document.querySelectorAll(".rec-card.clickable[data-paper-url]").forEach((card) => {
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("button, a, input, textarea, select, label")) return;
+          window.location.href = card.dataset.paperUrl;
+        });
+        card.addEventListener("keydown", (event) => {
+          if (event.target !== card) return;
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          window.location.href = card.dataset.paperUrl;
+        });
+      });
     }
 
     function autoRevealRecommendBatch(section) {
       if (!section) return;
-      const autoBatches = parseInt(section.dataset.autoBatches || "0", 10);
-      const maxAutoBatches = parseInt(section.dataset.maxAutoBatches || "3", 10);
-      if (autoBatches >= maxAutoBatches) {
-        syncRecommendControls(section);
-        return;
-      }
-      const hasMore = revealRecommendBatch(section);
-      section.dataset.autoBatches = String(autoBatches + 1);
-      syncRecommendControls(section);
-      if (!hasMore) return;
-    }
-
-    function toggleRecommendSection(btn) {
-      const targetId = btn.dataset.target;
-      const section = document.getElementById(targetId);
-      if (!section) return;
-      const hasHidden = revealRecommendBatch(section);
-      syncRecommendControls(section);
-      btn.textContent = hasHidden ? "さらに見る" : "すべて表示中";
-      btn.disabled = !hasHidden;
+      revealRecommendBatch(section);
     }
 
     function setupRecommendAutoReveal() {
-      const sections = document.querySelectorAll(".rec-feed[id^='rec-section-']");
+      const sentinels = document.querySelectorAll(".rec-autoload-sentinel[data-target]");
       if (!("IntersectionObserver" in window)) {
-        sections.forEach(syncRecommendControls);
+        document.querySelectorAll(".rec-feed[id^='rec-section-'] .rec-card.hidden").forEach((card) => {
+          card.classList.remove("hidden");
+        });
         return;
       }
 
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          autoRevealRecommendBatch(entry.target);
+          const section = document.getElementById(entry.target.dataset.target);
+          const hasMore = revealRecommendBatch(section);
+          if (!hasMore) observer.unobserve(entry.target);
         });
       }, {
         root: null,
-        threshold: 1,
-        rootMargin: "0px 0px 120px 0px",
+        threshold: 0,
+        rootMargin: "0px 0px 260px 0px",
       });
 
-      sections.forEach((section) => {
-        syncRecommendControls(section);
-        observer.observe(section);
-      });
+      sentinels.forEach((sentinel) => observer.observe(sentinel));
     }
 
     document.addEventListener("click", function(e) {
       const modal = document.getElementById("composer-modal");
       if (modal && e.target === modal) closeComposerModal();
+      const saveSheet = document.getElementById("recommend-save-sheet");
+      if (saveSheet && e.target === saveSheet) closeRecommendSaveSheet();
+      const commentSheet = document.getElementById("recommend-comment-sheet");
+      if (commentSheet && e.target === commentSheet) closeRecommendCommentSheet();
     });
 
     document.addEventListener("keydown", function(e) {
-      if (e.key === "Escape") closeComposerModal();
+      if (e.key !== "Escape") return;
+      closeComposerModal();
+      closeRecommendSaveSheet();
+      closeRecommendCommentSheet();
     });
 
     document.addEventListener("DOMContentLoaded", function() {
+      setupRecommendCardNavigation();
       setupRecommendAutoReveal();
     });
   </script>

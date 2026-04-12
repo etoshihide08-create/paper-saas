@@ -207,6 +207,9 @@ body {
     margin-top: 8px;
     color: #64748b;
 }
+.status-meta strong {
+    color: #0f172a;
+}
 @media (max-width: 860px) {
     .grid {
         grid-template-columns: 1fr;
@@ -309,6 +312,27 @@ body {
                             {% endif %}
                             {% if wordpress_config_source == 'env' and not saved_site_url %}
                             <div class="status-meta">現在は環境変数の接続設定を使っています。この画面で保存すると、こちらの設定が優先されます。</div>
+                            {% endif %}
+                            <div class="status-meta">
+                                <strong>保存済みパスワード:</strong>
+                                {% if password_encrypted %}
+                                暗号化して保管しています。
+                                {% elif has_saved_password %}
+                                旧形式のため、次回更新時に暗号化へ移行されます。
+                                {% else %}
+                                まだありません。
+                                {% endif %}
+                            </div>
+                            <div class="status-meta">
+                                <strong>暗号化バックエンド:</strong>
+                                {% if wordpress_encryption_available %}
+                                利用可能です。
+                                {% else %}
+                                依存関係の更新後に有効になります。
+                                {% endif %}
+                            </div>
+                            {% if password_unavailable %}
+                            <div class="status-meta">この環境では暗号化済みパスワードを復号できないため、必要なら再入力してください。</div>
                             {% endif %}
                         </div>
 
