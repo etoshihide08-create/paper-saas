@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>マイページ</title>
+<title>マイページ — {{ BRAND_TITLE }}</title>
 <style>
 :root {
     --bg: #f4f7fb;
@@ -530,17 +530,115 @@ body {
 
 /* Logout */
 .logout-row {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 15px 20px;
+    padding: 10px 0 0;
     text-decoration: none;
-    color: #ef4444;
-    gap: 12px;
+    color: #94a3b8;
+    gap: 8px;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 13px;
 }
 
-.logout-row:hover { background: #fff5f5; }
+.logout-row:hover { color: #64748b; }
+
+.feedback-box {
+    padding: 18px 20px 20px;
+}
+
+.feedback-copy {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--subtext);
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.feedback-select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f9fafb;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+}
+
+.feedback-select:focus {
+    border-color: var(--primary);
+    background: #fff;
+}
+
+.feedback-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    background: #f9fafb;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #111827;
+    resize: vertical;
+    font-family: inherit;
+    outline: none;
+}
+
+.feedback-textarea:focus {
+    border-color: var(--primary);
+    background: #fff;
+}
+
+.feedback-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--subtext);
+}
+
+.feedback-submit {
+    align-self: flex-start;
+    border: none;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(37,99,235,0.12);
+}
+
+.feedback-submit:hover { opacity: 0.94; }
+
+.inline-feedback {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.inline-feedback.success {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+}
+
+.inline-feedback.error {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+}
 
 /* Success toast */
 .toast {
@@ -697,17 +795,18 @@ body {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 38px;
-        padding: 10px 12px;
+        min-height: 34px;
+        padding: 8px 10px;
         border-radius: 12px;
-        background: linear-gradient(135deg, var(--secondary), var(--primary));
-        color: #fff;
+        background: #f8fafc;
+        color: #64748b;
         text-decoration: none;
-        font-weight: 700;
-        font-size: 13px;
+        font-weight: 600;
+        font-size: 12px;
+        box-shadow: inset 0 0 0 1px #e2e8f0;
     }
 
-    .sidebar-auth-link:hover { opacity: 0.92; }
+    .sidebar-auth-link:hover { background: #f1f5f9; color: #475569; }
 
     .page-wrap {
         max-width: 760px;
@@ -732,8 +831,8 @@ body {
 <div class="app-layout">
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <div class="sidebar-title">リハエビデンスナビ</div>
-        <div class="sidebar-subtext">保存・メモ・おすすめの蓄積を見える化して、継続利用の価値を一目で確認できます。</div>
+        <div class="sidebar-title">{{ BRAND_NAME_EN }}</div>
+        <div class="sidebar-subtext">{{ BRAND_NAME_JA }}<br>{{ BRAND_COPY }}</div>
     </div>
 
     <nav class="sidebar-nav">
@@ -773,6 +872,14 @@ body {
 
     {% if saved == '1' %}
     <div id="save-toast" class="toast show">プロフィールを保存しました</div>
+    {% endif %}
+
+    {% if feedback_notice %}
+    <div class="inline-feedback success">{{ feedback_notice }}</div>
+    {% endif %}
+
+    {% if feedback_error %}
+    <div class="inline-feedback error">{{ feedback_error }}</div>
     {% endif %}
 
     {% if current_plan == 'free' and supporter_offer %}
@@ -870,11 +977,6 @@ body {
                 <span class="plan-badge plan-{{ current_plan }}">{{ current_plan | upper }}</span>
             </span>
         </div>
-
-        <a href="/logout" class="logout-row">
-            <span class="row-icon">🚪</span>
-            ログアウト
-        </a>
     </div>
 
     <!-- ③ 利用状況 -->
@@ -1068,6 +1170,39 @@ body {
             臨床参考度ランキングを見る
             <span class="nav-row-arrow">›</span>
         </a>
+    </div>
+
+    <!-- ⑧ お問い合わせ -->
+    <div class="section" id="feedback-section">
+        <div class="section-header">お問い合わせ・フィードバック</div>
+        <div class="feedback-box">
+            <p class="feedback-copy">
+                使いにくかった点、不具合、ほしい機能、感想を気軽に送れます。短いメモでも大丈夫です。
+            </p>
+            <form action="/mypage/feedback" method="post" class="feedback-form">
+                <input type="hidden" name="page_context" value="mypage">
+                <select name="category" class="feedback-select">
+                    <option value="general">感想・改善要望</option>
+                    <option value="bug">不具合報告</option>
+                    <option value="feature">ほしい機能</option>
+                    <option value="support">使い方の相談</option>
+                </select>
+                <textarea
+                    name="message"
+                    class="feedback-textarea"
+                    maxlength="1200"
+                    placeholder="例：保存ページでこういう探し方がしたい / この画面で動作がおかしい / ここが分かりにくい"
+                ></textarea>
+                <div class="feedback-meta">
+                    <span>内容は運営確認用に保存されます。</span>
+                    <button type="submit" class="feedback-submit">送信する</button>
+                </div>
+            </form>
+            <a href="/logout" class="logout-row">
+                <span class="row-icon">🚪</span>
+                ログアウト
+            </a>
+        </div>
     </div>
 
 </div>

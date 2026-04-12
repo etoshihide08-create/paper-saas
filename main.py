@@ -113,6 +113,7 @@ from db import (
     record_master_article_marketing_event,
     set_user_article_attribution,
     get_master_article_marketing_summary,
+    create_user_feedback,
     MANUAL_SAVED_SOURCES,
 )
 from starlette.middleware.sessions import SessionMiddleware
@@ -133,6 +134,22 @@ app.add_middleware(
     session_cookie="rehaevidence_session",
 )
 templates = Jinja2Templates(directory="templates")
+BRAND_NAME_EN = "RehaEvidence"
+BRAND_NAME_JA = "リハエビデンス"
+BRAND_COPY = "英語論文を日本語でわかりやすく。保存・メモ・要約で、PT・OTの学びと臨床判断が積み上がる。"
+BRAND_COPY_LINES = [
+    "英語論文を日本語でわかりやすく。",
+    "保存・メモ・要約で、",
+    "PT・OTの学びと臨床判断が積み上がる。",
+]
+BRAND_TITLE = f"{BRAND_NAME_EN} | {BRAND_NAME_JA}"
+templates.env.globals.update(
+    BRAND_NAME_EN=BRAND_NAME_EN,
+    BRAND_NAME_JA=BRAND_NAME_JA,
+    BRAND_COPY=BRAND_COPY,
+    BRAND_COPY_LINES=BRAND_COPY_LINES,
+    BRAND_TITLE=BRAND_TITLE,
+)
 _original_template_response = templates.TemplateResponse
 
 
@@ -334,53 +351,53 @@ COMMON_DISCOVERY_TAGS = [
 
 OFFICIAL_LEARNING_PERSONAS = [
     {
-        "slug": "official",
-        "name": "みなと",
-        "role": "編集部・論文ピック担当",
-        "icon": "み",
+        "slug": "newgrad",
+        "name": "結城",
+        "role": "新卒・学びメモ",
+        "icon": "結",
         "badge": "編集部",
         "badge_tone": "editorial",
-        "headline": "今日の注目論文",
+        "headline": "新卒メモ",
         "disclosure": "",
     },
     {
-        "slug": "clinical",
-        "name": "しおり",
-        "role": "編集部・臨床メモ担当",
-        "icon": "し",
+        "slug": "year4",
+        "name": "佐伯",
+        "role": "4年目・臨床メモ",
+        "icon": "佐",
         "badge": "編集部",
         "badge_tone": "editorial",
-        "headline": "臨床で見るポイント",
+        "headline": "4年目メモ",
         "disclosure": "",
     },
     {
-        "slug": "study",
-        "name": "なぎさ",
-        "role": "編集部・座学メモ担当",
-        "icon": "な",
+        "slug": "year7",
+        "name": "水野",
+        "role": "7年目・ケースメモ",
+        "icon": "水",
         "badge": "編集部",
         "badge_tone": "editorial",
-        "headline": "座学で押さえたい論点",
+        "headline": "7年目メモ",
         "disclosure": "",
     },
     {
-        "slug": "pick",
-        "name": "りつ",
-        "role": "編集部・要点整理担当",
-        "icon": "り",
+        "slug": "year10",
+        "name": "神谷",
+        "role": "10年目・実装メモ",
+        "icon": "神",
         "badge": "編集部",
         "badge_tone": "editorial",
-        "headline": "今見ておきたい理由",
+        "headline": "10年目メモ",
         "disclosure": "",
     },
     {
-        "slug": "easy",
-        "name": "こもも",
-        "role": "編集部・やさしく整理担当",
-        "icon": "こ",
+        "slug": "year25",
+        "name": "東條",
+        "role": "25年目・視点メモ",
+        "icon": "東",
         "badge": "編集部",
         "badge_tone": "editorial",
-        "headline": "やさしく言い換えると",
+        "headline": "25年目メモ",
         "disclosure": "",
     },
 ]
@@ -2326,11 +2343,6 @@ def get_pubmed_trending_papers(limit: int = 20) -> list:
     # キャッシュが古くてもあれば返す、なければ空リスト
     return _trending_cache["papers"] if _trending_cache["papers"] is not None else []
 
-def stable_score_offset(pubmed_id: str) -> float:
-    seed = hashlib.md5(pubmed_id.encode("utf-8")).hexdigest()
-    value = int(seed[:8], 16) / 0xFFFFFFFF
-    return (value * 0.16) - 0.08
-
 def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
     normalized_keyword = normalize_search_keyword(keyword)
     converted = convert_japanese_keyword_to_english(normalized_keyword)
@@ -2581,6 +2593,22 @@ def _safe_float(value) -> float | None:
         return None
 
 
+def normalize_clinical_score(raw_score, default: str = "") -> str:
+    value = _safe_float(raw_score)
+    if value is None:
+        return default
+    value = max(0.0, min(5.0, value))
+    return f"{value:.1f}"
+
+
+def normalize_paper_clinical_score(paper: dict | None) -> dict | None:
+    if not isinstance(paper, dict):
+        return paper
+    normalized = normalize_clinical_score(paper.get("clinical_score"))
+    paper["clinical_score"] = normalized
+    return paper
+
+
 def _paper_display_title(paper: dict) -> str:
     return (
         (paper.get("custom_title") or "").strip()
@@ -2599,6 +2627,7 @@ def _build_recommendation_sections(user_id: int) -> list[dict]:
     def decorate_user_state(paper: dict):
         pid = str(paper.get("pubmed_id") or "")
         saved = user_saved_map.get(pid)
+        normalize_paper_clinical_score(paper)
         paper["is_saved"] = saved is not None
         paper["liked"] = get_paper_liked(pid, user_id) if pid else False
         if saved:
@@ -2780,6 +2809,222 @@ def _short_learning_takeaway(summary_text: str, clinical_reason: str, limit: int
     return ""
 
 
+def _learning_variant_index(seed: str, modulo: int) -> int:
+    if modulo <= 0:
+        return 0
+    digest = hashlib.md5(seed.encode("utf-8")).hexdigest()
+    return int(digest[:8], 16) % modulo
+
+
+def _soft_learning_focus(summary_text: str, clinical_reason: str, limit: int = 34) -> str:
+    candidates = [
+        _extract_learning_section(summary_text, "臨床ポイント"),
+        clinical_reason,
+        _extract_learning_section(summary_text, "結論"),
+        summary_text,
+    ]
+    for candidate in candidates:
+        sentence = _first_learning_sentence(candidate)
+        if not sentence:
+            continue
+        sentence = re.sub(r"【[^】]+】\s*", "", sentence)
+        sentence = re.sub(r"^(この論文|本研究|この研究)では?", "", sentence).strip(" 、。")
+        sentence = sentence.replace("示唆された", "見えてきた").replace("示された", "見えた")
+        sentence = sentence.replace("関連していた", "つながっていそう")
+        sentence = sentence.replace("関連している", "つながっていそう")
+        sentence = sentence.replace("有意", "差")
+        sentence = sentence.strip(" 、。")
+        if sentence:
+            return _truncate_learning_note(sentence, limit)
+    return ""
+
+
+def _comment_friendly_focus(focus: str, tags: list[str]) -> str:
+    cleaned = _normalize_learning_note_text(focus).strip(" 、。")
+    if cleaned and len(cleaned) <= 24 and not re.search(r"[0-9()（）×x/／,、]", cleaned):
+        return cleaned
+    if tags:
+        if len(tags) >= 2:
+            return f"{tags[0]}と{tags[1]}"
+        return tags[0]
+    if cleaned:
+        return "対象の置き方"
+    return ""
+
+
+def _stable_line_count(seed: str, minimum: int = 3, maximum: int = 7) -> int:
+    if maximum <= minimum:
+        return minimum
+    return minimum + _learning_variant_index(f"{seed}::line-count", maximum - minimum + 1)
+
+
+def _pick_stable_extra_lines(seed: str, extras: list[str], count: int) -> list[str]:
+    cleaned = [line for line in extras if line]
+    if count <= 0 or not cleaned:
+        return []
+
+    ordered = sorted(
+        cleaned,
+        key=lambda line: hashlib.md5(f"{seed}::{line}".encode("utf-8")).hexdigest(),
+    )
+    return ordered[:count]
+
+
+def _dedupe_learning_lines(lines: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for line in lines:
+        cleaned = (line or "").strip()
+        if not cleaned or cleaned in seen:
+            continue
+        unique.append(cleaned)
+        seen.add(cleaned)
+    return unique
+
+
+def _build_experience_comment_lines(
+    persona: dict,
+    focus: str,
+    tags: list[str],
+    score_value: float,
+    pubmed_id: str = "",
+) -> list[str]:
+    tags_text = "・".join(tags[:2]) if tags else ""
+    focus_label = _comment_friendly_focus(focus, tags)
+    score_label = f"{score_value:.1f}/5" if score_value else ""
+    seed = f"{persona['slug']}::{pubmed_id}::{focus_label}::{tags_text}::{score_label}"
+    variant = _learning_variant_index(seed, 2)
+
+    if persona["slug"] == "newgrad":
+        openings = [
+            "まずはここだけ押さえたいです。",
+            "新卒目線だと、この論文は入りやすいです。",
+        ]
+        follow = (
+            f"自分は {focus_label} のところから読み始めます。"
+            if focus_label
+            else f"{tags_text} をざっくり整理したいときによさそうです。"
+            if tags_text
+            else "まず対象と結果だけ拾えば十分そうです。"
+        )
+        closings = [
+            "全部読む前に、要約だけでも学びになります。",
+            "難しいところは後回しでも大丈夫そうです。",
+        ]
+        extras = [
+            "最初の1本としてちょうどよさそうです。",
+            "用語を追いながら読むだけでも勉強になります。",
+            f"{tags_text} が気になるときの入口によさそうです。" if tags_text else "",
+            "まず評価と結果だけ見ても十分残りそうです。",
+        ]
+        base_lines = [openings[variant], follow, closings[variant]]
+        extra_count = max(0, _stable_line_count(seed) - len(base_lines))
+        return _dedupe_learning_lines(base_lines + _pick_stable_extra_lines(seed, extras, extra_count))
+
+    if persona["slug"] == "year4":
+        openings = [
+            "臨床なら、ここがそのままヒントになりそうです。",
+            "4年目だと、評価から介入につなげて見たくなります。",
+        ]
+        follow = (
+            f"{focus_label} の整理に、そのまま使いやすそうです。"
+            if focus_label
+            else f"{tags_text} で迷うときの整理に使えそうです。"
+            if tags_text
+            else "評価の置き方を見直すきっかけになりそうです。"
+        )
+        closings = [
+            "まず担当ケースに近いかを確認したいです。",
+            "明日の症例で思い出したい論文です。",
+        ]
+        extras = [
+            "評価の置き方を揃える時に使いやすそうです。",
+            "介入を考える前の整理にちょうどよさそうです。",
+            f"{tags_text} を担当していると刺さりやすそうです。" if tags_text else "",
+            "ひとまず要約だけ保存しておきたい論文です。",
+        ]
+        base_lines = [openings[variant], follow, closings[variant]]
+        extra_count = max(0, _stable_line_count(seed) - len(base_lines))
+        return _dedupe_learning_lines(base_lines + _pick_stable_extra_lines(seed, extras, extra_count))
+
+    if persona["slug"] == "year7":
+        openings = [
+            "この結果、誰に当てはめるかで見え方が変わりそうです。",
+            "7年目くらいだと、対象条件から先に見たくなります。",
+        ]
+        follow = (
+            f"自分は {focus_label} を見て、使える場面を絞りたいです。"
+            if focus_label
+            else f"{tags_text} まわりの患者像で考えると使いやすそうです。"
+            if tags_text
+            else "そのまま真似するより、対象を絞って読みたい内容です。"
+        )
+        closings = [
+            "ケースに当てる前に、条件だけは確認しておきたいです。",
+            "当てはまる人が浮かぶと、かなり使いやすいです。",
+        ]
+        extras = [
+            "対象がずれると受け取り方も変わりそうです。",
+            "症例に当てるなら、まず近い条件探しから入りたいです。",
+            f"{tags_text} のケースで思い出したいです。" if tags_text else "",
+            "そのまま真似するより、使う場面を絞って残したいです。",
+        ]
+        base_lines = [openings[variant], follow, closings[variant]]
+        extra_count = max(0, _stable_line_count(seed) - len(base_lines))
+        return _dedupe_learning_lines(base_lines + _pick_stable_extra_lines(seed, extras, extra_count))
+
+    if persona["slug"] == "year10":
+        openings = [
+            "チームで共有するなら、この視点は押さえておきたいです。",
+            "10年目だと、実装しやすいかまで一緒に見ます。",
+        ]
+        follow = (
+            f"{focus_label} が、共有ポイントとして残しやすそうでした。"
+            if focus_label
+            else f"{tags_text} の話題としてカンファでも使いやすそうです。"
+            if tags_text
+            else "現場に落とす前提で読むと、かなり整理しやすいです。"
+        )
+        closings = [
+            "優先度は高めでチェックしておきたいです。" if score_value >= 4.0 else "すぐ導入より、条件整理から入りたいです。",
+            "スタッフ間で言葉を揃える材料になりそうです。",
+        ]
+        extras = [
+            "勉強会の小ネタとしても扱いやすそうです。",
+            "共有するときは、対象条件も一緒に添えたいです。",
+            f"この {score_label} なら先に回してもよさそうです。" if score_label else "",
+            "現場導入前のすり合わせに向いていそうです。",
+        ]
+        base_lines = [openings[variant], follow, closings[variant]]
+        extra_count = max(0, _stable_line_count(seed) - len(base_lines))
+        return _dedupe_learning_lines(base_lines + _pick_stable_extra_lines(seed, extras, extra_count))
+
+    openings = [
+        "結果だけで飛びつかず、背景まで見ておきたい論文です。",
+        "25年目の感覚だと、例外条件まで先に確認したくなります。",
+    ]
+    follow = (
+        f"{focus_label} を見ると、使いどころが見えやすいです。"
+        if focus_label
+        else f"{tags_text} の患者さんに近いときほど活きそうです。"
+        if tags_text
+        else "患者背景が近いときに効きそうな学びです。"
+    )
+    closings = [
+        "対象条件を外すと解釈が変わりそうです。",
+        "急いで使うより、背景と一緒に押さえたいです。",
+    ]
+    extras = [
+        "患者さんの背景まで想像できると活きやすいです。",
+        "結果より先に、誰に当てはめる話かを見ておきたいです。",
+        f"{tags_text} の人に使うなら慎重に見たいです。" if tags_text else "",
+        "長く残るのは、こういう条件整理のある論文だと思います。",
+    ]
+    base_lines = [openings[variant], follow, closings[variant]]
+    extra_count = max(0, _stable_line_count(seed) - len(base_lines))
+    return _dedupe_learning_lines(base_lines + _pick_stable_extra_lines(seed, extras, extra_count))
+
+
 def _build_official_board_notes(current_user: dict | None, active_tag: str = "") -> list[dict]:
     active_tag = normalize_discovery_tag((active_tag or "").strip())
     current_user_id = current_user["id"] if current_user else None
@@ -2857,49 +3102,18 @@ def _build_official_board_notes(current_user: dict | None, active_tag: str = "")
         clinical_reason = (paper.get("clinical_reason") or "").strip()
         tags = paper.get("generated_tags") or []
         score_value = paper.get("score_value") or 0.0
-        full_lines: list[str] = []
-        tags_text = " / ".join(tags[:2]) if tags else ""
-        takeaway = _short_learning_takeaway(summary_text, clinical_reason, 60)
-        clinical_takeaway = _short_learning_takeaway(clinical_reason, summary_text, 56)
-
-        if persona["slug"] == "official":
-            full_lines.append("これ、今日は当たりです。")
-            if takeaway:
-                full_lines.append(takeaway)
-            if tags_text:
-                full_lines.append(f"見るなら {tags_text} まわり。")
-            if score_value:
-                full_lines.append(f"使いやすさは {score_value:.1f}/5 くらい。")
-        elif persona["slug"] == "clinical":
-            full_lines.append("現場ならここを見ます。")
-            if clinical_takeaway:
-                full_lines.append(clinical_takeaway)
-            full_lines.append("評価と介入のヒントあり。")
-            if score_value and score_value >= 4.0:
-                full_lines.append("急ぎなら優先でOKです。")
-        elif persona["slug"] == "study":
-            full_lines.append("勉強メモです。")
-            if takeaway:
-                full_lines.append(takeaway)
-            if tags_text:
-                full_lines.append(f"つながるのは {tags_text}。")
-            full_lines.append("先に結論だけで大丈夫です。")
-        elif persona["slug"] == "pick":
-            full_lines.append("迷ったらこれでよさそう。")
-            if clinical_takeaway:
-                full_lines.append(clinical_takeaway)
-            if tags_text:
-                full_lines.append(f"関連は {tags_text}。")
-            full_lines.append("詳細は要約だけでも十分です。")
-        else:
-            full_lines.append("すごく簡単に言うと、")
-            if takeaway:
-                full_lines.append(takeaway)
-            if tags_text:
-                full_lines.append(f"{tags_text} の話です。")
-            full_lines.append("今日はここだけ見ればOKです。")
-
-        full_lines = [line for line in full_lines if line]
+        focus = _soft_learning_focus(summary_text, clinical_reason, 38)
+        full_lines = [
+            line
+            for line in _build_experience_comment_lines(
+                persona,
+                focus,
+                tags,
+                score_value,
+                str(paper.get("pubmed_id") or ""),
+            )
+            if line
+        ]
         preview_lines = [_truncate_learning_note(line, 64) for line in full_lines[:4]]
         has_more = (
             len(full_lines) > 4
@@ -3150,7 +3364,7 @@ abstractに書かれている情報のみ使う。
 サンプル数、対象の偏り、期間の短さなど、abstractに書かれている制限を書く。
 明確な記載がなければ「記載なし」と書く。
 
-臨床参考度は0.0〜5.0で厳密に評価する。平均的な論文は2.5〜3.0。以下の基準を使うこと：
+臨床参考度は0.0〜5.0で厳密に評価する。普通の論文は3.0を基準にし、迷ったら3.0前後に置く。以下の基準を使うこと：
 ・0.0〜1.0：症例報告（n<5）、abstractのみで内容不明、エビデンス皆無
 ・1.0〜2.0：小規模観察研究（n<20）、方法論が不明確、臨床適用困難
 ・2.0〜3.0：中規模研究（n=20〜50）、一定の方法論あり、限界が大きい
@@ -3246,6 +3460,7 @@ def root(request: Request):
     # jp_titleがない場合は英語titleをそのまま使う
     updated_papers = []
     for paper in papers:
+        normalize_paper_clinical_score(paper)
         jp_title = paper.get("jp_title") or ""
         if not jp_title:
             paper["jp_title"] = paper.get("title") or ""
@@ -3315,6 +3530,7 @@ def root(request: Request):
         decorated: list[dict] = []
         for paper in paper_list:
             item = dict(paper)
+            normalize_paper_clinical_score(item)
             pid = str(item.get("pubmed_id") or "").strip()
             saved = manual_saved_map.get(pid)
             if not (item.get("jp_title") or "").strip():
@@ -3533,6 +3749,16 @@ def mypage(request: Request):
     recent_papers = get_saved_papers(user_id=current_user["id"])
     recent_papers = sorted(recent_papers, key=lambda x: x.get("created_at", ""), reverse=True)[:3]
 
+    feedback_notice_key = (request.query_params.get("feedback_notice") or "").strip()
+    feedback_error_key = (request.query_params.get("feedback_error") or "").strip()
+    feedback_notice_map = {
+        "sent": "フィードバックを受け取りました。ありがとうございます。",
+    }
+    feedback_error_map = {
+        "empty": "内容を入力してから送信してください。",
+        "too_long": "フィードバックは1200文字以内でお願いします。",
+    }
+
     return templates.TemplateResponse(
         "mypage.html",
         {
@@ -3552,6 +3778,8 @@ def mypage(request: Request):
             "memo_count": memo_count,
             "recent_papers": recent_papers,
             "is_master_user": is_master_user(user),
+            "feedback_notice": feedback_notice_map.get(feedback_notice_key, ""),
+            "feedback_error": feedback_error_map.get(feedback_error_key, ""),
         }
     )
 
@@ -3888,6 +4116,32 @@ def mypage_profile_update(
     return RedirectResponse("/mypage?saved=1", status_code=303)
 
 
+@app.post("/mypage/feedback")
+def mypage_feedback_submit(
+    request: Request,
+    category: str = Form("general"),
+    message: str = Form(""),
+    page_context: str = Form("mypage"),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login?from=mypage", status_code=303)
+
+    normalized_message = (message or "").strip()
+    if not normalized_message:
+        return RedirectResponse("/mypage?feedback_error=empty", status_code=303)
+    if len(normalized_message) > 1200:
+        return RedirectResponse("/mypage?feedback_error=too_long", status_code=303)
+
+    create_user_feedback(
+        user_id=current_user["id"],
+        category=(category or "general").strip() or "general",
+        message=normalized_message,
+        page_context=(page_context or "mypage").strip() or "mypage",
+    )
+    return RedirectResponse("/mypage?feedback_notice=sent", status_code=303)
+
+
 @app.get("/board")
 def board_page(request: Request, tag: str = Query("")):
     # /board は /learn?tab=board にリダイレクト（既存リンクの後方互換）
@@ -4217,16 +4471,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             abstract = saved.get("abstract", "") or ""
 
             raw_saved_score = saved.get("clinical_score", "") or ""
-            display_clinical_score = ""
-
-            if raw_saved_score:
-                try:
-                    base_saved_score = float(raw_saved_score)
-                    adjusted_saved_score = base_saved_score + stable_score_offset(str(pmid))
-                    adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
-                    display_clinical_score = f"{adjusted_saved_score:.2f}"
-                except Exception:
-                    display_clinical_score = raw_saved_score
+            display_clinical_score = normalize_clinical_score(raw_saved_score)
 
             papers.append({
                 "id": str(pmid),
@@ -4578,13 +4823,7 @@ def paper(
             raw_cached_score = cached_source.get("clinical_score") or ""
 
     if raw_cached_score:
-        try:
-            base_saved_score = float(raw_cached_score)
-            adjusted_saved_score = base_saved_score + stable_score_offset(id)
-            adjusted_saved_score = max(0.0, min(5.0, adjusted_saved_score))
-            clinical_score = f"{adjusted_saved_score:.2f}"
-        except Exception:
-            clinical_score = raw_cached_score
+        clinical_score = normalize_clinical_score(raw_cached_score)
 
     if not jp_title:
         jp_title = translate_title_to_japanese(title)
@@ -4597,14 +4836,7 @@ def paper(
         summary_jp = summary_result["summary"]
         clinical_reason = summary_result["reason"]
 
-        try:
-            base_score = float(summary_result["score"] or 0)
-        except Exception:
-            base_score = 0.0
-
-        adjusted_score = base_score + stable_score_offset(id)
-        adjusted_score = max(0.0, min(5.0, adjusted_score))
-        clinical_score = f"{adjusted_score:.2f}"
+        clinical_score = normalize_clinical_score(summary_result.get("score"), default="3.0")
 
     manual_summary_requested = current_user_id is not None and (translate == 1 or summarize == 1)
 
@@ -4657,7 +4889,11 @@ def paper(
         site_jp_title = jp_title or (site_cached_paper.get("jp_title") if site_cached_paper else "") or (shared_cached_paper.get("jp_title") if shared_cached_paper else "") or ""
         site_jp = jp or (site_cached_paper.get("jp") if site_cached_paper else "") or (shared_cached_paper.get("jp") if shared_cached_paper else "") or ""
         site_summary_jp = summary_jp or (site_cached_paper.get("summary_jp") if site_cached_paper else "") or (shared_cached_paper.get("summary_jp") if shared_cached_paper else "") or ""
-        site_clinical_score = clinical_score or (site_cached_paper.get("clinical_score") if site_cached_paper else "") or (shared_cached_paper.get("clinical_score") if shared_cached_paper else "") or ""
+        site_clinical_score = normalize_clinical_score(
+            clinical_score
+            or (site_cached_paper.get("clinical_score") if site_cached_paper else "")
+            or (shared_cached_paper.get("clinical_score") if shared_cached_paper else "")
+        )
         site_clinical_reason = clinical_reason or (site_cached_paper.get("clinical_reason") if site_cached_paper else "") or (shared_cached_paper.get("clinical_reason") if shared_cached_paper else "") or ""
 
         save_paper(
@@ -4820,6 +5056,7 @@ def save_paper_route(
     clean_folder_name = (folder_name or "").strip()
     if clean_folder_name == DEFAULT_SAVED_FOLDER_LABEL:
         clean_folder_name = ""
+    normalized_clinical_score = normalize_clinical_score(clinical_score)
 
     save_paper(
         pubmed_id=pubmed_id,
@@ -4832,7 +5069,7 @@ def save_paper_route(
         jp=jp,
         summary_jp=summary_jp,
         folder_name=clean_folder_name,
-        clinical_score=clinical_score,
+        clinical_score=normalized_clinical_score,
         clinical_reason=clinical_reason,
         user_id=current_user["id"],
         save_source="manual_save",
@@ -4893,6 +5130,7 @@ def saved(request: Request):
 
     def build_display_paper(raw_paper):
         paper = dict(raw_paper)
+        normalize_paper_clinical_score(paper)
         folder_name = (paper.get("folder_name") or "").strip()
         is_default_folder = folder_name in {"", "未分類", DEFAULT_SAVED_FOLDER_LABEL}
         display_folder_name = "公開保存" if is_guest else (DEFAULT_SAVED_FOLDER_LABEL if is_default_folder else folder_name)
@@ -5106,6 +5344,8 @@ def public_paper(request: Request, pubmed_id: str):
             }
         )
 
+    normalize_paper_clinical_score(paper)
+
     return templates.TemplateResponse(
         "public.html",
         {
@@ -5128,6 +5368,7 @@ def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
     )
 
     for paper in papers:
+        normalize_paper_clinical_score(paper)
         custom_title = (paper.get("custom_title") or "").strip()
         default_title = (paper.get("jp_title") or paper.get("title") or "").strip()
         paper["display_title"] = custom_title or default_title
@@ -5407,6 +5648,8 @@ def ranking_list(request: Request, sort: str = "likes"):
         page_title = "人気論文ランキング" if sort == "likes" else "臨床参考度ランキング"
         page_description = "SaaS内で保存・要約された論文の中から読めるランキング一覧です。"
 
+    papers = [normalize_paper_clinical_score(dict(paper)) for paper in papers]
+
     return templates.TemplateResponse(
         "public_list.html",
         {
@@ -5443,6 +5686,8 @@ def public_list(request: Request, sort: str = "likes"):
             key=lambda x: x.get("created_at", ""),
             reverse=True
         )
+
+    papers = [normalize_paper_clinical_score(dict(paper)) for paper in papers]
 
     return templates.TemplateResponse(
         "public_list.html",
@@ -6318,12 +6563,7 @@ def paper_memo_detail(request: Request, memo_id: int):
         )
         if cached_paper:
             raw_score = str(cached_paper.get("clinical_score") or "").strip()
-            score_label = ""
-            if raw_score:
-                try:
-                    score_label = f"{float(raw_score):.1f}"
-                except Exception:
-                    score_label = raw_score
+            score_label = normalize_clinical_score(raw_score)
             paper_reference = {
                 "pubmed_id": pubmed_id,
                 "display_title": (

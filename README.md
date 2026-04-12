@@ -1,4 +1,4 @@
-# RehaEvidence / リハエビデンスナビ
+# RehaEvidence / リハエビデンス
 
 ## Railway デプロイ
 

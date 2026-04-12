@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>理学療法士向け論文翻訳・要約ツール</title>
+    <title>{{ BRAND_TITLE }}</title>
 
     <style>
       :root {
@@ -139,6 +139,26 @@
         line-height: 1.85;
         color: #4b5563;
         text-align: center;
+      }
+
+      .sub-text-brand {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #64748b;
+      }
+
+      .sub-text-line {
+        display: block;
+      }
+
+      .sub-text-desktop {
+        display: block;
+      }
+
+      .sub-text-mobile {
+        display: none;
       }
 
       .search-row {
@@ -1148,8 +1168,15 @@
           color: #111827;
         }
 
-        .sidebar-subtext {
+        .sidebar-brand-ja {
           margin-top: 8px;
+          font-size: 13px;
+          font-weight: 700;
+          color: #475569;
+        }
+
+        .sidebar-subtext {
+          margin-top: 10px;
           font-size: 13px;
           line-height: 1.7;
           color: var(--subtext);
@@ -1350,6 +1377,19 @@
           line-height: 1.85;
         }
 
+        .sub-text-desktop {
+          display: none;
+        }
+
+        .sub-text-mobile {
+          display: block;
+        }
+
+        .sub-text-brand {
+          margin-bottom: 8px;
+          font-size: 17px;
+        }
+
         .card-header {
           flex-direction: column;
           align-items: stretch;
@@ -1491,10 +1531,9 @@
     <div class="app-layout">
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-title">リハエビデンスナビ</div>
-          <div class="sidebar-subtext">
-            PubMed論文を日本語で素早く理解し、臨床判断にそのまま使える形で整理。
-          </div>
+          <div class="sidebar-title">{{ BRAND_NAME_EN }}</div>
+          <div class="sidebar-brand-ja">{{ BRAND_NAME_JA }}</div>
+          <div class="sidebar-subtext">{{ BRAND_COPY }}</div>
         </div>
 
         <nav class="sidebar-nav">
@@ -1568,11 +1607,15 @@
 
         <div class="container">
           <div class="main-card">
-            <h1>リハエビデンスナビ</h1>
+            <h1>{{ BRAND_NAME_EN }}</h1>
             <p class="sub-text">
-              PubMed論文を日本語で素早く理解し、<br />
-              臨床判断にそのまま使える形で整理。<br />
-              忙しいリハ職のための時短インプット環境。
+              <span class="sub-text-brand">{{ BRAND_NAME_JA }}</span>
+              <span class="sub-text-desktop">{{ BRAND_COPY }}</span>
+              <span class="sub-text-mobile">
+                {% for line in BRAND_COPY_LINES %}
+                <span class="sub-text-line">{{ line }}</span>
+                {% endfor %}
+              </span>
             </p>
 
             <form

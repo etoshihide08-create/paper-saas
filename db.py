@@ -178,6 +178,20 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            category TEXT DEFAULT 'general',
+            message TEXT NOT NULL,
+            page_context TEXT DEFAULT 'mypage',
+            status TEXT DEFAULT 'new',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
     # saved_papers migrations
 
     for sql in [
@@ -244,6 +258,7 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_paper_history_user_pubmed ON paper_history(user_id, pubmed_id)",
         "CREATE INDEX IF NOT EXISTS idx_paper_comments_pubmed_created ON paper_comments(pubmed_id, created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_paper_comments_user_created ON paper_comments(user_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_user_feedback_user_created ON user_feedback(user_id, created_at DESC)",
     ]:
         cur.execute(sql)
     conn.commit()
@@ -2949,3 +2964,31 @@ def get_next_master_article_draft_for_autopost(user_id: int):
     row = cur.fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def create_user_feedback(user_id: int, category: str, message: str, page_context: str = "mypage"):
+    normalized_category = (category or "general").strip() or "general"
+    normalized_message = (message or "").strip()
+    normalized_context = (page_context or "mypage").strip() or "mypage"
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO user_feedback (
+            user_id,
+            category,
+            message,
+            page_context
+        )
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            user_id,
+            normalized_category,
+            normalized_message,
+            normalized_context,
+        )
+    )
+    conn.commit()
+    conn.close()
