@@ -256,6 +256,72 @@
         margin-top: 14px;
       }
 
+      .upgrade-nudge {
+        margin-bottom: 12px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(37, 99, 235, 0.14);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239,246,255,0.92));
+        box-shadow: var(--shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .upgrade-nudge.is-strong {
+        border-color: rgba(37, 99, 235, 0.24);
+        background: linear-gradient(135deg, rgba(22,50,79,0.98), rgba(37,99,235,0.94));
+      }
+
+      .upgrade-nudge.is-strong .upgrade-kicker,
+      .upgrade-nudge.is-strong .upgrade-title,
+      .upgrade-nudge.is-strong .upgrade-body {
+        color: #fff;
+      }
+
+      .upgrade-copy { min-width: 0; }
+
+      .upgrade-kicker {
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #1d4ed8;
+      }
+
+      .upgrade-title {
+        margin-top: 6px;
+        font-size: 18px;
+        line-height: 1.45;
+        letter-spacing: -0.02em;
+        font-weight: 900;
+        color: #111827;
+      }
+
+      .upgrade-body {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--subtext);
+      }
+
+      .upgrade-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
+        text-decoration: none;
+        background: linear-gradient(135deg, #16324f, #2563eb);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        white-space: nowrap;
+        box-shadow: 0 10px 24px rgba(37,99,235,0.16);
+      }
+
       .mini-action {
         border: none;
         background: transparent;
@@ -1287,6 +1353,17 @@
           align-items: stretch;
         }
 
+        .upgrade-nudge {
+          padding: 14px;
+          border-radius: 18px;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .upgrade-title {
+          font-size: 16px;
+        }
+
         .memo-cta-btn {
           width: 100%;
         }
@@ -1487,6 +1564,17 @@
           </form>
         </div>
       </div>
+
+      {% if upgrade_nudge %}
+      <section class="upgrade-nudge {% if upgrade_nudge.tone == 'strong' %}is-strong{% endif %}">
+        <div class="upgrade-copy">
+          <div class="upgrade-kicker">{{ upgrade_nudge.kicker }}</div>
+          <div class="upgrade-title">{{ upgrade_nudge.title }}</div>
+          <div class="upgrade-body">{{ upgrade_nudge.body }}</div>
+        </div>
+        <a href="{{ upgrade_nudge.href }}" class="upgrade-btn">{{ upgrade_nudge.button }}</a>
+      </section>
+      {% endif %}
 
       {% if paper.summary_jp %}
       <div class="card">

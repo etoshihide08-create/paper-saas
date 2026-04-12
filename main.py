@@ -55,6 +55,7 @@ from db import (
     rename_folder,
     update_user_profile,
     get_user_daily_usage,
+    increment_daily_usage,
     count_user_all_memos,
     get_user_memos,
     get_memo_by_id,
@@ -1814,7 +1815,9 @@ def get_plan_limits(plan):
         "guest": {
             "daily_summary_limit": 5,
             "save_limit": 0,
-            "ranking_limit": 20,
+            "ranking_limit": 100,
+            "home_ranking_limit": 20,
+            "ranking_masked": True,
             "can_view_score_ranking": True,
             "memo_limit": 0,
         },
@@ -1822,7 +1825,9 @@ def get_plan_limits(plan):
         "free": {
             "daily_summary_limit": 5,
             "save_limit": 10,
-            "ranking_limit": 20,
+            "ranking_limit": 100,
+            "home_ranking_limit": 20,
+            "ranking_masked": True,
             "can_view_score_ranking": True,
             "memo_limit": 15,
         },
@@ -1831,14 +1836,18 @@ def get_plan_limits(plan):
             "daily_summary_limit": 50,
             "save_limit": 300,
             "ranking_limit": 100,
+            "home_ranking_limit": 20,
+            "ranking_masked": False,
             "can_view_score_ranking": True,
-            "memo_limit": None,
+            "memo_limit": 300,
         },
 
         "expert": {
             "daily_summary_limit": None,
             "save_limit": None,
-            "ranking_limit": 300,
+            "ranking_limit": 100,
+            "home_ranking_limit": 20,
+            "ranking_masked": False,
             "can_view_score_ranking": True,
             "memo_limit": None,
         },
@@ -2023,6 +2032,169 @@ def can_user_save(user):
     limits = get_plan_limits(plan)
 
     return limits["save_limit"] != 0
+
+
+def can_user_add_manual_save(user, pubmed_id: str = ""):
+    if not user:
+        return False, "login_required"
+
+    fresh_user = get_user_by_id(user["id"]) if user.get("id") else None
+    user = fresh_user or user
+    plan = get_user_plan(user)
+    limits = get_plan_limits(plan)
+    save_limit = limits.get("save_limit")
+
+    if save_limit == 0:
+        return False, "limit_reached"
+
+    if save_limit is None:
+        return True, "ok"
+
+    existing_saved_paper = get_saved_paper_by_id(pubmed_id, user_id=user["id"]) if pubmed_id else None
+    existing_source = str((existing_saved_paper or {}).get("save_source") or "").strip()
+
+    if existing_source in MANUAL_SAVED_SOURCES:
+        return True, "ok"
+
+    current_manual_count = count_user_saved_papers(user["id"])
+    if current_manual_count >= int(save_limit):
+        return False, "limit_reached"
+
+    return True, "ok"
+
+
+def build_upgrade_nudge(
+    surface: str,
+    current_plan: str,
+    *,
+    daily_usage: int = 0,
+    saved_count: int = 0,
+    memo_count: int = 0,
+    summary_action_requested: bool = False,
+):
+    if current_plan in ("pro", "expert"):
+        return None
+
+    limits = get_plan_limits(current_plan)
+    daily_limit = limits.get("daily_summary_limit")
+    save_limit = limits.get("save_limit")
+    memo_limit = limits.get("memo_limit")
+
+    if current_plan == "guest":
+        guest_map = {
+            "search": {
+                "tone": "guest",
+                "kicker": "気になる論文は残して育てられます",
+                "title": "無料登録で、保存とメモが自分の資産になります",
+                "body": "気になった論文を保存して、あとから読み返しながらメモも積み上げられます。",
+                "href": "/register?from=search",
+                "button": "無料で始める",
+            },
+            "paper": {
+                "tone": "guest",
+                "kicker": "この論文、あとで見返せます",
+                "title": "無料登録で、日本語要約も保存も育てやすくなります",
+                "body": "読んだ論文をその場で保存して、論文メモや要約履歴として残せます。",
+                "href": "/register?from=paper",
+                "button": "無料で始める",
+            },
+        }
+        if surface == "paper" and not summary_action_requested:
+            return None
+        return guest_map.get(surface)
+
+    if surface in {"search", "paper"}:
+        if summary_action_requested and daily_usage >= 3:
+            remaining_text = ""
+            if daily_limit is not None:
+                remaining = max(int(daily_limit) - int(daily_usage), 0)
+                if remaining > 0:
+                    remaining_text = f"無料プランは1日{daily_limit}本まで。あと{remaining}本です。"
+                else:
+                    remaining_text = f"無料プランは1日{daily_limit}本が目安です。"
+
+            return {
+                "tone": "primary" if daily_usage < (daily_limit or 999) else "strong",
+                "kicker": f"今日{daily_usage}本要約しました",
+                "title": "要約の流れができてきたら、Proの方が快適です",
+                "body": f"{remaining_text} Proなら1日50本まで、日本語要約を止めずに読み進められます。",
+                "href": "/plans?source=summary_growth",
+                "button": "Proを見る",
+            }
+
+    if surface == "saved":
+        if saved_count >= 5:
+            return {
+                "tone": "growth",
+                "kicker": f"保存が{saved_count}本に増えました",
+                "title": "知識の資産が育ち始めています",
+                "body": f"無料プランは保存{save_limit}件まで。Proなら保存枠を広げて、あとで見返す流れを止めずに育てられます。",
+                "href": "/plans?source=saved_growth",
+                "button": "保存を育てる",
+            }
+        if saved_count >= 3:
+            return {
+                "tone": "growth",
+                "kicker": f"保存{saved_count}本",
+                "title": "残した論文を、もっと整理しやすくできます",
+                "body": "Proなら保存上限を気にせず、フォルダごとに知識を積み上げやすくなります。",
+                "href": "/plans?source=saved_growth",
+                "button": "Proを見る",
+            }
+
+    if surface == "memo":
+        if memo_limit is not None and memo_count >= memo_limit:
+            return None
+        if memo_count >= 8:
+            return {
+                "tone": "memo",
+                "kicker": f"メモが{memo_count}件に増えました",
+                "title": "積み上がったメモを、件数を気にせず育てられます",
+                "body": f"無料プランはメモ{memo_limit}件まで。Proなら臨床メモも論文メモも300件まで残せます。",
+                "href": "/plans?source=memo_growth",
+                "button": "メモを育てる",
+            }
+        if memo_count >= 3:
+            return {
+                "tone": "memo",
+                "kicker": f"メモ{memo_count}件",
+                "title": "考えが残り始めたら、Proが使いやすくなります",
+                "body": "Proならメモを300件まで残せるので、学びをかなり余裕をもって積み上げられます。",
+                "href": "/plans?source=memo_growth",
+                "button": "Proを見る",
+            }
+
+    return None
+
+
+def get_or_increment_summary_usage(
+    request: Request,
+    user_id: int | None,
+    paper_id: str,
+    *,
+    summary_action_requested: bool,
+) -> int:
+    if not user_id:
+        return 0
+
+    usage = get_user_daily_usage(user_id)
+    if not summary_action_requested:
+        return usage
+
+    today_key = datetime.now().strftime("%Y-%m-%d")
+    session_key = f"summary_usage_events:{today_key}"
+    seen_events = request.session.get(session_key) or []
+    if not isinstance(seen_events, list):
+        seen_events = []
+
+    event_key = str(paper_id)
+    if event_key not in seen_events:
+        increment_daily_usage(user_id, 1)
+        seen_events = (seen_events + [event_key])[-200:]
+        request.session[session_key] = seen_events
+        return usage + 1
+
+    return usage
 
 def normalize_search_keyword(keyword: str) -> str:
     normalized = (keyword or "").strip()
@@ -3474,9 +3646,9 @@ def root(request: Request):
         reverse=True
     )
 
-    limit = limits["ranking_limit"]
+    home_ranking_limit = int(limits.get("home_ranking_limit") or 20)
 
-    popular_papers = sorted_popular[:limit]
+    popular_papers = sorted_popular[:home_ranking_limit]
 
     # 臨床参考度ランキング
 
@@ -3486,10 +3658,10 @@ def root(request: Request):
         reverse=True
     )
 
-    top_rated_papers = sorted_score[:limit]
+    top_rated_papers = sorted_score[:home_ranking_limit]
 
     try:
-        trending_papers = get_pubmed_trending_papers(20)
+        trending_papers = get_pubmed_trending_papers(home_ranking_limit)
     except Exception:
         trending_papers = []
 
@@ -3558,7 +3730,9 @@ def root(request: Request):
             "current_user": current_user,
             "current_plan": plan,
             "can_view_score_ranking": limits["can_view_score_ranking"],
-            "ranking_limit": limits["ranking_limit"],
+            "ranking_limit": home_ranking_limit,
+            "full_ranking_limit": limits["ranking_limit"],
+            "ranking_masked": bool(limits.get("ranking_masked")),
             "save_folder_choices": save_folder_choices,
             "default_saved_folder_label": DEFAULT_SAVED_FOLDER_LABEL,
         }
@@ -4403,6 +4577,13 @@ def saved_export(request: Request):
 def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     current_user = get_current_user(request)
     current_plan = get_user_plan(get_user_by_id(current_user["id"])) if current_user else "guest"
+    daily_usage = get_user_daily_usage(current_user["id"]) if current_user else 0
+    search_upgrade_nudge = build_upgrade_nudge(
+        "search",
+        current_plan,
+        daily_usage=daily_usage,
+        summary_action_requested=(daily_usage >= 3),
+    )
 
     if not keyword.strip():
         return templates.TemplateResponse(
@@ -4416,6 +4597,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "total_pages": 1,
                 "current_user": current_user,
                 "current_plan": current_plan,
+                "daily_usage": daily_usage,
+                "upgrade_nudge": search_upgrade_nudge,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
             }
@@ -4434,6 +4617,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "total_pages": 1,
                 "current_user": current_user,
                 "current_plan": current_plan,
+                "daily_usage": daily_usage,
+                "upgrade_nudge": search_upgrade_nudge,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
             }
@@ -4520,6 +4705,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                     "total_pages": total_pages,
                     "current_user": current_user,
                     "current_plan": current_plan,
+                    "daily_usage": daily_usage,
+                    "upgrade_nudge": search_upgrade_nudge,
                     "discovery_tags": COMMON_DISCOVERY_TAGS,
                     "background_translation_ids": [],
                 }
@@ -4595,6 +4782,8 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             "total_pages": total_pages,
             "current_user": current_user,
             "current_plan": current_plan,
+            "daily_usage": daily_usage,
+            "upgrade_nudge": search_upgrade_nudge,
             "discovery_tags": COMMON_DISCOVERY_TAGS,
             "background_translation_ids": background_translation_ids,
         }
@@ -4746,6 +4935,7 @@ def paper(
     current_paper_url = request.url.path
     if request.url.query:
         current_paper_url += f"?{request.url.query}"
+    summary_action_requested = translate == 1 or summarize == 1
 
     handle = Entrez.efetch(
         db="pubmed",
@@ -4838,7 +5028,13 @@ def paper(
 
         clinical_score = normalize_clinical_score(summary_result.get("score"), default="3.0")
 
-    manual_summary_requested = current_user_id is not None and (translate == 1 or summarize == 1)
+    manual_summary_requested = current_user_id is not None and summary_action_requested
+    if manual_summary_requested:
+        can_save_manual, save_reason = can_user_add_manual_save(current_user, id)
+        if not can_save_manual:
+            if save_reason == "limit_reached":
+                save_error = "limit_reached"
+            manual_summary_requested = False
 
     # サイト内キャッシュとして保存
     if jp_title or jp or summary_jp:
@@ -4914,6 +5110,18 @@ def paper(
         )
 
     refreshed_saved = get_saved_paper_by_id(id, user_id=current_user_id)
+    daily_usage = get_or_increment_summary_usage(
+        request,
+        current_user_id,
+        id,
+        summary_action_requested=summary_action_requested,
+    )
+    paper_upgrade_nudge = build_upgrade_nudge(
+        "paper",
+        current_plan,
+        daily_usage=daily_usage,
+        summary_action_requested=summary_action_requested,
+    )
     save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
     if current_user_id:
         try:
@@ -4975,6 +5183,8 @@ def paper(
         "folder_suggestions": get_folder_name_suggestions(user_id=current_user_id),
         "save_error_message": save_error_message,
         "current_paper_url": current_paper_url,
+        "daily_usage": daily_usage,
+        "upgrade_nudge": paper_upgrade_nudge,
     }
 )
 
@@ -5052,6 +5262,12 @@ def save_paper_route(
             {"ok": False, "message": "ログインしてください"},
             status_code=401
         )
+
+    can_save_manual, save_reason = can_user_add_manual_save(current_user, pubmed_id)
+    if not can_save_manual:
+        status_code = 403 if save_reason == "limit_reached" else 401
+        message = "現在のプランの保存上限に達しています。プラン変更をご検討ください。" if save_reason == "limit_reached" else "ログインしてください"
+        return JSONResponse({"ok": False, "message": message, "reason": save_reason}, status_code=status_code)
 
     clean_folder_name = (folder_name or "").strip()
     if clean_folder_name == DEFAULT_SAVED_FOLDER_LABEL:
@@ -5313,6 +5529,11 @@ def saved(request: Request):
         "note_count": sum(1 for paper in display_papers_sorted if paper.get("has_note")),
         "score_count": sum(1 for paper in display_papers_sorted if (paper.get("score_value") or 0) >= 4.0),
     }
+    saved_upgrade_nudge = build_upgrade_nudge(
+        "saved",
+        current_plan,
+        saved_count=len(display_papers_sorted),
+    )
 
     return templates.TemplateResponse(
         "saved.html",
@@ -5328,6 +5549,7 @@ def saved(request: Request):
             "current_user": current_user,
             "current_plan": current_plan,
             "is_guest": is_guest,
+            "upgrade_nudge": saved_upgrade_nudge,
         }
     )
 
@@ -5626,6 +5848,7 @@ def ranking_list(request: Request, sort: str = "likes"):
     current_user = get_current_user(request)
     plan = get_user_plan(current_user)
     limits = get_plan_limits(plan)
+    ranking_masked = bool(limits.get("ranking_masked"))
 
     if sort == "trend":
         papers = get_pubmed_trending_papers(limits["ranking_limit"])
@@ -5661,6 +5884,9 @@ def ranking_list(request: Request, sort: str = "likes"):
             "page_description": page_description,
             "base_path": "/ranking",
             "empty_message": "まだランキング対象の論文がありません。",
+            "ranking_limit": limits["ranking_limit"],
+            "ranking_masked": ranking_masked,
+            "current_plan": plan,
         }
     )
 
@@ -6287,6 +6513,7 @@ def memo_list(request: Request, tab: str = "quick"):
             "map_more_paper_count": 0,
             "total_count": 0,
             "memo_limit": 0,
+            "upgrade_nudge": None,
         })
 
     user_id = current_user["id"]
@@ -6302,6 +6529,11 @@ def memo_list(request: Request, tab: str = "quick"):
     for memo in paper_memos:
         memo["body_preview"] = memo_body_to_plain_text(memo.get("body") or "")
     total_count = len(quick_memos) + len(paper_memos)
+    memo_upgrade_nudge = build_upgrade_nudge(
+        "memo",
+        plan,
+        memo_count=total_count,
+    )
     map_preview_limit = 10
     map_quick_memos = quick_memos[:map_preview_limit]
     map_paper_memos = paper_memos[:map_preview_limit]
@@ -6351,6 +6583,7 @@ def memo_list(request: Request, tab: str = "quick"):
             "memo_map_paper_nodes": memo_map_paper_nodes,
             "total_count": total_count,
             "memo_limit": memo_limit,
+            "upgrade_nudge": memo_upgrade_nudge,
         }
     )
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>料金プラン — PT Research</title>
+    <title>料金プラン — RehaEvidence</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -62,25 +62,42 @@
             margin-bottom: 32px;
         }
         .current-plan-pill span { color: #a5b4fc; }
-
-        /* Billing toggle */
-        .billing-wrap {
-            display: inline-flex; align-items: center; gap: 12px;
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 999px; padding: 6px 6px 6px 16px;
+        .billing-preview {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
-        .billing-label { font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 600; }
-        .billing-toggle { display: flex; gap: 4px; }
-        .billing-btn {
-            border: none; background: transparent; color: rgba(255,255,255,0.65);
-            padding: 8px 18px; border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 13px;
-            transition: background 0.2s, color 0.2s;
+        .billing-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.16);
+            backdrop-filter: blur(8px);
         }
-        .billing-btn.active { background: #fff; color: #111; }
-        .billing-save-badge {
-            background: linear-gradient(135deg, var(--pro-from), var(--pro-to));
-            color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
-            padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+        .billing-option {
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.72);
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.15s;
+        }
+        .billing-option:hover { transform: translateY(-1px); }
+        .billing-option.active {
+            background: #fff;
+            color: #111827;
+        }
+        .billing-preview-note {
+            font-size: 12px;
+            color: rgba(255,255,255,0.62);
+            line-height: 1.6;
         }
 
         /* ── Layout ───────────────────────────── */
@@ -427,6 +444,10 @@
         .plan-price-annual { font-size: 44px; font-weight: 800; line-height: 1; color: #111; }
         .plan-period { font-size: 16px; font-weight: 600; color: #666; margin-left: 4px; }
         .price-note { font-size: 12px; color: #888; margin-top: 4px; }
+        .annual-only { display: none; }
+        .monthly-only { display: inline; }
+        body.annual-mode .annual-only { display: inline; }
+        body.annual-mode .monthly-only { display: none; }
 
         .plan-cta { margin-bottom: 24px; }
         .plan-cta form { margin: 0; }
@@ -549,13 +570,10 @@
             .hero { padding: 40px 16px 64px; }
             .page-body { padding: 0 12px 60px; }
             .compare-section, .referral-section, .notes-section { padding: 20px 16px; }
+            .billing-switch { width: 100%; justify-content: center; }
+            .billing-option { padding: 9px 12px; }
         }
 
-        /* Billing mode visibility */
-        .annual-only { display: none; }
-        .monthly-only { display: inline; }
-        body.annual-mode .annual-only { display: inline; }
-        body.annual-mode .monthly-only { display: none; }
     </style>
 </head>
 <body>
@@ -564,8 +582,8 @@
         <div class="hero-inner">
             <a href="/" class="hero-back">← トップへ戻る</a>
             <div class="hero-eyebrow">Pricing</div>
-            <h1 class="hero-title">理学療法士のための<br>研究ツール</h1>
-            <p class="hero-sub">論文検索・要約・マーカー・学習掲示板まで。<br>あなたの臨床と学習をワンプラットフォームで。</p>
+            <h1 class="hero-title">リハエビデンスの<br>料金プラン</h1>
+            <p class="hero-sub">英語論文を日本語で理解し、保存とメモで知識を積み上げるためのプランです。</p>
 
             {% if current_user %}
             <div class="current-plan-pill">
@@ -576,14 +594,14 @@
             <div class="current-plan-pill">ログインすると詳細設定が可能になります</div>
             {% endif %}
 
-            <div class="billing-wrap">
-                <span class="billing-label">支払い</span>
-                <div class="billing-toggle">
-                    <button type="button" class="billing-btn active" id="monthly-btn" onclick="setBillingMode('monthly')">月額</button>
-                    <button type="button" class="billing-btn" id="annual-btn" onclick="setBillingMode('annual')">年額</button>
+            <div class="billing-preview">
+                <div class="billing-switch" aria-label="料金表示の切り替え">
+                    <button type="button" class="billing-option active" id="monthly-btn" onclick="setBillingMode('monthly')">月額</button>
+                    <button type="button" class="billing-option" id="annual-btn" onclick="setBillingMode('annual')">年額</button>
                 </div>
-                <span class="billing-save-badge annual-only">2ヶ月分お得</span>
+                <div class="billing-preview-note">年額は参考表示です。申し込みは現在月額プランから始まります。</div>
             </div>
+
         </div>
     </div>
 
@@ -612,7 +630,7 @@
 
         {% if selected_campaign and not supporter_claim %}
         <div class="campaign-note">
-            <strong>選択中の特典：</strong>応援サポーター枠。まだ適用前です。下の `Pro` を開始して契約が完了した時点で、サポーター価格980円が適用されます。先着30名に残っていれば、最初の6か月は500円特典も自動で適用されます。
+            <strong>選択中の特典：</strong>応援サポーター枠。まだ適用前です。下の Pro を開始して契約が完了した時点で、サポーター価格980円が適用されます。先着30名に残っていれば、最初の6か月は500円特典も自動で適用されます。
         </div>
         {% endif %}
 
@@ -685,10 +703,10 @@
                 </div>
                 <div class="plan-icon">🆓</div>
                 <div class="plan-name">Free</div>
-                <div class="plan-tagline">まずは体験したい方。基本的な論文検索と要約を試せます。</div>
+                <div class="plan-tagline">まずは試したい方向け。検索と日本語要約の基本を体験できます。</div>
                 <div class="price-block">
                     <span class="plan-price">¥0</span>
-                    <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
+                    <span class="plan-period">/ 月</span>
                     <div class="price-note">クレジットカード不要</div>
                 </div>
                 <div class="plan-cta">
@@ -707,9 +725,10 @@
                 <ul class="feature-list">
                     <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <strong>5回 / 日</strong></span></li>
                     <li><span class="feat-icon">🔍</span><span class="feat-text">キーワード検索</span></li>
-                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <strong>TOP20</strong></span></li>
+                    <li><span class="feat-icon">📊</span><span class="feat-text">ランキングは <strong>上位3件まで</strong>、4位以降はプレビュー</span></li>
                     <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <strong>10件まで</strong></span></li>
-                    <li><span class="feat-icon">📝</span><span class="feat-text">クイックメモ <strong>15件まで</strong></span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">メモ <strong>15件まで</strong></span></li>
+                    <li><span class="feat-icon">💬</span><span class="feat-text">おすすめ論文と学習掲示板の閲覧</span></li>
                 </ul>
             </div>
 
@@ -724,14 +743,14 @@
                 </div>
                 <div class="plan-icon">⚡</div>
                 <div class="plan-name">Pro</div>
-                <div class="plan-tagline">臨床で毎日活用したい方向けの主力プラン。全機能が解放されます。</div>
+                <div class="plan-tagline">毎日の臨床と学びを止めずに回したい方向け。いちばん使いやすい主力プランです。</div>
                 <div class="price-block">
                     <span class="plan-price monthly-only">¥1,500</span>
                     <span class="plan-price annual-only">¥15,000</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
                     <div class="price-note">
                         <span class="monthly-only">7日間の無料体験あり</span>
-                        <span class="annual-only">月あたり ¥1,250（2ヶ月分お得）</span>
+                        <span class="annual-only">年額の参考価格です。現在は月額プランから開始します。</span>
                     </div>
                 </div>
                 <div class="plan-cta">
@@ -744,14 +763,11 @@
                             <input type="hidden" name="plan" value="pro">
                             <input type="hidden" name="campaign_slug" value="{{ selected_campaign_slug or '' }}">
                             <button class="btn btn-pro" type="submit">
-                                <span class="monthly-only">
-                                    {% if selected_campaign %}
-                                        {{ selected_campaign.title }}でProを始める
-                                    {% else %}
-                                        Proを始める（7日無料）
-                                    {% endif %}
-                                </span>
-                                <span class="annual-only">Pro年額を始める</span>
+                                {% if selected_campaign %}
+                                    {{ selected_campaign.title }}でProを始める
+                                {% else %}
+                                    Proを始める（7日無料）
+                                {% endif %}
                             </button>
                         </form>
                     {% endif %}
@@ -759,14 +775,12 @@
                 <hr class="divider">
                 <ul class="feature-list">
                     <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <span class="feat-highlight">50回 / 日</span></span></li>
-                    <li><span class="feat-icon">🔍</span><span class="feat-text">キーワード検索 ＋ 専門タグ検索</span></li>
+                    <li><span class="feat-icon">🔍</span><span class="feat-text">検索・学び・保存・メモを毎日止めずに使える</span></li>
                     <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <span class="feat-highlight">TOP100</span></span></li>
                     <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <span class="feat-highlight">300件まで</span></span></li>
-                    <li><span class="feat-icon">📝</span><span class="feat-text">クイックメモ <span class="feat-highlight">無制限</span></span></li>
-                    <li><span class="feat-icon">🖊️</span><span class="feat-text">論文マーカー（カラー4色）</span></li>
-                    <li><span class="feat-icon">📖</span><span class="feat-text">学習掲示板 ＆ おすすめ論文</span></li>
-                    <li><span class="feat-icon">🏷️</span><span class="feat-text">カスタムタグ ＆ 興味学習エンジン</span></li>
-                    <li><span class="feat-icon">📁</span><span class="feat-text">フォルダ管理</span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">メモ <span class="feat-highlight">300件まで</span></span></li>
+                    <li><span class="feat-icon">📤</span><span class="feat-text">保存論文のエクスポート</span></li>
+                    <li><span class="feat-icon">📁</span><span class="feat-text">名前付きフォルダで整理</span></li>
                 </ul>
             </div>
 
@@ -783,7 +797,7 @@
                 </div>
                 <div class="plan-icon">🎓</div>
                 <div class="plan-name">Expert</div>
-                <div class="plan-tagline">大学院生・研究者・施設での本格運用向け。すべて無制限。</div>
+                <div class="plan-tagline">論文を大量に読み、長く蓄積したい方向け。要約も保存も上限を気にせず使えます。</div>
                 <div class="price-block">
                     <span class="monthly-only">
                         {% if supporter_benefits.expert_upgrade_eligible %}
@@ -791,7 +805,7 @@
                         {% endif %}
                         <span class="plan-price">¥{{ "{:,}".format(supporter_benefits.expert_monthly_price) }}</span>
                     </span>
-                    <span class="plan-price annual-only">¥49,800</span>
+                    <span class="plan-price annual-only">¥{{ "{:,}".format((supporter_benefits.expert_monthly_price or 0) * 10) }}</span>
                     <span class="plan-period">/ <span class="monthly-only">月</span><span class="annual-only">年</span></span>
                     <div class="price-note">
                         <span class="monthly-only">
@@ -801,7 +815,7 @@
                                 7日間の無料体験あり
                             {% endif %}
                         </span>
-                        <span class="annual-only">月あたり ¥4,150（2ヶ月分お得）</span>
+                        <span class="annual-only">年額の参考価格です。現在は月額プランから開始します。</span>
                     </div>
                     {% if supporter_benefits.expert_upgrade_eligible %}
                     <div class="expert-discount-note">サポーター価格を確保している方は、Expert も永年優待価格の月額1480円でアップグレードできます。</div>
@@ -816,14 +830,11 @@
                         <form action="/set-plan" method="post">
                             <input type="hidden" name="plan" value="expert">
                             <button class="btn btn-expert" type="submit">
-                                <span class="monthly-only">
-                                    {% if supporter_benefits.expert_upgrade_eligible %}
-                                        Expertを優待価格で始める
-                                    {% else %}
-                                        Expertを始める（7日無料）
-                                    {% endif %}
-                                </span>
-                                <span class="annual-only">Expert年額を始める</span>
+                                {% if supporter_benefits.expert_upgrade_eligible %}
+                                    Expertを優待価格で始める
+                                {% else %}
+                                    Expertを始める（7日無料）
+                                {% endif %}
                             </button>
                         </form>
                     {% endif %}
@@ -831,14 +842,12 @@
                 <hr class="divider">
                 <ul class="feature-list">
                     <li><span class="feat-icon">📄</span><span class="feat-text">論文詳細・要約 <span class="feat-expert-highlight">無制限</span></span></li>
-                    <li><span class="feat-icon">🔍</span><span class="feat-text">Pro の全検索機能</span></li>
-                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <span class="feat-expert-highlight">TOP300</span></span></li>
+                    <li><span class="feat-icon">🔍</span><span class="feat-text">Pro の全機能</span></li>
+                    <li><span class="feat-icon">📊</span><span class="feat-text">人気 / 臨床参考度ランキング <span class="feat-expert-highlight">TOP100</span></span></li>
                     <li><span class="feat-icon">🔖</span><span class="feat-text">論文保存 <span class="feat-expert-highlight">無制限</span></span></li>
-                    <li><span class="feat-icon">📝</span><span class="feat-text">メモ・マーカー・掲示板 全機能</span></li>
-                    <li><span class="feat-icon">⚡</span><span class="feat-text">優先処理（レスポンス高速化）</span></li>
-                    <li><span class="feat-icon">📥</span><span class="feat-text">論文・メモ エクスポート</span></li>
-                    <li><span class="feat-icon">📚</span><span class="feat-text">研究用の引用整理</span></li>
-                    <li><span class="feat-icon">🔧</span><span class="feat-text">要約テンプレ切替（臨床 / 研究）</span></li>
+                    <li><span class="feat-icon">📝</span><span class="feat-text">メモ <span class="feat-expert-highlight">無制限</span></span></li>
+                    <li><span class="feat-icon">📤</span><span class="feat-text">保存論文のエクスポート</span></li>
+                    <li><span class="feat-icon">🧠</span><span class="feat-text">要約も保存も止めずに回せる大容量プラン</span></li>
                 </ul>
             </div>
         </div>
@@ -922,16 +931,10 @@
                         <td><span class="td-expert-check">○</span></td>
                     </tr>
                     <tr>
-                        <td>専門タグ検索（31分野）</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-check">○</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>人気 / 参考度ランキング</td>
-                        <td>TOP20</td>
+                        <td>ランキング閲覧</td>
+                        <td>上位3件 + プレビュー</td>
                         <td><span class="td-check">TOP100</span></td>
-                        <td><span class="td-expert-check">TOP300</span></td>
+                        <td><span class="td-expert-check">TOP100</span></td>
                     </tr>
                     <tr>
                         <td>論文保存件数</td>
@@ -940,51 +943,15 @@
                         <td><span class="td-expert-check">無制限</span></td>
                     </tr>
                     <tr>
-                        <td>クイックメモ</td>
+                        <td>メモ</td>
                         <td>15件</td>
-                        <td><span class="td-check">無制限</span></td>
+                        <td><span class="td-check">300件</span></td>
                         <td><span class="td-expert-check">無制限</span></td>
                     </tr>
                     <tr>
-                        <td>論文マーカー（4色）</td>
+                        <td>保存論文エクスポート</td>
                         <td><span class="td-no">—</span></td>
                         <td><span class="td-check">○</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>学習掲示板 / おすすめ論文</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-check">○</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>カスタムタグ & 興味学習</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-check">○</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>フォルダ管理</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-check">○</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>優先処理</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>エクスポート / 引用整理</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-expert-check">○</span></td>
-                    </tr>
-                    <tr>
-                        <td>要約テンプレ切替</td>
-                        <td><span class="td-no">—</span></td>
-                        <td><span class="td-no">—</span></td>
                         <td><span class="td-expert-check">○</span></td>
                     </tr>
                     <tr>
@@ -1000,8 +967,8 @@
         <!-- Notes -->
         <div class="notes-section">
             <h2>補足事項</h2>
-            <p>Pro・Expertは通常7日間の無料体験を提供しています。キャンペーン時は14日まで延長される場合があります。</p>
-            <p>年額プランは10か月分の価格で2か月分お得です。いつでもキャンセル・変更できます。</p>
+            <p>Pro・Expert は通常 7 日間の無料体験つきです。紹介特典やキャンペーンがある場合は、その内容が優先して適用されます。</p>
+            <p>Free は上位 3 件まで見え、4 位以降はプレビュー表示です。Pro・Expert はランキングを 100 件まで見られます。</p>
             <p>紹介コードを使うと体験期間が延長されます。紹介した方にも最大60日のボーナスが付与されます。</p>
         </div>
     </div>
@@ -1011,16 +978,17 @@
             const body = document.body;
             const monthlyBtn = document.getElementById("monthly-btn");
             const annualBtn = document.getElementById("annual-btn");
+            if (!body || !monthlyBtn || !annualBtn) return;
             if (mode === "annual") {
                 body.classList.add("annual-mode");
                 annualBtn.classList.add("active");
                 monthlyBtn.classList.remove("active");
-                localStorage.setItem("billing_mode", "annual");
+                localStorage.setItem("plans_billing_mode", "annual");
             } else {
                 body.classList.remove("annual-mode");
                 monthlyBtn.classList.add("active");
                 annualBtn.classList.remove("active");
-                localStorage.setItem("billing_mode", "monthly");
+                localStorage.setItem("plans_billing_mode", "monthly");
             }
         }
 
@@ -1047,9 +1015,10 @@
         }
 
         window.addEventListener("load", function() {
-            const saved = localStorage.getItem("billing_mode");
+            const saved = localStorage.getItem("plans_billing_mode");
             setBillingMode(saved === "annual" ? "annual" : "monthly");
         });
+
     </script>
 </body>
 </html>

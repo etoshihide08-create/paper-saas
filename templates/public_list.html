@@ -93,6 +93,125 @@ body {
     margin-bottom: 20px;
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.paper.is-locked .title,
+.paper.is-locked .metrics,
+.paper.is-locked .meta,
+.paper.is-locked .summary,
+.paper.is-locked .open-link {
+    filter: blur(8px);
+    opacity: 0.58;
+    pointer-events: none;
+    user-select: none;
+}
+
+.paper-lock-banner {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+    border: 1px solid rgba(37,99,235,0.12);
+    color: #1e3a8a;
+    font-size: 14px;
+    line-height: 1.7;
+    font-weight: 700;
+}
+
+.paper-lock-overlay {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.94);
+    border: 1px solid rgba(37,99,235,0.14);
+    box-shadow: 0 14px 28px rgba(15,23,42,0.08);
+}
+
+.paper-lock-copy {
+    min-width: 0;
+}
+
+.paper-lock-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2563eb;
+}
+
+.paper-lock-text {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 700;
+    color: #111827;
+}
+
+.paper-lock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 800;
+    background: #2563eb;
+    color: white;
+}
+
+.paper-preview-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(37,99,235,0.08);
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.paper-preview-stack {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.paper-preview-line {
+    height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e5edf9 0%, #f3f7fd 50%, #e5edf9 100%);
+}
+
+.paper-preview-line.is-title {
+    height: 22px;
+    width: 86%;
+}
+
+.paper-preview-line.is-sub {
+    width: 44%;
+}
+
+.paper-preview-line.is-body {
+    width: 100%;
+}
+
+.paper-preview-line.is-body-short {
+    width: 70%;
 }
 
 .rank {
@@ -187,6 +306,12 @@ body {
         <p>{{ page_description }}</p>
     </div>
 
+    {% if ranking_masked %}
+    <div class="paper-lock-banner">
+        Freeプランでは上位3件まで見られます。4位以降はPro / Expertで TOP {{ ranking_limit }} まで見られます。
+    </div>
+    {% endif %}
+
     <div class="sort-box">
         <div class="sort-title">並び替え</div>
         <div class="sort-links">
@@ -198,9 +323,17 @@ body {
 
     {% if papers %}
         {% for paper in papers %}
-            <div class="paper">
+            <div class="paper{% if ranking_masked and loop.index > 3 %} is-locked{% endif %}">
                 <div class="rank">#{{ loop.index }}</div>
-
+                {% if ranking_masked and loop.index > 3 %}
+                <span class="paper-preview-badge">Preview</span>
+                <div class="paper-preview-stack">
+                    <div class="paper-preview-line is-title"></div>
+                    <div class="paper-preview-line is-sub"></div>
+                    <div class="paper-preview-line is-body"></div>
+                    <div class="paper-preview-line is-body-short"></div>
+                </div>
+                {% else %}
                 <div class="title">
                     <a href="/p/{{ paper.pubmed_id }}">
                         {{ paper.title }}
@@ -224,6 +357,16 @@ body {
                 {% endif %}
 
                 <a href="/p/{{ paper.pubmed_id }}" class="open-link">公開ページを見る →</a>
+                {% endif %}
+                {% if ranking_masked and loop.index == 4 %}
+                <div class="paper-lock-overlay">
+                    <div class="paper-lock-copy">
+                        <div class="paper-lock-kicker">Free Preview</div>
+                        <div class="paper-lock-text">4位以降はPro以上で見られます。</div>
+                    </div>
+                    <a href="/plans" class="paper-lock-btn">プランを見る</a>
+                </div>
+                {% endif %}
             </div>
         {% endfor %}
     {% else %}

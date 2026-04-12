@@ -350,6 +350,130 @@
         border-color: rgba(37,99,235,0.18);
       }
 
+      .ranking-item.is-locked {
+        cursor: default;
+      }
+
+      .ranking-item.is-locked:hover {
+        transform: none;
+        box-shadow: var(--shadow-soft);
+        border-color: #e5e7eb;
+      }
+
+      .ranking-item.is-locked .ranking-title-ja,
+      .ranking-item.is-locked .ranking-clinical-chip,
+      .ranking-item.is-locked .ranking-social-row {
+        filter: blur(8px);
+        opacity: 0.58;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .ranking-item.is-locked .ranking-social-row {
+        filter: blur(5px);
+      }
+
+      .ranking-lock-overlay {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(37,99,235,0.12);
+        box-shadow: 0 14px 28px rgba(15,23,42,0.08);
+      }
+
+      .ranking-lock-copy {
+        min-width: 0;
+      }
+
+      .ranking-lock-kicker {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #2563eb;
+      }
+
+      .ranking-lock-text {
+        margin-top: 2px;
+        font-size: 12px;
+        line-height: 1.45;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .ranking-lock-btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 10px 22px rgba(37,99,235,0.22);
+      }
+
+      .ranking-preview-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(37,99,235,0.08);
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .ranking-placeholder-stack {
+        display: grid;
+        gap: 10px;
+        margin-top: 6px;
+      }
+
+      .ranking-placeholder-line {
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #e5edf9 0%, #f3f7fd 50%, #e5edf9 100%);
+      }
+
+      .ranking-placeholder-line.is-title {
+        height: 22px;
+        width: 86%;
+      }
+
+      .ranking-placeholder-line.is-sub {
+        width: 42%;
+      }
+
+      .ranking-placeholder-line.is-body {
+        width: 100%;
+      }
+
+      .ranking-placeholder-line.is-body-short {
+        width: 68%;
+      }
+
+      .ranking-social-row.is-preview {
+        opacity: 0.55;
+        pointer-events: none;
+      }
+
       .ranking-card.is-visible .ranking-item {
         animation: rankingItemReveal 0.52s cubic-bezier(.2,.8,.2,1) both;
       }
@@ -1697,11 +1821,40 @@
 
             {% if popular_papers %} {% for paper in popular_papers %}
             <div
-              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              class="ranking-item{% if not (ranking_masked and loop.index > 3) %} clickable{% endif %}{% if ranking_masked and loop.index > 3 %} is-locked{% endif %}{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              {% if not (ranking_masked and loop.index > 3) %}
               data-paper-url="/paper?id={{ paper.pubmed_id }}"
               tabindex="0"
               role="link"
-              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く"
+              {% endif %}>
+              {% if ranking_masked and loop.index > 3 %}
+              <div class="ranking-item-header">
+                <div class="ranking-rank">{{ loop.index }}位</div>
+                <span class="ranking-preview-badge">Preview</span>
+              </div>
+              <div class="ranking-placeholder-stack">
+                <div class="ranking-placeholder-line is-title"></div>
+                <div class="ranking-placeholder-line is-sub"></div>
+                <div class="ranking-placeholder-line is-body"></div>
+                <div class="ranking-placeholder-line is-body-short"></div>
+              </div>
+              <div class="ranking-social-row is-preview">
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">コメント</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">保存</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">いいね</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">共有</span></button>
+              </div>
+              {% if loop.index == 4 %}
+              <div class="ranking-lock-overlay">
+                <div class="ranking-lock-copy">
+                  <div class="ranking-lock-kicker">Free Preview</div>
+                  <div class="ranking-lock-text">4位以降はPro以上で見られます。</div>
+                </div>
+                <a href="/plans" class="ranking-lock-btn">プランを見る</a>
+              </div>
+              {% endif %}
+              {% else %}
               <div class="ranking-item-header">
                 <div class="ranking-rank">
                   {% if loop.index == 1 %}
@@ -1783,6 +1936,7 @@
                   <span class="ranking-social-label">共有</span>
                 </button>
               </div>
+              {% endif %}
             </div>
             {% endfor %} {% else %}
             <div class="empty-box">まだ人気論文はありません。</div>
@@ -1796,11 +1950,40 @@
 
             {% if top_rated_papers %} {% for paper in top_rated_papers %}
             <div
-              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              class="ranking-item{% if not (ranking_masked and loop.index > 3) %} clickable{% endif %}{% if ranking_masked and loop.index > 3 %} is-locked{% endif %}{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              {% if not (ranking_masked and loop.index > 3) %}
               data-paper-url="/paper?id={{ paper.pubmed_id }}"
               tabindex="0"
               role="link"
-              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く"
+              {% endif %}>
+              {% if ranking_masked and loop.index > 3 %}
+              <div class="ranking-item-header">
+                <div class="ranking-rank">{{ loop.index }}位</div>
+                <span class="ranking-preview-badge">Preview</span>
+              </div>
+              <div class="ranking-placeholder-stack">
+                <div class="ranking-placeholder-line is-title"></div>
+                <div class="ranking-placeholder-line is-sub"></div>
+                <div class="ranking-placeholder-line is-body"></div>
+                <div class="ranking-placeholder-line is-body-short"></div>
+              </div>
+              <div class="ranking-social-row is-preview">
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">コメント</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">保存</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">いいね</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">共有</span></button>
+              </div>
+              {% if loop.index == 4 %}
+              <div class="ranking-lock-overlay">
+                <div class="ranking-lock-copy">
+                  <div class="ranking-lock-kicker">Free Preview</div>
+                  <div class="ranking-lock-text">4位以降はPro以上で見られます。</div>
+                </div>
+                <a href="/plans" class="ranking-lock-btn">プランを見る</a>
+              </div>
+              {% endif %}
+              {% else %}
               <div class="ranking-item-header">
                 <div class="ranking-rank">
                   {% if loop.index == 1 %}
@@ -1882,6 +2065,7 @@
                   <span class="ranking-social-label">共有</span>
                 </button>
               </div>
+              {% endif %}
             </div>
             {% endfor %} {% else %}
             <div class="empty-box">まだ高評価論文はありません。</div>
@@ -1894,11 +2078,40 @@
             </div>
             {% if trending_papers %} {% for paper in trending_papers %}
             <div
-              class="ranking-item clickable{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              class="ranking-item{% if not (ranking_masked and loop.index > 3) %} clickable{% endif %}{% if ranking_masked and loop.index > 3 %} is-locked{% endif %}{% if loop.index <= 3 %} podium podium-{{ loop.index }}{% endif %}"
+              {% if not (ranking_masked and loop.index > 3) %}
               data-paper-url="/paper?id={{ paper.pubmed_id }}"
               tabindex="0"
               role="link"
-              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く">
+              aria-label="{{ paper.display_title or paper.jp_title or paper.title or '論文詳細' }}の詳細を開く"
+              {% endif %}>
+              {% if ranking_masked and loop.index > 3 %}
+              <div class="ranking-item-header">
+                <div class="ranking-rank">{{ loop.index }}位</div>
+                <span class="ranking-preview-badge">Preview</span>
+              </div>
+              <div class="ranking-placeholder-stack">
+                <div class="ranking-placeholder-line is-title"></div>
+                <div class="ranking-placeholder-line is-sub"></div>
+                <div class="ranking-placeholder-line is-body"></div>
+                <div class="ranking-placeholder-line is-body-short"></div>
+              </div>
+              <div class="ranking-social-row is-preview">
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">コメント</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">保存</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">いいね</span></button>
+                <button type="button" class="ranking-social-btn"><span class="ranking-social-label">共有</span></button>
+              </div>
+              {% if loop.index == 4 %}
+              <div class="ranking-lock-overlay">
+                <div class="ranking-lock-copy">
+                  <div class="ranking-lock-kicker">Free Preview</div>
+                  <div class="ranking-lock-text">4位以降はPro以上で見られます。</div>
+                </div>
+                <a href="/plans" class="ranking-lock-btn">プランを見る</a>
+              </div>
+              {% endif %}
+              {% else %}
               <div class="ranking-item-header">
                 <div class="ranking-rank">
                   {% if loop.index == 1 %}
@@ -1979,6 +2192,7 @@
                   <span class="ranking-social-label">共有</span>
                 </button>
               </div>
+              {% endif %}
             </div>
             {% endfor %} {% else %}
             <div class="empty-box">トレンドデータを取得中です。しばらくしてから再度お試しください。</div>

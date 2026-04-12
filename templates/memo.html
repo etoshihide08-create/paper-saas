@@ -137,6 +137,61 @@
         text-decoration: underline;
       }
 
+      .upgrade-nudge {
+        margin-bottom: 18px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(217, 119, 6, 0.16);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,248,232,0.95));
+        box-shadow: var(--shadow-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .upgrade-copy { min-width: 0; }
+
+      .upgrade-kicker {
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #b45309;
+      }
+
+      .upgrade-title {
+        margin-top: 6px;
+        font-size: 18px;
+        line-height: 1.45;
+        letter-spacing: -0.02em;
+        font-weight: 900;
+        color: var(--secondary);
+      }
+
+      .upgrade-body {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--subtext);
+      }
+
+      .upgrade-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
+        text-decoration: none;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        white-space: nowrap;
+        box-shadow: 0 10px 24px rgba(37,99,235,0.16);
+      }
+
       /* ── ログインプロンプトカード ── */
       .login-prompt-card {
         background: linear-gradient(135deg, #f8fbff 0%, var(--primary-soft, #eaf2ff) 100%);
@@ -878,6 +933,17 @@
           font-size: 11px;
           padding: 7px 10px;
         }
+
+        .upgrade-nudge {
+          padding: 14px;
+          border-radius: 18px;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .upgrade-title {
+          font-size: 16px;
+        }
       }
     </style>
   </head>
@@ -970,6 +1036,17 @@
             メモが上限（{{ memo_limit }}件）に達しました。
             <a href="/plans">プランをアップグレード</a>すると無制限で使えます。
           </div>
+          {% endif %}
+
+          {% if upgrade_nudge %}
+          <section class="upgrade-nudge">
+            <div class="upgrade-copy">
+              <div class="upgrade-kicker">{{ upgrade_nudge.kicker }}</div>
+              <div class="upgrade-title">{{ upgrade_nudge.title }}</div>
+              <div class="upgrade-body">{{ upgrade_nudge.body }}</div>
+            </div>
+            <a href="{{ upgrade_nudge.href }}" class="upgrade-btn">{{ upgrade_nudge.button }}</a>
+          </section>
           {% endif %}
 
           {% set can_add = (memo_limit is none) or (total_count < memo_limit) %}

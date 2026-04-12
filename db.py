@@ -1540,6 +1540,7 @@ def count_user_saved_papers(user_id):
         SELECT COUNT(*)
         FROM saved_papers
         WHERE user_id = ?
+          AND save_source IN ('manual_save', 'manual_summary')
     """, (user_id,))
 
     count = cur.fetchone()[0]
