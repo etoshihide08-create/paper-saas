@@ -1270,9 +1270,16 @@
 
         .sidebar-auth-link:hover { opacity: 0.92; }
 
-        .top-bar { padding: 14px 32px; }
+        .top-bar {
+          width: min(100%, 1180px);
+          margin: 0 auto;
+          padding: 14px 32px;
+        }
 
-        .paper-banner { margin: 20px 32px 0; }
+        .paper-banner {
+          width: min(100%, calc(1180px - 64px));
+          margin: 20px auto 0;
+        }
         .paper-note-layout {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 360px;
@@ -1291,7 +1298,11 @@
         .paper-summary-sheet-backdrop,
         .paper-summary-open { display: none; }
 
-        .editor-wrap { padding: 24px 32px 80px; margin: 0; max-width: 920px; }
+        .editor-wrap {
+          padding: 24px 0 80px;
+          margin: 0 auto;
+          max-width: 920px;
+        }
 
         .editor-card {
           padding: 28px 28px 22px;

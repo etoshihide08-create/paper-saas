@@ -68,7 +68,14 @@ from db import (
     update_paper_memo,
     delete_paper_memo,
     get_user_memo_map_layout,
+    get_user_memo_mind_map,
+    list_user_memo_mind_map_files,
+    get_user_memo_mind_map_file,
+    create_user_memo_mind_map_file,
+    update_user_memo_mind_map_file,
+    delete_user_memo_mind_map_file,
     upsert_user_memo_map_layout,
+    upsert_user_memo_mind_map,
     create_post,
     get_posts,
     get_replies,
@@ -2211,6 +2218,50 @@ def extract_non_japanese_search_terms(text: str) -> list[str]:
     ]
 
 
+def _dedupe_preserve_order(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for item in items:
+        clean = item.strip()
+        if not clean or clean in seen:
+            continue
+        seen.add(clean)
+        ordered.append(clean)
+    return ordered
+
+
+def _extract_alias_terms_from_piece(
+    piece: str,
+    merged_aliases: dict[str, str],
+    sorted_alias_keys: list[str],
+) -> list[str]:
+    mapped = merged_aliases.get(piece)
+    if mapped:
+        return str(mapped).split()
+
+    if not contains_japanese(piece):
+        return [piece]
+
+    extracted_terms: list[str] = []
+    cursor = 0
+    matched_any = False
+    while cursor < len(piece):
+        matched = False
+        for ja_word in sorted_alias_keys:
+            if not piece.startswith(ja_word, cursor):
+                continue
+            extracted_terms.extend(str(merged_aliases[ja_word]).split())
+            cursor += len(ja_word)
+            matched = True
+            matched_any = True
+            break
+        if matched:
+            continue
+        cursor += 1
+
+    return extracted_terms if matched_any else []
+
+
 def convert_japanese_keyword_to_english(keyword: str) -> str:
     normalized_keyword = normalize_search_keyword(keyword)
     if not normalized_keyword:
@@ -2221,28 +2272,19 @@ def convert_japanese_keyword_to_english(keyword: str) -> str:
     if exact_match:
         return " ".join(str(exact_match).split())
 
+    sorted_alias_keys = sorted(
+        [key for key in merged_aliases.keys() if len(key) >= 2],
+        key=len,
+        reverse=True,
+    )
     converted_terms: list[str] = []
 
     for piece in normalized_keyword.split():
-        mapped = merged_aliases.get(piece)
-        if mapped:
-            converted_terms.extend(str(mapped).split())
-            continue
+        converted_terms.extend(
+            _extract_alias_terms_from_piece(piece, merged_aliases, sorted_alias_keys)
+        )
 
-        if not contains_japanese(piece):
-            converted_terms.append(piece)
-            continue
-
-        piece_converted = piece
-        for ja_word in sorted(merged_aliases.keys(), key=len, reverse=True):
-            if len(ja_word) < 2 or ja_word == piece:
-                continue
-            if ja_word in piece_converted:
-                piece_converted = piece_converted.replace(ja_word, f" {merged_aliases[ja_word]} ")
-
-        converted_terms.extend(extract_non_japanese_search_terms(" ".join(piece_converted.split())))
-
-    return " ".join(converted_terms)
+    return " ".join(_dedupe_preserve_order(converted_terms))
 
 
 def contains_japanese(text: str) -> bool:
@@ -2270,6 +2312,8 @@ def _timed_cache_get(cache: dict, key: Any, ttl: int):
     item = cache.get(key)
     if not item:
         return None
+    if not isinstance(item, dict):
+        return item
     if (time.time() - float(item.get("ts", 0))) > ttl:
         cache.pop(key, None)
         return None
@@ -2306,20 +2350,91 @@ def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
         return None
 
 
+def build_search_query_candidates(keyword: str) -> list[str]:
+    normalized_keyword = normalize_search_keyword(keyword)
+    if not normalized_keyword:
+        return []
+
+    candidates: list[str] = []
+
+    if not contains_japanese(normalized_keyword):
+        candidates.append(normalized_keyword)
+
+    local_converted = convert_japanese_keyword_to_english(normalized_keyword)
+    if local_converted:
+        candidates.append(local_converted)
+
+    english_terms = " ".join(extract_non_japanese_search_terms(normalized_keyword))
+    if english_terms:
+        candidates.append(english_terms)
+
+    return _dedupe_preserve_order(candidates)
+
+
+def _ask_gpt_for_search_keyword(keyword: str) -> str:
+    normalized_keyword = normalize_search_keyword(keyword)
+    if not normalized_keyword:
+        return ""
+
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=f"""
+次の検索キーワードを、PubMed検索に適した英語の医学検索語へ変換してください。
+
+条件:
+- 出力は英語の検索語のみ
+- 余計な説明は不要
+- 単語をスペース区切りで出す
+- 医学・リハビリ分野として自然な語を使う
+- もとの意味を変えない
+
+検索キーワード:
+{normalized_keyword}
+"""
+        )
+        return " ".join(response.output_text.strip().split())
+    except Exception:
+        return ""
+
+
+def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
+    normalized_keyword = normalize_search_keyword(keyword)
+    if not normalized_keyword:
+        return "", []
+
+    candidates = build_search_query_candidates(normalized_keyword)
+    fallback_candidate = candidates[0] if candidates else normalized_keyword
+
+    for candidate in candidates:
+        id_list = _get_search_ids_for_keyword(candidate)
+        if id_list:
+            return candidate, id_list
+
+    if contains_japanese(normalized_keyword):
+        gpt_candidate = _ask_gpt_for_search_keyword(normalized_keyword)
+        if gpt_candidate and gpt_candidate not in candidates:
+            id_list = _get_search_ids_for_keyword(gpt_candidate)
+            if id_list:
+                return gpt_candidate, id_list
+            fallback_candidate = gpt_candidate
+
+    return fallback_candidate, []
+
+
 def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "") -> tuple[str, list[str], int, int]:
     normalized_keyword = normalize_search_keyword(keyword)
     keyword_cache_key = normalized_keyword.lower()
     converted_keyword = (converted_keyword_hint or "").strip()
+    id_list: list[str] = []
     if not converted_keyword:
-        converted_keyword = keyword_cache.get(keyword_cache_key)
-    if not converted_keyword:
-        try:
-            converted_keyword = convert_keyword_with_gpt_if_needed(normalized_keyword)
-        except Exception:
-            converted_keyword = normalized_keyword
-        keyword_cache[keyword_cache_key] = converted_keyword
+        converted_keyword = _timed_cache_get(keyword_cache, keyword_cache_key, OPENAI_CACHE_TTL) or ""
+        if converted_keyword:
+            id_list = _get_search_ids_for_keyword(converted_keyword) or []
+    if not converted_keyword or not id_list:
+        converted_keyword, id_list = resolve_search_keyword_for_pubmed(normalized_keyword)
+        _timed_cache_set(keyword_cache, keyword_cache_key, converted_keyword)
 
-    id_list = _get_search_ids_for_keyword(converted_keyword) or []
     if not id_list:
         return converted_keyword, [], 1, 1
 
@@ -2517,39 +2632,81 @@ def get_pubmed_trending_papers(limit: int = 20) -> list:
 
 def convert_keyword_with_gpt_if_needed(keyword: str) -> str:
     normalized_keyword = normalize_search_keyword(keyword)
-    converted = convert_japanese_keyword_to_english(normalized_keyword)
+    candidates = build_search_query_candidates(normalized_keyword)
+    if candidates:
+        return candidates[0]
 
-    if converted and not contains_japanese(converted):
-        return converted
+    gpt_keyword = _ask_gpt_for_search_keyword(normalized_keyword)
+    return gpt_keyword or normalized_keyword
 
-    # 一部だけでもローカル変換できた場合は、その語を優先して GPT の意図ズレを避ける。
-    local_terms = extract_non_japanese_search_terms(converted)
-    if local_terms:
-        return " ".join(local_terms)
+
+def _tokenize_search_terms(text: str) -> list[str]:
+    normalized = normalize_search_keyword(text)
+    if not normalized:
+        return []
+    raw_tokens = re.split(r"[\s()]+", normalized)
+    tokens: list[str] = []
+    for token in raw_tokens:
+        clean = token.strip().strip("\"'")
+        if not clean:
+            continue
+        if clean.lower() in {"and", "or", "not"}:
+            continue
+        if not contains_japanese(clean) and len(clean) <= 1:
+            continue
+        tokens.append(clean.lower())
+    return _dedupe_preserve_order(tokens)
+
+
+def score_search_paper_relevance(paper: dict[str, Any], original_keyword: str, converted_keyword: str) -> int:
+    score = 0
+    title = str(paper.get("title") or "").lower()
+    jp_title = str(paper.get("jp_title") or "").lower()
+    journal = str(paper.get("journal") or "").lower()
+    tag_text = " ".join(paper.get("tags") or []).lower()
+
+    for token in _tokenize_search_terms(original_keyword):
+        if contains_japanese(token):
+            if jp_title == token:
+                score += 60
+            elif token in jp_title:
+                score += 28
+            if token in tag_text:
+                score += 18
+        else:
+            if title == token:
+                score += 56
+            elif token in title:
+                score += 22
+            if token in journal:
+                score += 6
+
+    for token in _tokenize_search_terms(converted_keyword):
+        if token in title:
+            score += 14
+        elif token in journal:
+            score += 4
 
     try:
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=f"""
-次の検索キーワードを、PubMed検索に適した英語の医学検索語へ変換してください。
+        score += int(float(str(paper.get("clinical_score") or "").strip()) * 2)
+    except (TypeError, ValueError):
+        pass
 
-条件:
-- 出力は英語の検索語のみ
-- 余計な説明は不要
-- 単語をスペース区切りで出す
-- 医学・リハビリ分野として自然な語を使う
-- もとの意味を変えない
+    return score
 
-検索キーワード:
-{normalized_keyword}
-"""
+
+def rerank_search_papers(papers: list[dict[str, Any]], original_keyword: str, converted_keyword: str) -> list[dict[str, Any]]:
+    scored_items: list[tuple[int, int, dict[str, Any]]] = []
+    for index, paper in enumerate(papers):
+        scored_items.append(
+            (
+                score_search_paper_relevance(paper, original_keyword, converted_keyword),
+                -index,
+                paper,
+            )
         )
-
-        gpt_keyword = response.output_text.strip()
-        return " ".join(gpt_keyword.split()) or normalized_keyword
-
-    except Exception:
-        return converted or normalized_keyword
+    scored_items.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    return [paper for _score, _index, paper in scored_items]
     
 def generate_tags(title: str, abstract: str):
     text = f"{title} {abstract}".lower()
@@ -4751,6 +4908,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
 
     papers_map = {str(p["pubmed_id"]): p for p in papers}
     papers = [papers_map[str(pmid)] for pmid in page_id_list if str(pmid) in papers_map]
+    papers = rerank_search_papers(papers, keyword, converted_keyword)
 
     untranslated_items = [
         (str(paper["pubmed_id"]), str(paper.get("title") or ""))
@@ -6491,11 +6649,141 @@ def public_toggle(request: Request, pubmed_id: str):
         }
     )
 
+# ─── 軽量マインドマップ ───────────────────────────────────
+
+def build_default_memo_mind_map():
+    return {
+        "root_id": "root",
+        "nodes": [
+            {"id": "root", "parent_id": None, "text": "学びテーマ", "x": 0.18, "y": 0.50, "tone": "root"},
+            {"id": "node-insight", "parent_id": "root", "text": "気づき", "x": 0.42, "y": 0.24, "tone": "yellow"},
+            {"id": "node-clinical", "parent_id": "root", "text": "臨床で使う", "x": 0.42, "y": 0.40, "tone": "blue"},
+            {"id": "node-question", "parent_id": "root", "text": "疑問", "x": 0.42, "y": 0.58, "tone": "pink"},
+            {"id": "node-next", "parent_id": "root", "text": "次に調べる", "x": 0.42, "y": 0.76, "tone": "green"},
+        ],
+    }
+
+
+def build_icf_memo_mind_map():
+    base_map = build_default_memo_mind_map()
+    base_map["nodes"] = [
+        {"id": "root", "parent_id": None, "text": "ICFで整理するテーマ", "x": 0.18, "y": 0.50, "tone": "root"},
+        {"id": "node-health", "parent_id": "root", "text": "健康状態", "x": 0.42, "y": 0.18, "tone": "default"},
+        {"id": "node-body", "parent_id": "root", "text": "心身機能・構造", "x": 0.42, "y": 0.32, "tone": "yellow"},
+        {"id": "node-activity", "parent_id": "root", "text": "活動", "x": 0.42, "y": 0.46, "tone": "blue"},
+        {"id": "node-participation", "parent_id": "root", "text": "参加", "x": 0.42, "y": 0.60, "tone": "green"},
+        {"id": "node-environment", "parent_id": "root", "text": "環境因子", "x": 0.42, "y": 0.74, "tone": "pink"},
+        {"id": "node-personal", "parent_id": "root", "text": "個人因子", "x": 0.42, "y": 0.86, "tone": "default"},
+    ]
+    return base_map
+
+
+def normalize_memo_mind_map(raw_map):
+    if not isinstance(raw_map, dict):
+        return build_default_memo_mind_map()
+
+    raw_nodes = raw_map.get("nodes")
+    if not isinstance(raw_nodes, list):
+        raw_nodes = []
+
+    nodes = []
+    seen_ids = set()
+    allowed_tones = {"default", "yellow", "pink", "blue", "green", "root"}
+    for raw_node in raw_nodes:
+        if not isinstance(raw_node, dict):
+            continue
+        node_id = str(raw_node.get("id") or "").strip()
+        if not node_id or node_id in seen_ids:
+            continue
+        parent_id = raw_node.get("parent_id")
+        parent_id = str(parent_id).strip() if parent_id not in (None, "") else None
+        text = " ".join(str(raw_node.get("text") or "").split()).strip()[:60] or "無題"
+        try:
+            x = float(raw_node.get("x", 0.5))
+            y = float(raw_node.get("y", 0.5))
+        except (TypeError, ValueError):
+            x, y = 0.5, 0.5
+        tone = str(raw_node.get("tone") or "default").strip().lower()
+        if tone not in allowed_tones:
+            tone = "default"
+        paper_ref = raw_node.get("paper_ref")
+        normalized_paper_ref = None
+        if isinstance(paper_ref, dict):
+            ref_pubmed_id = str(paper_ref.get("pubmed_id") or "").strip()
+            ref_title = " ".join(str(paper_ref.get("title") or "").split()).strip()[:120]
+            if ref_pubmed_id:
+                normalized_paper_ref = {
+                    "pubmed_id": ref_pubmed_id,
+                    "title": ref_title or ref_pubmed_id,
+                }
+        nodes.append({
+            "id": node_id,
+            "parent_id": parent_id,
+            "text": text,
+            "x": max(0.06, min(0.94, x)),
+            "y": max(0.10, min(0.90, y)),
+            "tone": tone,
+            "paper_ref": normalized_paper_ref,
+        })
+        seen_ids.add(node_id)
+
+    if not nodes:
+        return build_default_memo_mind_map()
+
+    root_id = str(raw_map.get("root_id") or "").strip() or "root"
+    valid_ids = {node["id"] for node in nodes}
+    if root_id not in valid_ids:
+        root_id = nodes[0]["id"]
+
+    normalized_nodes = []
+    for node in nodes:
+        if node["id"] == root_id:
+            node["parent_id"] = None
+            node["x"] = 0.18
+            node["y"] = 0.50
+            node["tone"] = "root"
+        elif node["parent_id"] not in valid_ids:
+            node["parent_id"] = root_id
+        elif node.get("tone") == "root":
+            node["tone"] = "default"
+        normalized_nodes.append(node)
+
+    return {
+        "root_id": root_id,
+        "nodes": normalized_nodes,
+    }
+
+
+def build_initial_mind_map_file_title(mind_map: dict, index: int = 1) -> str:
+    normalized_map = normalize_memo_mind_map(mind_map)
+    root_id = normalized_map.get("root_id") or "root"
+    root_node = next((node for node in normalized_map.get("nodes", []) if node.get("id") == root_id), None)
+    root_text = (root_node or {}).get("text") or ""
+    root_text = " ".join(str(root_text).split()).strip()
+    if root_text and root_text != "学びテーマ":
+        return root_text[:40]
+    return f"マップ {max(1, index)}"
+
+
+def ensure_user_memo_mind_map_files(user_id: int) -> list[dict]:
+    files = list_user_memo_mind_map_files(user_id)
+    if files:
+        return files
+
+    legacy_map = normalize_memo_mind_map(get_user_memo_mind_map(user_id))
+    initial_title = build_initial_mind_map_file_title(legacy_map, 1)
+    create_user_memo_mind_map_file(user_id, initial_title, legacy_map)
+    upsert_user_memo_mind_map(user_id, legacy_map)
+    return list_user_memo_mind_map_files(user_id)
+
 # ─── メモ機能 ──────────────────────────────────────────
 
 @app.get("/memo")
-def memo_list(request: Request, tab: str = "quick"):
-    if tab not in {"quick", "paper", "map"}:
+def memo_list(request: Request, tab: str = "quick", map_file_id: int | None = Query(None)):
+    if tab == "map":
+        return RedirectResponse(url="/memo?tab=quick", status_code=303)
+
+    if tab not in {"quick", "paper"}:
         tab = "quick"
 
     current_user = get_current_user(request)
@@ -6507,10 +6795,9 @@ def memo_list(request: Request, tab: str = "quick"):
             "tab": tab,
             "quick_memos": [],
             "paper_memos": [],
-            "map_quick_memos": [],
-            "map_paper_memos": [],
-            "map_more_quick_count": 0,
-            "map_more_paper_count": 0,
+            "mind_map_data": build_default_memo_mind_map(),
+            "mind_map_suggestions": [],
+            "mind_map_papers": [],
             "total_count": 0,
             "memo_limit": 0,
             "upgrade_nudge": None,
@@ -6534,36 +6821,75 @@ def memo_list(request: Request, tab: str = "quick"):
         plan,
         memo_count=total_count,
     )
-    map_preview_limit = 10
-    map_quick_memos = quick_memos[:map_preview_limit]
-    map_paper_memos = paper_memos[:map_preview_limit]
-    memo_map_layout = get_user_memo_map_layout(user_id)
+    mind_map_files: list[dict] = []
+    selected_mind_map_file = None
+    selected_mind_map_file_id = None
+    selected_mind_map_file_title = ""
+    show_mind_map_picker = False
+    if tab == "map":
+        mind_map_files = ensure_user_memo_mind_map_files(user_id)
+        if map_file_id is not None:
+            selected_mind_map_file = get_user_memo_mind_map_file(user_id, map_file_id)
+        else:
+            show_mind_map_picker = True
+        if map_file_id is not None and not selected_mind_map_file:
+            show_mind_map_picker = True
+        if selected_mind_map_file:
+            selected_mind_map_file_id = selected_mind_map_file["id"]
+            selected_mind_map_file_title = (selected_mind_map_file.get("title") or "").strip()
 
-    memo_map_quick_nodes = [
-        {
-            "id": memo["id"],
-            "node_key": f"quick:{memo['id']}",
-            "title": (memo.get("title") or memo.get("body_preview") or "タイトルなし").strip(),
-            "preview": (memo.get("body_preview") or "").strip(),
-            "updated_at": memo.get("updated_at", "")[:10],
-            "url": f"/memo/{memo['id']}",
+    mind_map_data = normalize_memo_mind_map(
+        (selected_mind_map_file or {}).get("map_json")
+        if selected_mind_map_file
+        else get_user_memo_mind_map(user_id)
+    )
+    if tab == "map" and selected_mind_map_file:
+        upsert_user_memo_mind_map(user_id, mind_map_data)
+    mind_map_suggestions = []
+    seen_suggestions = set()
+    for memo in quick_memos[:4]:
+        label = (memo.get("title") or memo.get("body_preview") or "").strip()
+        if not label or label in seen_suggestions:
+            continue
+        seen_suggestions.add(label)
+        mind_map_suggestions.append({
+            "label": label[:32],
             "type": "quick",
-        }
-        for memo in map_quick_memos
-    ]
-    memo_map_paper_nodes = [
-        {
-            "id": memo["id"],
-            "node_key": f"paper:{memo['id']}",
-            "title": (memo.get("paper_title") or "論文メモ").strip(),
-            "preview": (memo.get("body_preview") or "").strip(),
-            "updated_at": memo.get("updated_at", "")[:10],
-            "url": f"/memo/paper/{memo['id']}",
+        })
+    for memo in paper_memos[:4]:
+        label = (memo.get("paper_title") or "").strip()
+        if not label or label in seen_suggestions:
+            continue
+        seen_suggestions.add(label)
+        mind_map_suggestions.append({
+            "label": label[:32],
             "type": "paper",
-            "pubmed_id": memo.get("pubmed_id", ""),
-        }
-        for memo in map_paper_memos
-    ]
+        })
+    mind_map_papers = []
+    seen_papers = set()
+    for memo in paper_memos[:6]:
+        pubmed_id = str(memo.get("pubmed_id") or "").strip()
+        paper_title = (memo.get("paper_title") or "").strip()
+        if not pubmed_id or pubmed_id in seen_papers:
+            continue
+        seen_papers.add(pubmed_id)
+        mind_map_papers.append({
+            "pubmed_id": pubmed_id,
+            "title": paper_title[:60] if paper_title else pubmed_id,
+        })
+    if len(mind_map_papers) < 6:
+        for paper in get_saved_papers(user_id=user_id):
+            pubmed_id = str(paper.get("pubmed_id") or "").strip()
+            paper_title = (_paper_display_title(paper) or "").strip()
+            if not pubmed_id or pubmed_id in seen_papers:
+                continue
+            seen_papers.add(pubmed_id)
+            mind_map_papers.append({
+                "pubmed_id": pubmed_id,
+                "title": paper_title[:60] if paper_title else pubmed_id,
+            })
+            if len(mind_map_papers) >= 6:
+                break
 
     return templates.TemplateResponse(
         "memo.html",
@@ -6574,18 +6900,140 @@ def memo_list(request: Request, tab: str = "quick"):
             "tab": tab,
             "quick_memos": quick_memos,
             "paper_memos": paper_memos,
-            "map_quick_memos": map_quick_memos,
-            "map_paper_memos": map_paper_memos,
-            "map_more_quick_count": max(0, len(quick_memos) - len(map_quick_memos)),
-            "map_more_paper_count": max(0, len(paper_memos) - len(map_paper_memos)),
-            "memo_map_layout": memo_map_layout,
-            "memo_map_quick_nodes": memo_map_quick_nodes,
-            "memo_map_paper_nodes": memo_map_paper_nodes,
+            "mind_map_data": mind_map_data,
+            "mind_map_suggestions": mind_map_suggestions[:6],
+            "mind_map_papers": mind_map_papers[:6],
+            "mind_map_files": mind_map_files,
+            "selected_mind_map_file": selected_mind_map_file,
+            "selected_mind_map_file_id": selected_mind_map_file_id,
+            "selected_mind_map_file_title": selected_mind_map_file_title,
+            "show_mind_map_picker": show_mind_map_picker,
             "total_count": total_count,
             "memo_limit": memo_limit,
             "upgrade_nudge": memo_upgrade_nudge,
         }
     )
+
+
+@app.post("/memo/mind-map/save")
+async def memo_mind_map_save(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    raw_map = payload.get("mind_map") if isinstance(payload, dict) else {}
+    map_file_id_raw = payload.get("file_id") if isinstance(payload, dict) else None
+    map_file_id = None
+    try:
+        if map_file_id_raw not in (None, ""):
+            map_file_id = int(map_file_id_raw)
+    except (TypeError, ValueError):
+        map_file_id = None
+    normalized_map = normalize_memo_mind_map(raw_map)
+    if map_file_id is not None:
+        updated = update_user_memo_mind_map_file(current_user["id"], map_file_id, mind_map=normalized_map)
+        if not updated:
+            return JSONResponse({"ok": False, "error": "map_file_not_found"}, status_code=404)
+    upsert_user_memo_mind_map(current_user["id"], normalized_map)
+    return JSONResponse({"ok": True, "file_id": map_file_id})
+
+
+@app.post("/memo/mind-map/file/create")
+async def memo_mind_map_file_create(request: Request):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    base_title = ""
+    source_file_id = None
+    template_kind = ""
+    if isinstance(payload, dict):
+        base_title = str(payload.get("title") or "").strip()
+        template_kind = str(payload.get("template") or "").strip().lower()
+        try:
+            if payload.get("source_file_id") not in (None, ""):
+                source_file_id = int(payload.get("source_file_id"))
+        except (TypeError, ValueError):
+            source_file_id = None
+
+    source_map = build_icf_memo_mind_map() if template_kind == "icf" else build_default_memo_mind_map()
+    if source_file_id is not None:
+        source_file = get_user_memo_mind_map_file(current_user["id"], source_file_id)
+        if source_file:
+            source_map = normalize_memo_mind_map(source_file.get("map_json"))
+
+    existing_files = ensure_user_memo_mind_map_files(current_user["id"])
+    next_title = base_title or build_initial_mind_map_file_title(source_map, len(existing_files) + 1)
+    new_file_id = create_user_memo_mind_map_file(current_user["id"], next_title, source_map)
+    new_file = get_user_memo_mind_map_file(current_user["id"], new_file_id)
+    return JSONResponse({
+        "ok": True,
+        "file": {
+            "id": new_file_id,
+            "title": (new_file or {}).get("title") or next_title,
+        },
+    })
+
+
+@app.post("/memo/mind-map/file/{file_id}/rename")
+async def memo_mind_map_file_rename(request: Request, file_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    next_title = str((payload or {}).get("title") or "").strip()
+    if not next_title:
+        return JSONResponse({"ok": False, "error": "title_required"}, status_code=400)
+
+    updated = update_user_memo_mind_map_file(current_user["id"], file_id, title=next_title)
+    if not updated:
+        return JSONResponse({"ok": False, "error": "map_file_not_found"}, status_code=404)
+    return JSONResponse({"ok": True, "title": next_title})
+
+
+@app.post("/memo/mind-map/file/{file_id}/delete")
+async def memo_mind_map_file_delete(request: Request, file_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "login_required"}, status_code=401)
+
+    deleted = delete_user_memo_mind_map_file(current_user["id"], file_id)
+    if not deleted:
+        return JSONResponse({"ok": False, "error": "map_file_not_found"}, status_code=404)
+
+    remaining_files = list_user_memo_mind_map_files(current_user["id"])
+    if not remaining_files:
+        default_map = build_default_memo_mind_map()
+        next_file_id = create_user_memo_mind_map_file(
+            current_user["id"],
+            build_initial_mind_map_file_title(default_map, 1),
+            default_map,
+        )
+        remaining_files = list_user_memo_mind_map_files(current_user["id"])
+    else:
+        next_file_id = remaining_files[0]["id"]
+
+    next_file = next((item for item in remaining_files if item["id"] == next_file_id), remaining_files[0])
+    upsert_user_memo_mind_map(current_user["id"], normalize_memo_mind_map(next_file.get("map_json")))
+    return JSONResponse({
+        "ok": True,
+        "next_file_id": next_file_id,
+    })
 
 
 @app.post("/memo/map/layout")

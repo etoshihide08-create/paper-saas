@@ -264,6 +264,110 @@
         box-shadow: 0 10px 24px rgba(37,99,235,0.16);
       }
 
+      .context-guide {
+        margin-bottom: 14px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239,246,255,0.9));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .context-guide-title {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--secondary);
+      }
+
+      .context-guide-body {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .context-guide-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .helper-sample {
+        margin-top: 12px;
+        padding: 16px 16px 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
+        box-shadow: var(--shadow-soft);
+      }
+
+      .helper-sample[hidden] { display: none; }
+
+      .helper-sample-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .helper-sample-kicker {
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary);
+      }
+
+      .helper-sample-close {
+        border: none;
+        background: transparent;
+        color: var(--subtext);
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .helper-sample-title {
+        margin-top: 8px;
+        font-size: 16px;
+        line-height: 1.55;
+        font-weight: 900;
+        color: var(--text);
+      }
+
+      .helper-sample-body {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--subtext);
+      }
+
+      .helper-sample-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        margin-top: 10px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
       .section-head {
         display: flex;
         align-items: flex-end;
@@ -712,6 +816,24 @@
 
             <div class="empty-state" id="saved-empty-state">該当する論文が見つかりません。検索語を変えるか、フォルダを切り替えてみてください。</div>
             {% else %}
+            {% if current_user %}
+            <div class="context-guide">
+              <div>
+                <div class="context-guide-title">まずは気になる論文を1本だけ保存してみましょう</div>
+                <div class="context-guide-body">論文詳細やおすすめカードで保存すると、ここからあとで見返しやすくなります。</div>
+              </div>
+              <a href="/" class="context-guide-btn">検索へ戻る</a>
+            </div>
+            <section class="helper-sample" id="saved-helper-sample" hidden>
+              <div class="helper-sample-head">
+                <div class="helper-sample-kicker">使い方例</div>
+                <button type="button" class="helper-sample-close" aria-label="サンプルを閉じる" onclick="dismissSavedHelperSample()">×</button>
+              </div>
+              <div class="helper-sample-title">あとで見るに 1 本だけ入れておくと、次に開く論文が迷いにくくなります。</div>
+              <div class="helper-sample-body">たとえば「脳卒中の歩行練習」みたいに気になった論文を 1 本だけ保存しておくと、あとからここでまとめて見返せます。</div>
+              <div class="helper-sample-chip">例: あとで見る → 脳卒中と歩行の論文</div>
+            </section>
+            {% endif %}
             <div class="empty-state show">まだ手動で保存した論文がありません。気になる論文を保存すると、ここに並びます。</div>
             {% endif %}
 
@@ -776,6 +898,7 @@
       </main>
 
       <script>
+        const savedHelperSample = document.getElementById("saved-helper-sample");
         const viewButtons = Array.from(document.querySelectorAll("[data-view-target]"));
         const viewPanels = Array.from(document.querySelectorAll(".view-panel"));
         const savedSearchInput = document.getElementById("saved-paper-search");
@@ -790,6 +913,14 @@
         function switchSavedView(target) {
           viewButtons.forEach((button) => button.classList.toggle("active", button.dataset.viewTarget === target));
           viewPanels.forEach((panel) => panel.classList.toggle("active", panel.id === "view-" + target));
+        }
+
+        function dismissSavedHelperSample() {
+          if (!savedHelperSample) return;
+          savedHelperSample.hidden = true;
+          try {
+            localStorage.setItem("saved-helper-sample-dismissed", "1");
+          } catch (error) {}
         }
 
         function filterSavedPapers() {
@@ -846,6 +977,17 @@
 
         if (historySearchInput) {
           historySearchInput.addEventListener("input", filterHistoryPapers);
+        }
+
+        if (savedHelperSample) {
+          try {
+            const dismissed = localStorage.getItem("saved-helper-sample-dismissed");
+            if (!dismissed) {
+              savedHelperSample.hidden = false;
+            }
+          } catch (error) {
+            savedHelperSample.hidden = false;
+          }
         }
       </script>
 

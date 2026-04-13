@@ -192,6 +192,110 @@
         box-shadow: 0 10px 24px rgba(37,99,235,0.16);
       }
 
+      .context-guide {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(239,246,255,0.9));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .context-guide-title {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--secondary);
+      }
+
+      .context-guide-body {
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--subtext);
+      }
+
+      .context-guide-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        color: var(--blue);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .helper-sample {
+        margin-bottom: 14px;
+        padding: 16px 16px 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
+        box-shadow: var(--shadow-soft);
+      }
+
+      .helper-sample[hidden] { display: none; }
+
+      .helper-sample-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .helper-sample-kicker {
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .helper-sample-close {
+        border: none;
+        background: transparent;
+        color: var(--subtext);
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .helper-sample-title {
+        margin-top: 8px;
+        font-size: 16px;
+        line-height: 1.55;
+        font-weight: 900;
+        color: var(--secondary);
+      }
+
+      .helper-sample-body {
+        margin-top: 6px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--subtext);
+      }
+
+      .helper-sample-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        margin-top: 10px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
       /* ── ログインプロンプトカード ── */
       .login-prompt-card {
         background: linear-gradient(135deg, #f8fbff 0%, var(--primary-soft, #eaf2ff) 100%);
@@ -353,22 +457,219 @@
         white-space: nowrap;
       }
 
-      /* ── マップ ── */
+      /* ── マインドマップ ── */
       .memo-map-shell {
-        background: rgba(255, 255, 255, 0.96);
+        background: rgba(255, 255, 255, 0.98);
         border: 1px solid rgba(22, 50, 79, 0.08);
         border-radius: 28px;
         box-shadow: var(--shadow);
         padding: 20px 18px 18px;
       }
 
+      .memo-map-picker {
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 22px 20px 20px;
+      }
+
+      .memo-map-picker-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .memo-map-picker-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .memo-map-picker-title {
+        margin-top: 6px;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--secondary);
+      }
+
+      .memo-map-picker-sub {
+        margin-top: 8px;
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--subtext);
+        max-width: 620px;
+      }
+
+      .memo-map-picker-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .memo-map-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, var(--secondary), var(--blue));
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+        cursor: pointer;
+      }
+
+      .memo-map-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.1);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .memo-map-picker-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .memo-map-picker-card {
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
+        padding: 18px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .memo-map-picker-card.is-wide {
+        grid-column: 1 / -1;
+      }
+
+      .memo-map-picker-card-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--secondary);
+      }
+
+      .memo-map-picker-card-body {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.75;
+        color: var(--subtext);
+      }
+
+      .memo-map-picker-list {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .memo-map-picker-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: rgba(255,255,255,0.92);
+      }
+
+      .memo-map-picker-item-main {
+        min-width: 0;
+      }
+
+      .memo-map-picker-item-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--secondary);
+        line-height: 1.5;
+      }
+
+      .memo-map-picker-item-meta {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--subtext);
+      }
+
       .memo-map-toolbar {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .memo-map-filebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
         margin-bottom: 14px;
+      }
+
+      .memo-map-filechips {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+      }
+
+      .memo-map-filechip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--secondary);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .memo-map-filechip.is-active {
+        background: linear-gradient(135deg, rgba(22, 50, 79, 0.94), rgba(37, 99, 235, 0.92));
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .memo-map-fileactions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .memo-map-kicker {
@@ -394,14 +695,55 @@
         color: var(--subtext);
       }
 
-      .memo-map-actions {
+      .memo-map-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: min(100%, 360px);
+        flex: 1;
+      }
+
+      .memo-map-editor-row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         flex-wrap: wrap;
       }
 
-      .memo-map-action {
+      .memo-map-selected-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .memo-map-editor-input {
+        flex: 1 1 220px;
+        min-width: 0;
+        min-height: 40px;
+        border-radius: 14px;
+        border: 1px solid rgba(22, 50, 79, 0.10);
+        background: #fff;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 0 14px;
+        outline: none;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .memo-map-editor-input:focus {
+        border-color: rgba(37,99,235,0.28);
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.10);
+      }
+
+      .memo-map-toolbar-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -417,31 +759,96 @@
         box-shadow: var(--shadow-soft);
       }
 
-      .memo-map-action:hover {
+      .memo-map-toolbar-action:hover {
         border-color: rgba(37,99,235,0.18);
         color: var(--blue);
       }
 
+      .memo-map-toolbar-action:disabled {
+        cursor: not-allowed;
+        opacity: 0.42;
+        color: var(--subtext);
+      }
+
+      .memo-map-suggestions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .memo-map-suggestions-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--subtext);
+      }
+
+      .memo-map-suggestion {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
       .memo-map-stage {
         position: relative;
-        min-height: 680px;
+        min-height: 720px;
         border-radius: 28px;
         overflow: hidden;
         border: 1px solid rgba(22, 50, 79, 0.08);
         background:
-          radial-gradient(circle at top, rgba(37,99,235,0.10), transparent 32%),
-          linear-gradient(180deg, #fbfdff 0%, #f4f8ff 52%, #eef4fb 100%);
+          radial-gradient(circle at top, rgba(37,99,235,0.08), transparent 28%),
+          linear-gradient(180deg, #fbfdff 0%, #f5f8fc 50%, #edf3fb 100%);
       }
 
       .memo-map-stage::before {
         content: "";
         position: absolute;
         inset: 0;
-        background-image:
-          radial-gradient(rgba(148, 163, 184, 0.18) 0.7px, transparent 0.7px);
+        background-image: radial-gradient(rgba(148, 163, 184, 0.14) 0.7px, transparent 0.7px);
         background-size: 22px 22px;
         pointer-events: none;
-        opacity: 0.45;
+        opacity: 0.5;
+      }
+
+      .memo-map-stage-toolbar {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .memo-map-stage-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.10);
+        background: rgba(255,255,255,0.94);
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 800;
+        box-shadow: var(--shadow-soft);
+        cursor: pointer;
+      }
+
+      .memo-map-stage-action:hover {
+        border-color: rgba(37,99,235,0.18);
+        color: var(--blue);
       }
 
       .memo-map-svg {
@@ -455,187 +862,125 @@
       .memo-map-lines path {
         fill: none;
         stroke-linecap: round;
-      }
-
-      .memo-map-lines .core-link {
-        stroke: rgba(22, 50, 79, 0.22);
-        stroke-width: 3;
-      }
-
-      .memo-map-lines .quick-link {
-        stroke: rgba(22, 50, 79, 0.18);
-        stroke-width: 2.5;
-      }
-
-      .memo-map-lines .paper-link {
-        stroke: rgba(37, 99, 235, 0.22);
-        stroke-width: 2.5;
+        stroke-linejoin: round;
+        stroke: rgba(51, 65, 85, 0.28);
+        stroke-width: 2.8;
       }
 
       .memo-map-node {
         position: absolute;
         transform: translate(-50%, -50%);
-        border: none;
-        border-radius: 22px;
+        min-width: 120px;
+        max-width: 220px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(22, 50, 79, 0.10);
         background: #fff;
-        box-shadow: 0 16px 32px rgba(15,23,42,0.10);
+        box-shadow: 0 12px 28px rgba(15,23,42,0.08);
         color: var(--text);
+        user-select: none;
+        touch-action: none;
         cursor: pointer;
-        text-align: left;
-        font: inherit;
-        appearance: none;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
       }
 
-      .memo-map-node:focus-visible {
-        outline: 3px solid rgba(37,99,235,0.22);
-        outline-offset: 3px;
+      .memo-map-node:hover {
+        border-color: rgba(37,99,235,0.18);
+        box-shadow: 0 16px 34px rgba(15,23,42,0.11);
+      }
+
+      .memo-map-node.is-selected {
+        border-color: rgba(37,99,235,0.42);
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.12), 0 18px 36px rgba(15,23,42,0.12);
+      }
+
+      .memo-map-node.is-dragging {
+        z-index: 6;
+        box-shadow: 0 22px 42px rgba(15,23,42,0.16);
       }
 
       .memo-map-node.root {
-        width: min(260px, calc(100% - 40px));
-        padding: 18px 18px 16px;
-        border-radius: 26px;
-        background: linear-gradient(135deg, rgba(22,50,79,0.98), rgba(37,99,235,0.94));
+        min-width: 150px;
+        max-width: 260px;
+        padding: 16px 18px;
+        border-radius: 22px;
+        border: none;
+        background: linear-gradient(135deg, rgba(34,197,94,0.96), rgba(22,163,74,0.92));
         color: #fff;
-        cursor: default;
+        box-shadow: 0 20px 42px rgba(22,163,74,0.22);
+      }
+
+      .memo-map-node.root.is-selected {
+        box-shadow: 0 0 0 4px rgba(34,197,94,0.18), 0 24px 48px rgba(22,163,74,0.28);
+      }
+
+      .memo-map-node.is-reparent-source {
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.14), 0 0 0 8px rgba(37,99,235,0.08), 0 18px 36px rgba(15,23,42,0.12);
+      }
+
+      .memo-map-node[data-tone="yellow"] {
+        background: linear-gradient(135deg, #fff9db, #fff4b8);
+        border-color: rgba(217, 119, 6, 0.20);
+      }
+
+      .memo-map-node[data-tone="pink"] {
+        background: linear-gradient(135deg, #fff1f7, #ffd9ea);
+        border-color: rgba(219, 39, 119, 0.18);
+      }
+
+      .memo-map-node[data-tone="blue"] {
+        background: linear-gradient(135deg, #eef5ff, #dbeafe);
+        border-color: rgba(37, 99, 235, 0.20);
+      }
+
+      .memo-map-node[data-tone="green"] {
+        background: linear-gradient(135deg, #eefcf3, #dcfce7);
+        border-color: rgba(22, 163, 74, 0.18);
+      }
+
+      .memo-map-node-label {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.45;
+        letter-spacing: -0.01em;
         text-align: center;
-        box-shadow: 0 22px 40px rgba(22,50,79,0.22);
+        word-break: break-word;
       }
 
-      .memo-map-node.branch {
-        width: 172px;
-        padding: 13px 14px 12px;
-        cursor: default;
-        text-align: center;
-        border: 1px solid rgba(22,50,79,0.08);
-        background: rgba(255,255,255,0.94);
+      .memo-map-node.root .memo-map-node-label {
+        font-size: 18px;
+        color: #fff;
       }
 
-      .memo-map-node.branch.quick {
-        box-shadow: 0 14px 26px rgba(22,50,79,0.10);
-      }
-
-      .memo-map-node.branch.paper {
-        box-shadow: 0 14px 26px rgba(37,99,235,0.12);
-      }
-
-      .memo-map-node.note {
-        width: 190px;
-        padding: 14px 14px 13px;
-        border: 1px solid rgba(22,50,79,0.08);
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        user-select: none;
-        touch-action: none;
-      }
-
-      .memo-map-node.note:hover {
-        border-color: rgba(37,99,235,0.18);
-        box-shadow: 0 18px 34px rgba(15,23,42,0.12);
-      }
-
-      .memo-map-node.note.quick {
-        border-top: 4px solid rgba(22,50,79,0.92);
-      }
-
-      .memo-map-node.note.paper {
-        border-top: 4px solid rgba(37,99,235,0.86);
-      }
-
-      .memo-map-node.note.is-dragging {
-        box-shadow: 0 22px 42px rgba(15,23,42,0.16);
-        z-index: 6;
-      }
-
-      .memo-map-node-kicker {
+      .memo-map-node-depth {
+        margin-top: 6px;
         font-size: 10px;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+        color: var(--subtext);
+        text-align: center;
       }
 
-      .memo-map-node.root .memo-map-node-kicker {
-        color: rgba(255,255,255,0.76);
+      .memo-map-node.root .memo-map-node-depth {
+        color: rgba(255,255,255,0.75);
       }
 
-      .memo-map-node.branch.quick .memo-map-node-kicker,
-      .memo-map-node.note.quick .memo-map-node-kicker {
-        color: #16324f;
+      .memo-map-node-editing {
+        padding: 10px 12px;
       }
 
-      .memo-map-node.branch.paper .memo-map-node-kicker,
-      .memo-map-node.note.paper .memo-map-node-kicker {
-        color: #2563eb;
-      }
-
-      .memo-map-node-title {
-        margin-top: 5px;
+      .memo-map-node-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
         font-size: 15px;
-        font-weight: 900;
-        line-height: 1.4;
-        letter-spacing: -0.01em;
-      }
-
-      .memo-map-node.root .memo-map-node-title {
-        font-size: 24px;
-        color: #fff;
-      }
-
-      .memo-map-node.root .memo-map-sub {
-        color: rgba(255,255,255,0.82);
-      }
-
-      .memo-map-node.branch .memo-map-node-title {
-        font-size: 16px;
-        color: var(--secondary);
-      }
-
-      .memo-map-node.note .memo-map-node-title.empty {
-        color: var(--subtext);
-        font-style: italic;
-        font-weight: 600;
-      }
-
-      .memo-map-node-meta {
-        margin-top: 7px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-        font-size: 11px;
-        color: var(--subtext);
-      }
-
-      .memo-map-node-preview {
-        margin-top: 8px;
-        font-size: 13px;
-        color: #475569;
-        line-height: 1.62;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-      }
-
-      .memo-map-node-tag {
-        margin-top: 9px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 11px;
         font-weight: 800;
-      }
-
-      .memo-map-node.note.quick .memo-map-node-tag {
-        background: rgba(22,50,79,0.08);
-        color: #16324f;
-      }
-
-      .memo-map-node.note.paper .memo-map-node-tag {
-        background: rgba(37,99,235,0.08);
-        color: #2563eb;
+        line-height: 1.45;
+        text-align: center;
+        outline: none;
       }
 
       .memo-map-stage-hint {
@@ -644,18 +989,153 @@
         bottom: 14px;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.86);
+        background: rgba(255,255,255,0.88);
         color: var(--subtext);
         font-size: 12px;
         font-weight: 700;
         box-shadow: var(--shadow-soft);
       }
 
-      .memo-map-more {
-        margin-top: 14px;
+      .memo-map-popover {
+        position: absolute;
+        z-index: 7;
+        min-width: 220px;
+        max-width: min(320px, calc(100% - 24px));
+        padding: 10px;
+        border-radius: 18px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: rgba(255,255,255,0.96);
+        box-shadow: 0 18px 42px rgba(15,23,42,0.14);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+
+      .memo-map-popover[hidden] {
+        display: none !important;
+      }
+
+      .memo-map-popover-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .memo-map-popover-row + .memo-map-popover-row {
+        margin-top: 8px;
+      }
+
+      .memo-map-popover-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--subtext);
+      }
+
+      .memo-map-popover-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: #fff;
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .memo-map-popover-action:hover {
+        color: var(--blue);
+        border-color: rgba(37,99,235,0.18);
+      }
+
+      .memo-map-popover-action.is-active {
+        background: rgba(37,99,235,0.08);
+        border-color: rgba(37,99,235,0.22);
+        color: var(--blue);
+      }
+
+      .memo-map-color-chip {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        box-shadow: inset 0 0 0 1px rgba(22,50,79,0.10);
+      }
+
+      .memo-map-color-chip:hover {
+        transform: scale(1.06);
+      }
+
+      .memo-map-color-chip.is-active {
+        border-color: var(--secondary);
+      }
+
+      .memo-map-color-chip[data-tone="default"] { background: #ffffff; }
+      .memo-map-color-chip[data-tone="yellow"] { background: linear-gradient(135deg, #fff9db, #fedf89); }
+      .memo-map-color-chip[data-tone="pink"] { background: linear-gradient(135deg, #fff1f7, #f9a8d4); }
+      .memo-map-color-chip[data-tone="blue"] { background: linear-gradient(135deg, #eef5ff, #93c5fd); }
+      .memo-map-color-chip[data-tone="green"] { background: linear-gradient(135deg, #eefcf3, #86efac); }
+
+      .memo-map-popover-hint {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--subtext);
+      }
+
+      .memo-map-paper-status {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--secondary);
+        font-weight: 700;
+      }
+
+      .memo-map-paper-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .memo-map-paper-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        max-width: 100%;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(22, 50, 79, 0.08);
+        background: #fff;
+        color: var(--secondary);
         font-size: 12px;
         font-weight: 700;
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .memo-map-paper-chip:hover,
+      .memo-map-paper-chip.is-active {
+        color: var(--blue);
+        border-color: rgba(37,99,235,0.22);
+        background: rgba(37,99,235,0.06);
+      }
+
+      .memo-map-node-ref {
+        margin-top: 8px;
+        padding-top: 7px;
+        border-top: 1px solid rgba(22, 50, 79, 0.08);
+        font-size: 11px;
+        line-height: 1.45;
+        font-weight: 700;
         color: var(--subtext);
+        text-align: center;
+        word-break: break-word;
       }
 
       /* ── 空の状態 ── */
@@ -884,54 +1364,138 @@
           padding: 16px 12px 14px;
           border-radius: 24px;
         }
+        .memo-map-picker {
+          padding: 18px 14px 16px;
+          border-radius: 24px;
+        }
+        .memo-map-picker-title {
+          font-size: 21px;
+        }
+        .memo-map-picker-sub {
+          font-size: 13px;
+          line-height: 1.7;
+        }
+        .memo-map-picker-actions {
+          width: 100%;
+        }
+        .memo-map-primary,
+        .memo-map-secondary {
+          min-height: 40px;
+          font-size: 13px;
+          flex: 1 1 0;
+        }
+        .memo-map-picker-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .memo-map-picker-item {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .memo-map-picker-item .memo-map-secondary {
+          width: 100%;
+        }
         .memo-map-toolbar {
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
         .memo-map-title {
           font-size: 18px;
         }
         .memo-map-sub {
+          display: none;
+        }
+        .memo-map-filebar {
+          margin-bottom: 10px;
+        }
+        .memo-map-fileactions {
+          width: 100%;
+        }
+        .memo-map-filechip {
+          min-height: 36px;
+          padding: 0 13px;
           font-size: 12px;
         }
-        .memo-map-action {
+        .memo-map-controls {
+          display: none;
+        }
+        .memo-map-toolbar-action {
           min-height: 34px;
           padding: 0 12px;
           font-size: 12px;
         }
         .memo-map-stage {
-          min-height: 620px;
+          min-height: calc(100vh - 300px);
+          max-height: calc(100vh - 230px);
           border-radius: 24px;
         }
+        .memo-map-stage-toolbar {
+          top: 10px;
+          right: 10px;
+          gap: 6px;
+        }
+        .memo-map-stage-action {
+          min-height: 32px;
+          padding: 0 10px;
+          font-size: 11px;
+        }
         .memo-map-node.root {
-          width: min(220px, calc(100% - 28px));
-          padding: 16px 14px 14px;
+          min-width: 118px;
+          max-width: 188px;
+          padding: 14px 12px 12px;
         }
-        .memo-map-node.root .memo-map-node-title {
-          font-size: 21px;
+        .memo-map-node {
+          min-width: 92px;
+          max-width: 132px;
+          padding: 9px 8px;
+          border-radius: 16px;
         }
-        .memo-map-node.branch {
-          width: 142px;
-          padding: 11px 12px;
-        }
-        .memo-map-node.branch .memo-map-node-title {
-          font-size: 14px;
-        }
-        .memo-map-node.note {
-          width: 156px;
-          padding: 12px 11px 11px;
-          border-radius: 18px;
-        }
-        .memo-map-node.note .memo-map-node-title {
-          font-size: 13px;
-        }
-        .memo-map-node-preview {
+        .memo-map-node .memo-map-node-label {
           font-size: 12px;
+          line-height: 1.35;
+        }
+        .memo-map-node-depth {
+          margin-top: 4px;
+          font-size: 9px;
+        }
+        .memo-map-node-ref {
+          margin-top: 6px;
+          padding-top: 6px;
+          font-size: 10px;
+          line-height: 1.35;
         }
         .memo-map-stage-hint {
           right: 10px;
           bottom: 10px;
           font-size: 11px;
           padding: 7px 10px;
+        }
+        .memo-map-popover {
+          min-width: 0;
+          width: calc(100% - 20px);
+          max-width: calc(100% - 20px);
+          padding: 10px;
+        }
+
+        .memo-map-popover.is-mobile-sheet {
+          position: fixed;
+          left: 12px !important;
+          right: 12px !important;
+          top: auto !important;
+          bottom: calc(78px + env(safe-area-inset-bottom));
+          width: auto !important;
+          max-width: none;
+          max-height: min(46vh, 360px);
+          overflow-y: auto;
+          border-radius: 22px;
+          box-shadow: 0 22px 40px rgba(15,23,42,0.18);
+        }
+
+        .memo-map-stage-hint {
+          display: none;
+        }
+
+        .memo-map-suggestions {
+          display: none;
         }
 
         .upgrade-nudge {
@@ -1010,10 +1574,6 @@
                  class="memo-tab-btn {% if tab == 'paper' %}is-active{% endif %}">
                 📄 論文メモ
               </a>
-              <a href="/memo?tab=map"
-                 class="memo-tab-btn {% if tab == 'map' %}is-active{% endif %}">
-                🧠 マップ
-              </a>
             </div>
           </div>
 
@@ -1050,6 +1610,29 @@
           {% endif %}
 
           {% set can_add = (memo_limit is none) or (total_count < memo_limit) %}
+
+          {% if total_count == 0 and tab != 'map' %}
+          <section class="context-guide">
+            <div>
+              <div class="context-guide-title">まずは一言メモから始めると続けやすいです</div>
+              <div class="context-guide-body">気づいたことを1行だけ残しておくだけでも、あとで学びがつながりやすくなります。</div>
+            </div>
+            {% if can_add %}
+            <a href="#" class="context-guide-btn" onclick="createQuickMemo(event)">クイックメモを作る</a>
+            {% else %}
+            <a href="/plans" class="context-guide-btn">プランを見る</a>
+            {% endif %}
+          </section>
+          <section class="helper-sample" id="memo-helper-sample" hidden>
+            <div class="helper-sample-head">
+              <div class="helper-sample-kicker">使い方例</div>
+              <button type="button" class="helper-sample-close" aria-label="サンプルを閉じる" onclick="dismissMemoHelperSample()">×</button>
+            </div>
+            <div class="helper-sample-title">たとえば「明日見返したいこと」を 1 行だけ残すところからで十分です。</div>
+            <div class="helper-sample-body">例: 歩行速度の数字だけ先に覚える。あとで論文メモにつなげる。</div>
+            <div class="helper-sample-chip">例: 気づき → 1 行だけメモ</div>
+          </section>
+          {% endif %}
 
           <!-- クイックメモタブ -->
           {% if tab == 'quick' %}
@@ -1117,48 +1700,182 @@
             {% if can_add %}
             <a href="/memo/paper/new" class="fab">+</a>
             {% endif %}
+          {% elif tab == 'map' and show_mind_map_picker %}
+            <div class="memo-map-picker">
+              <div class="memo-map-picker-head">
+                <div>
+                  <div class="memo-map-picker-kicker">mind map</div>
+                  <div class="memo-map-picker-title">マップを選んで始める</div>
+                  <div class="memo-map-picker-sub">毎回いきなり編集画面に入らず、使いたいマップを選んでから開けます。新しく作るときも、空のマップか ICF テンプレかを選べます。</div>
+                </div>
+                <div class="memo-map-picker-actions">
+                  <button type="button" class="memo-map-primary" onclick="createMindMapFile('blank')">＋ 新規作成</button>
+                  <button type="button" class="memo-map-secondary" onclick="createMindMapFile('icf')">ICFで作る</button>
+                </div>
+              </div>
+
+              <div class="memo-map-picker-grid">
+                {% if mind_map_files %}
+                <section class="memo-map-picker-card">
+                  <div class="memo-map-picker-card-title">前回のマップを続ける</div>
+                  <div class="memo-map-picker-card-body">前回開いた順に並んでいます。いちばん上からそのまま続けられます。</div>
+                  <div class="memo-map-picker-list">
+                    {% set recent_map = mind_map_files[0] %}
+                    <div class="memo-map-picker-item">
+                      <div class="memo-map-picker-item-main">
+                        <div class="memo-map-picker-item-title">{{ recent_map.title }}</div>
+                        <div class="memo-map-picker-item-meta">{{ recent_map.updated_at[:10] }} 更新</div>
+                      </div>
+                      <a href="/memo?tab=map&map_file_id={{ recent_map.id }}" class="memo-map-primary">開く</a>
+                    </div>
+                  </div>
+                </section>
+                {% endif %}
+
+                <section class="memo-map-picker-card {% if mind_map_files %}is-wide{% endif %}">
+                  <div class="memo-map-picker-card-title">マップ一覧</div>
+                  <div class="memo-map-picker-card-body">作ったマップをここから選べます。テーマごとに分けて使うのがおすすめです。</div>
+                  <div class="memo-map-picker-list">
+                    {% for map_file in mind_map_files %}
+                    <div class="memo-map-picker-item">
+                      <div class="memo-map-picker-item-main">
+                        <div class="memo-map-picker-item-title">{{ map_file.title }}</div>
+                        <div class="memo-map-picker-item-meta">{{ map_file.updated_at[:10] }} 更新</div>
+                      </div>
+                      <a href="/memo?tab=map&map_file_id={{ map_file.id }}" class="memo-map-secondary">使う</a>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {% if can_add %}
+            <a href="#" class="fab" id="fab-map-picker" onclick="createMindMapFile('blank'); return false;">+</a>
+            {% endif %}
           {% else %}
-            {% if map_quick_memos or map_paper_memos %}
             <div class="memo-map-shell">
+              {% if mind_map_files %}
+              <div class="memo-map-filebar">
+                <div class="memo-map-filechips">
+                  <a href="/memo?tab=map" class="memo-map-filechip">← マップ一覧</a>
+                  {% for map_file in mind_map_files %}
+                  <a
+                    href="/memo?tab=map&map_file_id={{ map_file.id }}"
+                    class="memo-map-filechip {% if selected_mind_map_file_id == map_file.id %}is-active{% endif %}"
+                  >
+                    {{ map_file.title }}
+                  </a>
+                  {% endfor %}
+                </div>
+                <div class="memo-map-fileactions">
+                  <button type="button" class="memo-map-toolbar-action" onclick="createMindMapFile()">＋ 新規</button>
+                  {% if selected_mind_map_file %}
+                  <button type="button" class="memo-map-toolbar-action" onclick="renameMindMapFile()">名前変更</button>
+                  <button type="button" class="memo-map-toolbar-action" onclick="deleteMindMapFile()">削除</button>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
               <div class="memo-map-toolbar">
                 <div>
                   <div class="memo-map-kicker">mind map</div>
-                  <div class="memo-map-title">メモのつながり</div>
-                  <div class="memo-map-sub">中心テーマから枝をたどって、気になるメモをそのまま開けます。ノードはドラッグで整理できます。</div>
+                  <div class="memo-map-title">{{ selected_mind_map_file_title or "学びをつなぐマインドマップ" }}</div>
+                  <div class="memo-map-sub">中心テーマから枝を伸ばして、考えをシンプルに整理できます。ノードは追加・編集・削除・ドラッグ保存に対応しています。</div>
                 </div>
-                <div class="memo-map-actions">
-                  <button type="button" class="memo-map-action" onclick="resetMemoMindMap()">配置を整える</button>
+                <div class="memo-map-controls">
+                  <div class="memo-map-editor-row">
+                    <div class="memo-map-selected-chip" id="mind-map-selected-chip">中心テーマ</div>
+                    <input
+                      type="text"
+                      id="mind-map-editor-input"
+                      class="memo-map-editor-input"
+                      placeholder="選択中ノードの名前を入力"
+                      maxlength="60"
+                    >
+                    <button type="button" class="memo-map-toolbar-action" onclick="insertMindMapIcfTemplate()">ICF</button>
+                    <button type="button" class="memo-map-toolbar-action" onclick="autoLayoutMindMap()">整列</button>
+                  </div>
                 </div>
               </div>
 
-              <div class="memo-map-stage" id="memo-map-stage">
-                <svg class="memo-map-svg" id="memo-map-svg" aria-hidden="true">
-                  <g class="memo-map-lines" id="memo-map-lines"></g>
-                </svg>
-                <div class="memo-map-stage-hint">ドラッグで整理</div>
-              </div>
-
-              {% if map_more_quick_count > 0 or map_more_paper_count > 0 %}
-              <div class="memo-map-more">
-                {% if map_more_quick_count > 0 %}+ クイックメモ {{ map_more_quick_count }} 件{% endif %}
-                {% if map_more_quick_count > 0 and map_more_paper_count > 0 %} / {% endif %}
-                {% if map_more_paper_count > 0 %}+ 論文メモ {{ map_more_paper_count }} 件{% endif %}
+              {% if mind_map_suggestions %}
+              <div class="memo-map-suggestions">
+                <span class="memo-map-suggestions-label">最近のメモから枝を追加</span>
+                {% for item in mind_map_suggestions %}
+                <button
+                  type="button"
+                  class="memo-map-suggestion"
+                  onclick="addMindMapSuggestion({{ item.label | tojson | safe }})"
+                >
+                  {{ "✏️" if item.type == "quick" else "📄" }} {{ item.label }}
+                </button>
+                {% endfor %}
               </div>
               {% endif %}
+
+              <div class="memo-map-stage" id="mind-map-stage">
+                <div class="memo-map-stage-toolbar">
+                  <button type="button" class="memo-map-stage-action" onclick="insertMindMapIcfTemplate()">ICF</button>
+                  <button type="button" class="memo-map-stage-action" onclick="autoLayoutMindMap()">全体</button>
+                </div>
+                <svg class="memo-map-svg" id="mind-map-svg" aria-hidden="true">
+                  <g class="memo-map-lines" id="mind-map-lines"></g>
+                </svg>
+                <div class="memo-map-popover" id="mind-map-popover" hidden>
+                  <div class="memo-map-popover-row">
+                    <span class="memo-map-popover-label">操作</span>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-edit" onclick="beginMindMapEdit(selectedMindNodeId)">編集</button>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-child" onclick="addMindMapChild()">子</button>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-sibling" onclick="addMindMapSibling()">兄弟</button>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-reparent" onclick="toggleMindMapReparentMode()">親変更</button>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-delete" onclick="deleteMindMapNode()">削除</button>
+                    <button type="button" class="memo-map-popover-action" onclick="insertMindMapIcfTemplate()">ICF</button>
+                  </div>
+                  <div class="memo-map-popover-row">
+                    <span class="memo-map-popover-label">色</span>
+                    <button type="button" class="memo-map-color-chip" data-tone="default" onclick="setMindMapNodeTone('default')" aria-label="標準色"></button>
+                    <button type="button" class="memo-map-color-chip" data-tone="yellow" onclick="setMindMapNodeTone('yellow')" aria-label="黄色"></button>
+                    <button type="button" class="memo-map-color-chip" data-tone="pink" onclick="setMindMapNodeTone('pink')" aria-label="ピンク"></button>
+                    <button type="button" class="memo-map-color-chip" data-tone="blue" onclick="setMindMapNodeTone('blue')" aria-label="水色"></button>
+                    <button type="button" class="memo-map-color-chip" data-tone="green" onclick="setMindMapNodeTone('green')" aria-label="黄緑"></button>
+                  </div>
+                  <div class="memo-map-popover-row">
+                    <span class="memo-map-popover-label">論文</span>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-paper-open" onclick="openLinkedMindMapPaper()">開く</button>
+                    <button type="button" class="memo-map-popover-action" id="mind-map-popover-paper-unlink" onclick="unlinkMindMapPaper()">解除</button>
+                  </div>
+                  <div class="memo-map-popover-row">
+                    <div class="memo-map-paper-status" id="mind-map-paper-status">論文はまだ紐づいていません。</div>
+                  </div>
+                  {% if mind_map_papers %}
+                  <div class="memo-map-popover-row">
+                    <span class="memo-map-popover-label">最近の論文</span>
+                  </div>
+                  <div class="memo-map-popover-row memo-map-paper-chip-list" id="mind-map-paper-chip-list">
+                    {% for paper in mind_map_papers %}
+                    <button
+                      type="button"
+                      class="memo-map-paper-chip"
+                      data-pubmed-id="{{ paper.pubmed_id }}"
+                      data-title="{{ paper.title }}"
+                      onclick="linkMindMapPaper({{ paper.pubmed_id | tojson | safe }}, {{ paper.title | tojson | safe }})"
+                    >
+                      📄 {{ paper.title }}
+                    </button>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  <div class="memo-map-popover-row">
+                    <div class="memo-map-popover-hint" id="mind-map-popover-hint">ノードを選ぶと、その場で追加や色分けができます。</div>
+                  </div>
+                </div>
+                <div class="memo-map-stage-hint">クリックで選択 / ダブルクリックで編集 / ドラッグで移動</div>
+              </div>
             </div>
 
             {% if can_add %}
-            <a href="#" class="fab" id="fab-map" onclick="createQuickMemo(event)">+</a>
-            {% endif %}
-            {% else %}
-            <div class="empty-state">
-              <div class="empty-icon">🧠</div>
-              <div class="empty-title">マップに出せるメモはまだありません</div>
-              <div class="empty-sub">クイックメモや論文メモを作ると、ここでつながりを見渡せるようになります</div>
-            </div>
-            {% if can_add %}
-            <a href="#" class="fab" id="fab-map" onclick="createQuickMemo(event)">+</a>
-            {% endif %}
+            <a href="#" class="fab" id="fab-map" onclick="addMindMapChild()">+</a>
             {% endif %}
           {% endif %}
 
@@ -1193,6 +1910,27 @@
     </div>
 
     <script>
+      const memoHelperSample = document.getElementById("memo-helper-sample");
+
+      function dismissMemoHelperSample() {
+        if (!memoHelperSample) return;
+        memoHelperSample.hidden = true;
+        try {
+          localStorage.setItem("memo-helper-sample-dismissed", "1");
+        } catch (error) {}
+      }
+
+      if (memoHelperSample) {
+        try {
+          const dismissed = localStorage.getItem("memo-helper-sample-dismissed");
+          if (!dismissed) {
+            memoHelperSample.hidden = false;
+          }
+        } catch (error) {
+          memoHelperSample.hidden = false;
+        }
+      }
+
       function createQuickMemo(e) {
         e.preventDefault();
         const form = document.createElement("form");
@@ -1202,303 +1940,793 @@
         form.submit();
       }
 
-      const memoMindMapData = {
-        quickNodes: {{ memo_map_quick_nodes | default([]) | tojson | safe }},
-        paperNodes: {{ memo_map_paper_nodes | default([]) | tojson | safe }},
-        layout: {{ memo_map_layout | default({}) | tojson | safe }},
-      };
+      const mindMapStage = document.getElementById("mind-map-stage");
+      const mindMapLines = document.getElementById("mind-map-lines");
+      const mindMapSelectedChip = document.getElementById("mind-map-selected-chip");
+      const mindMapEditorInput = document.getElementById("mind-map-editor-input");
+      const mindMapPopover = document.getElementById("mind-map-popover");
+      const mindMapPopoverHint = document.getElementById("mind-map-popover-hint");
+      const mindMapPopoverSibling = document.getElementById("mind-map-popover-sibling");
+      const mindMapPopoverDelete = document.getElementById("mind-map-popover-delete");
+      const mindMapPopoverReparent = document.getElementById("mind-map-popover-reparent");
+      const mindMapPopoverPaperOpen = document.getElementById("mind-map-popover-paper-open");
+      const mindMapPopoverPaperUnlink = document.getElementById("mind-map-popover-paper-unlink");
+      const mindMapPaperStatus = document.getElementById("mind-map-paper-status");
+      const mindMapRawData = {{ mind_map_data | default({}) | tojson | safe }};
+      const initialMindMapFileId = {{ selected_mind_map_file_id | default(None) | tojson | safe }};
+      const initialMindMapFileTitle = {{ selected_mind_map_file_title | default("") | tojson | safe }};
 
-      const memoMapStage = document.getElementById("memo-map-stage");
-      const memoMapLines = document.getElementById("memo-map-lines");
-      let memoMapLayout = { ...(memoMindMapData.layout || {}) };
-      let memoMapNodeElements = new Map();
-      let memoMapDragState = null;
-      let memoMapSaveTimer = null;
+      let mindMapState = normalizeMindMapClient(mindMapRawData);
+      let selectedMindNodeId = mindMapState.root_id;
+      let editingMindNodeId = null;
+      let mindMapDragState = null;
+      let mindMapReparentSourceId = null;
+      let mindMapSaveTimer = null;
+      let mindMapNodeElements = new Map();
+      let currentMindMapFileId = initialMindMapFileId;
+      let currentMindMapFileTitle = initialMindMapFileTitle || "新しいマップ";
+      let mindMapPopoverClosedForNodeId = null;
 
-      function getMemoMapAnchors() {
-        if (!memoMapStage) return null;
-        const rect = memoMapStage.getBoundingClientRect();
-        const compact = rect.width < 700;
+      function createDefaultMindMapClient() {
         return {
-          root: { x: 0.5, y: compact ? 0.15 : 0.16 },
-          quick: { x: compact ? 0.25 : 0.29, y: compact ? 0.31 : 0.35 },
-          paper: { x: compact ? 0.75 : 0.71, y: compact ? 0.31 : 0.35 },
-          compact,
+          root_id: "root",
+          nodes: [
+            { id: "root", parent_id: null, text: "学びテーマ", x: 0.18, y: 0.50, tone: "root" },
+            { id: "node-insight", parent_id: "root", text: "気づき", x: 0.42, y: 0.24, tone: "yellow" },
+            { id: "node-clinical", parent_id: "root", text: "臨床で使う", x: 0.42, y: 0.40, tone: "blue" },
+            { id: "node-question", parent_id: "root", text: "疑問", x: 0.42, y: 0.58, tone: "pink" },
+            { id: "node-next", parent_id: "root", text: "次に調べる", x: 0.42, y: 0.76, tone: "green" },
+          ],
         };
       }
 
-      function getDefaultMemoMapNodePosition(node, index) {
-        const anchors = getMemoMapAnchors();
-        const compact = anchors ? anchors.compact : false;
-        const isQuick = node.type === "quick";
-        const columns = compact ? 1 : 2;
-        const row = Math.floor(index / columns);
-        const col = index % columns;
-        const xBase = isQuick
-          ? (compact ? 0.2 : 0.15)
-          : (compact ? 0.8 : 0.63);
-        const xGap = compact ? 0 : 0.14;
-        const yBase = compact ? 0.48 : 0.52;
-        const yGap = compact ? 0.12 : 0.14;
-        return {
-          x: Math.max(0.08, Math.min(0.92, xBase + (isQuick ? col * xGap : col * xGap))),
-          y: Math.max(0.16, Math.min(0.9, yBase + row * yGap)),
-        };
-      }
-
-      function getMemoMapNodePosition(node, index) {
-        const saved = memoMapLayout[node.node_key];
-        if (saved && typeof saved.x === "number" && typeof saved.y === "number") {
-          return saved;
+      function normalizeMindMapClient(rawMap) {
+        if (!rawMap || typeof rawMap !== "object") {
+          return createDefaultMindMapClient();
         }
-        return getDefaultMemoMapNodePosition(node, index);
+
+        const rawNodes = Array.isArray(rawMap.nodes) ? rawMap.nodes : [];
+        const nodes = [];
+        const seenIds = new Set();
+        const allowedTones = new Set(["default", "yellow", "pink", "blue", "green", "root"]);
+        rawNodes.forEach((rawNode) => {
+          if (!rawNode || typeof rawNode !== "object") return;
+          const id = String(rawNode.id || "").trim();
+          if (!id || seenIds.has(id)) return;
+          const parentId = rawNode.parent_id ? String(rawNode.parent_id).trim() : null;
+          const text = String(rawNode.text || "").trim().replace(/\s+/g, " ").slice(0, 60) || "無題";
+          const x = Math.max(0.06, Math.min(0.94, Number(rawNode.x) || 0.5));
+          const y = Math.max(0.10, Math.min(0.90, Number(rawNode.y) || 0.5));
+          let tone = String(rawNode.tone || "default").trim().toLowerCase();
+          if (!allowedTones.has(tone)) tone = "default";
+          let paperRef = null;
+          if (rawNode.paper_ref && typeof rawNode.paper_ref === "object") {
+            const pubmedId = String(rawNode.paper_ref.pubmed_id || "").trim();
+            const title = String(rawNode.paper_ref.title || "").trim().replace(/\s+/g, " ").slice(0, 120);
+            if (pubmedId) {
+              paperRef = { pubmed_id: pubmedId, title: title || pubmedId };
+            }
+          }
+          nodes.push({ id, parent_id: parentId, text, x, y, tone, paper_ref: paperRef });
+          seenIds.add(id);
+        });
+
+        if (!nodes.length) return createDefaultMindMapClient();
+
+        let rootId = String(rawMap.root_id || "").trim();
+        if (!rootId || !nodes.some((node) => node.id === rootId)) {
+          rootId = nodes[0].id;
+        }
+        const validIds = new Set(nodes.map((node) => node.id));
+        nodes.forEach((node) => {
+          if (node.id === rootId) {
+            node.parent_id = null;
+            node.x = 0.18;
+            node.y = 0.5;
+            node.tone = "root";
+          } else if (!node.parent_id || !validIds.has(node.parent_id)) {
+            node.parent_id = rootId;
+          } else if (node.tone === "root") {
+            node.tone = "default";
+          }
+        });
+
+        return { root_id: rootId, nodes };
       }
 
-      function getMemoMapPoint(position) {
-        const rect = memoMapStage.getBoundingClientRect();
+      function getMindMapNode(nodeId) {
+        return (mindMapState.nodes || []).find((node) => node.id === nodeId) || null;
+      }
+
+      function getMindMapChildren(parentId) {
+        return (mindMapState.nodes || [])
+          .filter((node) => node.parent_id === parentId)
+          .sort((a, b) => (a.y - b.y) || a.text.localeCompare(b.text, "ja"));
+      }
+
+      function getMindMapDescendantIds(nodeId) {
+        const ids = [];
+        const walk = (parentId) => {
+          getMindMapChildren(parentId).forEach((child) => {
+            ids.push(child.id);
+            walk(child.id);
+          });
+        };
+        walk(nodeId);
+        return ids;
+      }
+
+      function generateMindMapNodeId() {
+        return `mind-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      }
+
+      function escapeMindMapHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;");
+      }
+
+      function getMindMapNodePoint(node) {
+        const rect = mindMapStage.getBoundingClientRect();
         return {
-          x: position.x * rect.width,
-          y: position.y * rect.height,
+          x: node.x * rect.width,
+          y: node.y * rect.height,
         };
       }
 
-      function memoMapPath(start, end) {
-        const midX = (start.x + end.x) / 2;
+      function createMindMapCurve(fromNode, toNode) {
+        const start = getMindMapNodePoint(fromNode);
+        const end = getMindMapNodePoint(toNode);
+        const midX = start.x + (end.x - start.x) * 0.48;
         return `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`;
       }
 
-      function createMemoMapNodeElement(type, html, position, options = {}) {
-        const el = document.createElement(options.tagName || "div");
-        el.className = `memo-map-node ${type}${options.extraClass ? ` ${options.extraClass}` : ""}`;
-        el.innerHTML = html;
-        placeMemoMapElement(el, position);
-        if (options.nodeKey) el.dataset.nodeKey = options.nodeKey;
-        if (options.href) el.dataset.href = options.href;
-        if (options.draggable) {
-          el.addEventListener("pointerdown", startMemoMapNodeDrag);
-          el.addEventListener("click", handleMemoMapNodeClick);
-          el.addEventListener("keydown", handleMemoMapNodeKeydown);
-          el.tabIndex = 0;
-          el.setAttribute("role", "link");
+      function renderMindMapLines() {
+        if (!mindMapStage || !mindMapLines) return;
+        const paths = [];
+        (mindMapState.nodes || []).forEach((node) => {
+          if (!node.parent_id) return;
+          const parent = getMindMapNode(node.parent_id);
+          if (!parent) return;
+          paths.push(`<path d="${createMindMapCurve(parent, node)}"></path>`);
+        });
+        mindMapLines.innerHTML = paths.join("");
+      }
+
+      function positionMindMapPopover() {
+        if (!mindMapStage || !mindMapPopover) return;
+        const selectedEl = mindMapNodeElements.get(selectedMindNodeId);
+        if (!selectedEl) {
+          mindMapPopover.hidden = true;
+          return;
         }
-        memoMapStage.appendChild(el);
-        return el;
+        if (mindMapPopoverClosedForNodeId && mindMapPopoverClosedForNodeId === selectedMindNodeId) {
+          mindMapPopover.hidden = true;
+          return;
+        }
+
+        const stageRect = mindMapStage.getBoundingClientRect();
+        const nodeRect = selectedEl.getBoundingClientRect();
+        const isMobile = window.innerWidth < 980;
+        if (isMobile) {
+          mindMapPopover.classList.add("is-mobile-sheet");
+          mindMapPopover.style.width = "";
+          mindMapPopover.style.left = "";
+          mindMapPopover.style.top = "";
+          mindMapPopover.hidden = false;
+          return;
+        }
+        mindMapPopover.classList.remove("is-mobile-sheet");
+        const popoverWidth = Math.min(isMobile ? stageRect.width - 20 : 280, 280);
+        const desiredLeft = (nodeRect.left - stageRect.left) + (nodeRect.width / 2) - (popoverWidth / 2);
+        const minLeft = 10;
+        const maxLeft = Math.max(minLeft, stageRect.width - popoverWidth - 10);
+        const safeLeft = Math.max(minLeft, Math.min(maxLeft, desiredLeft));
+
+        let top = (nodeRect.bottom - stageRect.top) + 12;
+        const estimatedHeight = isMobile ? 114 : 102;
+        if (top + estimatedHeight > stageRect.height - 12) {
+          top = Math.max(10, (nodeRect.top - stageRect.top) - estimatedHeight - 12);
+        }
+
+        mindMapPopover.style.width = isMobile ? `${stageRect.width - 20}px` : `${popoverWidth}px`;
+        mindMapPopover.style.left = `${safeLeft}px`;
+        mindMapPopover.style.top = `${top}px`;
+        mindMapPopover.hidden = false;
       }
 
-      function placeMemoMapElement(el, position) {
-        el.style.left = `${position.x * 100}%`;
-        el.style.top = `${position.y * 100}%`;
+      function updateMindMapSelectionUi() {
+        const selectedNode = getMindMapNode(selectedMindNodeId) || getMindMapNode(mindMapState.root_id);
+        if (!selectedNode) return;
+        selectedMindNodeId = selectedNode.id;
+        if (mindMapSelectedChip) {
+          if (selectedNode.id === mindMapState.root_id) {
+            mindMapSelectedChip.textContent = "中心テーマ";
+          } else if (selectedNode.paper_ref?.title) {
+            mindMapSelectedChip.textContent = `選択中ノード · ${selectedNode.paper_ref.title.slice(0, 18)}`;
+          } else {
+            mindMapSelectedChip.textContent = "選択中ノード";
+          }
+        }
+        if (mindMapEditorInput && document.activeElement !== mindMapEditorInput) {
+          mindMapEditorInput.value = selectedNode.text || "";
+        }
+        const rootSelected = selectedNode.id === mindMapState.root_id;
+        if (mindMapPopoverSibling) mindMapPopoverSibling.disabled = rootSelected;
+        if (mindMapPopoverDelete) mindMapPopoverDelete.disabled = rootSelected;
+        if (mindMapPopoverReparent) {
+          mindMapPopoverReparent.disabled = rootSelected;
+          mindMapPopoverReparent.classList.toggle("is-active", mindMapReparentSourceId === selectedNode.id);
+        }
+        if (mindMapPopoverHint) {
+          if (mindMapReparentSourceId && mindMapReparentSourceId === selectedNode.id) {
+            mindMapPopoverHint.textContent = "新しい親にしたいノードを次にクリックしてください。";
+          } else if (mindMapReparentSourceId) {
+            mindMapPopoverHint.textContent = "親の変更先を選ぶモードです。受け皿にしたいノードをクリックしてください。";
+          } else {
+            mindMapPopoverHint.textContent = window.innerWidth < 980
+              ? "下の操作から子追加・色分け・論文リンクができます。"
+              : "ノードを選ぶと、その場で追加や色分け、論文リンクができます。";
+          }
+        }
+        if (mindMapPaperStatus) {
+          mindMapPaperStatus.textContent = selectedNode.paper_ref?.title
+            ? `紐づけ中: ${selectedNode.paper_ref.title}`
+            : "論文はまだ紐づいていません。";
+        }
+        if (mindMapPopoverPaperOpen) {
+          mindMapPopoverPaperOpen.disabled = !selectedNode.paper_ref?.pubmed_id;
+        }
+        if (mindMapPopoverPaperUnlink) {
+          mindMapPopoverPaperUnlink.disabled = !selectedNode.paper_ref?.pubmed_id;
+        }
+        if (mindMapPopover) {
+          const tone = selectedNode.id === mindMapState.root_id ? "root" : (selectedNode.tone || "default");
+          mindMapPopover.querySelectorAll(".memo-map-color-chip").forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.tone === tone);
+            button.disabled = tone === "root" && button.dataset.tone !== "default";
+          });
+          mindMapPopover.querySelectorAll(".memo-map-paper-chip").forEach((button) => {
+            const pubmedId = button.dataset.pubmedId || "";
+            button.classList.toggle("is-active", pubmedId && pubmedId === (selectedNode.paper_ref?.pubmed_id || ""));
+          });
+        }
       }
 
-      function renderMemoMapLines(anchors, quickNodes, paperNodes) {
-        if (!memoMapLines || !anchors) return;
-        const rootPoint = getMemoMapPoint(anchors.root);
-        const quickPoint = getMemoMapPoint(anchors.quick);
-        const paperPoint = getMemoMapPoint(anchors.paper);
-        const fragments = [
-          `<path class="core-link" d="${memoMapPath(rootPoint, quickPoint)}"></path>`,
-          `<path class="core-link" d="${memoMapPath(rootPoint, paperPoint)}"></path>`,
-        ];
+      function renderMindMap() {
+        if (!mindMapStage || !mindMapLines) return;
 
-        quickNodes.forEach((node, index) => {
-          const point = getMemoMapPoint(getMemoMapNodePosition(node, index));
-          fragments.push(`<path class="quick-link" d="${memoMapPath(quickPoint, point)}"></path>`);
+        mindMapStage.querySelectorAll(".memo-map-node").forEach((node) => node.remove());
+        mindMapNodeElements = new Map();
+
+        (mindMapState.nodes || []).forEach((node) => {
+          const isRoot = node.id === mindMapState.root_id;
+          const isSelected = node.id === selectedMindNodeId;
+          const isEditing = node.id === editingMindNodeId;
+          const el = document.createElement("button");
+          el.type = "button";
+          el.className = `memo-map-node${isRoot ? " root" : ""}${isSelected ? " is-selected" : ""}`;
+          el.dataset.nodeId = node.id;
+          el.dataset.tone = isRoot ? "root" : (node.tone || "default");
+          el.style.left = `${node.x * 100}%`;
+          el.style.top = `${node.y * 100}%`;
+          if (mindMapReparentSourceId === node.id) {
+            el.classList.add("is-reparent-source");
+          }
+
+          if (isEditing) {
+            el.classList.add("memo-map-node-editing");
+            el.innerHTML = `<input class="memo-map-node-input" type="text" maxlength="60" value="${escapeMindMapHtml(node.text)}" aria-label="ノード名を編集">`;
+          } else {
+            const depth = isRoot ? "root" : `depth ${Math.max(1, getMindMapDepth(node.id))}`;
+            const paperRefHtml = node.paper_ref?.title
+              ? `<div class="memo-map-node-ref">📄 ${escapeMindMapHtml(node.paper_ref.title)}</div>`
+              : "";
+            el.innerHTML = `
+              <div class="memo-map-node-label">${escapeMindMapHtml(node.text)}</div>
+              <div class="memo-map-node-depth">${depth}</div>
+              ${paperRefHtml}
+            `;
+          }
+
+          el.addEventListener("click", (event) => {
+            if (el.dataset.justDragged === "1") {
+              el.dataset.justDragged = "0";
+              event.preventDefault();
+              return;
+            }
+            if (mindMapReparentSourceId && mindMapReparentSourceId !== node.id) {
+              assignMindMapParent(node.id);
+              return;
+            }
+            if (selectedMindNodeId === node.id && !editingMindNodeId && !mindMapReparentSourceId) {
+              if (!mindMapPopover.hidden) {
+                closeMindMapPopover(node.id);
+              } else {
+                mindMapPopoverClosedForNodeId = null;
+                positionMindMapPopover();
+              }
+              return;
+            }
+            mindMapPopoverClosedForNodeId = null;
+            selectedMindNodeId = node.id;
+            updateMindMapSelectionUi();
+            renderMindMap();
+          });
+
+          el.addEventListener("dblclick", () => {
+            beginMindMapEdit(node.id);
+          });
+
+          el.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !isEditing) {
+              event.preventDefault();
+              beginMindMapEdit(node.id);
+            }
+          });
+
+          if (!isRoot && !isEditing) {
+            el.addEventListener("pointerdown", startMindMapDrag);
+          }
+
+          mindMapStage.appendChild(el);
+          mindMapNodeElements.set(node.id, el);
         });
-        paperNodes.forEach((node, index) => {
-          const point = getMemoMapPoint(getMemoMapNodePosition(node, index));
-          fragments.push(`<path class="paper-link" d="${memoMapPath(paperPoint, point)}"></path>`);
-        });
-        memoMapLines.innerHTML = fragments.join("");
+
+        renderMindMapLines();
+        updateMindMapSelectionUi();
+        positionMindMapPopover();
+
+        if (editingMindNodeId) {
+          const editingEl = mindMapNodeElements.get(editingMindNodeId);
+          const input = editingEl?.querySelector(".memo-map-node-input");
+          if (input) {
+            input.focus();
+            input.select();
+            input.addEventListener("keydown", (event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitMindMapEdit(input.value);
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                editingMindNodeId = null;
+                renderMindMap();
+              }
+            }, { once: true });
+            input.addEventListener("blur", () => commitMindMapEdit(input.value), { once: true });
+          }
+        }
       }
 
-      function renderMemoMindMap() {
-        if (!memoMapStage || !memoMapLines) return;
-        memoMapStage.querySelectorAll(".memo-map-node").forEach((node) => node.remove());
-        memoMapNodeElements = new Map();
-
-        const anchors = getMemoMapAnchors();
-        const quickNodes = memoMindMapData.quickNodes || [];
-        const paperNodes = memoMindMapData.paperNodes || [];
-
-        createMemoMapNodeElement(
-          "root",
-          `
-            <div class="memo-map-node-kicker">mind map</div>
-            <div class="memo-map-node-title">メモの地図</div>
-            <div class="memo-map-sub">学びのつながりを中心から広げる</div>
-          `,
-          anchors.root
-        );
-
-        createMemoMapNodeElement(
-          "branch quick",
-          `
-            <div class="memo-map-node-kicker">quick memo</div>
-            <div class="memo-map-node-title">クイックメモ</div>
-          `,
-          anchors.quick
-        );
-
-        createMemoMapNodeElement(
-          "branch paper",
-          `
-            <div class="memo-map-node-kicker">paper memo</div>
-            <div class="memo-map-node-title">論文メモ</div>
-          `,
-          anchors.paper
-        );
-
-        quickNodes.forEach((node, index) => {
-          const title = (node.title || "").trim() || "タイトルなし";
-          const preview = (node.preview || "").trim();
-          const position = getMemoMapNodePosition(node, index);
-          const el = createMemoMapNodeElement(
-            "note quick",
-            `
-              <div class="memo-map-node-kicker">quick</div>
-              <div class="memo-map-node-title ${!title ? "empty" : ""}">${title}</div>
-              <div class="memo-map-node-meta">
-                <span>${node.updated_at || ""}</span>
-                <span>クイック</span>
-              </div>
-              ${preview ? `<div class="memo-map-node-preview">${preview}</div>` : ""}
-            `,
-            position,
-            { tagName: "button", nodeKey: node.node_key, href: node.url, draggable: true }
-          );
-          memoMapNodeElements.set(node.node_key, el);
-        });
-
-        paperNodes.forEach((node, index) => {
-          const title = (node.title || "").trim() || "論文メモ";
-          const preview = (node.preview || "").trim();
-          const position = getMemoMapNodePosition(node, index);
-          const el = createMemoMapNodeElement(
-            "note paper",
-            `
-              <div class="memo-map-node-kicker">paper</div>
-              <div class="memo-map-node-title">${title}</div>
-              <div class="memo-map-node-meta">
-                <span>${node.updated_at || ""}</span>
-                <span>論文</span>
-              </div>
-              ${preview ? `<div class="memo-map-node-preview">${preview}</div>` : ""}
-              ${node.pubmed_id ? `<div class="memo-map-node-tag">PMID ${node.pubmed_id}</div>` : ""}
-            `,
-            position,
-            { tagName: "button", nodeKey: node.node_key, href: node.url, draggable: true }
-          );
-          memoMapNodeElements.set(node.node_key, el);
-        });
-
-        renderMemoMapLines(anchors, quickNodes, paperNodes);
+      function closeMindMapPopover(nodeId = null) {
+        if (!mindMapPopover) return;
+        mindMapPopover.hidden = true;
+        if (nodeId) {
+          mindMapPopoverClosedForNodeId = nodeId;
+        }
       }
 
-      function scheduleMemoMapSave() {
-        if (!memoMapStage) return;
-        clearTimeout(memoMapSaveTimer);
-        memoMapSaveTimer = setTimeout(async () => {
+      function getMindMapDepth(nodeId) {
+        let depth = 0;
+        let current = getMindMapNode(nodeId);
+        while (current && current.parent_id) {
+          depth += 1;
+          current = getMindMapNode(current.parent_id);
+          if (depth > 12) break;
+        }
+        return depth;
+      }
+
+      function beginMindMapEdit(nodeId) {
+        mindMapPopoverClosedForNodeId = null;
+        selectedMindNodeId = nodeId;
+        editingMindNodeId = nodeId;
+        renderMindMap();
+      }
+
+      function commitMindMapEdit(nextValue) {
+        const node = getMindMapNode(editingMindNodeId || selectedMindNodeId);
+        if (!node) {
+          editingMindNodeId = null;
+          return;
+        }
+        const normalized = String(nextValue || "").trim().replace(/\s+/g, " ").slice(0, 60) || "無題";
+        node.text = normalized;
+        editingMindNodeId = null;
+        scheduleMindMapSave();
+        renderMindMap();
+      }
+
+      function setMindMapNodeTone(tone) {
+        const node = getMindMapNode(selectedMindNodeId);
+        if (!node || node.id === mindMapState.root_id) return;
+        const allowedTones = new Set(["default", "yellow", "pink", "blue", "green"]);
+        node.tone = allowedTones.has(tone) ? tone : "default";
+        mindMapPopoverClosedForNodeId = null;
+        scheduleMindMapSave();
+        renderMindMap();
+      }
+
+      function toggleMindMapReparentMode() {
+        const selectedNode = getMindMapNode(selectedMindNodeId);
+        if (!selectedNode || selectedNode.id === mindMapState.root_id) return;
+        mindMapReparentSourceId = mindMapReparentSourceId === selectedNode.id ? null : selectedNode.id;
+        renderMindMap();
+      }
+
+      function assignMindMapParent(targetParentId) {
+        const sourceId = mindMapReparentSourceId;
+        if (!sourceId) return;
+        const sourceNode = getMindMapNode(sourceId);
+        const targetNode = getMindMapNode(targetParentId);
+        if (!sourceNode || !targetNode) return;
+        const invalidParentIds = new Set([sourceId, ...getMindMapDescendantIds(sourceId)]);
+        if (invalidParentIds.has(targetParentId)) {
+          if (mindMapPopoverHint) {
+            mindMapPopoverHint.textContent = "子ノードや自分自身は親にできません。別のノードを選んでください。";
+          }
+          return;
+        }
+        sourceNode.parent_id = targetParentId;
+        selectedMindNodeId = sourceId;
+        mindMapReparentSourceId = null;
+        mindMapPopoverClosedForNodeId = null;
+        autoLayoutMindMap();
+      }
+
+      function scheduleMindMapSave() {
+        if (!mindMapStage) return;
+        clearTimeout(mindMapSaveTimer);
+        mindMapSaveTimer = setTimeout(async () => {
           try {
-            await fetch("/memo/map/layout", {
+            await fetch("/memo/mind-map/save", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ layout: memoMapLayout }),
+              body: JSON.stringify({ mind_map: mindMapState, file_id: currentMindMapFileId }),
             });
           } catch (error) {
-            // silent fallback
+            // ignore quietly
           }
-        }, 450);
+        }, 350);
       }
 
-      function startMemoMapNodeDrag(event) {
-        if (!memoMapStage) return;
-        const node = event.currentTarget;
-        const nodeKey = node.dataset.nodeKey;
-        if (!nodeKey) return;
-        const stageRect = memoMapStage.getBoundingClientRect();
-        const position = memoMapLayout[nodeKey] || { x: 0.5, y: 0.5 };
-        memoMapDragState = {
-          node,
-          nodeKey,
+      function computeMindMapSubtreeWeight(nodeId) {
+        const children = getMindMapChildren(nodeId);
+        if (!children.length) return 1;
+        return children.reduce((sum, child) => sum + computeMindMapSubtreeWeight(child.id), 0);
+      }
+
+      function autoLayoutMindMap() {
+        const root = getMindMapNode(mindMapState.root_id);
+        if (!root) return;
+        root.x = 0.18;
+        root.y = 0.50;
+
+        const layoutBranch = (parentId, depth, top, bottom) => {
+          const children = getMindMapChildren(parentId);
+          if (!children.length) return;
+          const totalWeight = children.reduce((sum, child) => sum + computeMindMapSubtreeWeight(child.id), 0);
+          let cursor = top;
+          children.forEach((child) => {
+            const weight = computeMindMapSubtreeWeight(child.id);
+            const span = ((bottom - top) * weight) / totalWeight;
+            const childTop = cursor;
+            const childBottom = cursor + span;
+            child.x = Math.min(0.9, 0.18 + depth * 0.22);
+            child.y = Math.max(0.12, Math.min(0.88, (childTop + childBottom) / 2));
+            layoutBranch(child.id, depth + 1, childTop, childBottom);
+            cursor = childBottom;
+          });
+        };
+
+        layoutBranch(root.id, 1, 0.14, 0.86);
+        scheduleMindMapSave();
+        renderMindMap();
+      }
+
+      function addMindMapNode(parentId, text, options = {}) {
+        const parent = getMindMapNode(parentId) || getMindMapNode(mindMapState.root_id);
+        if (!parent) return null;
+        const node = {
+          id: generateMindMapNodeId(),
+          parent_id: parent.id,
+          text: String(text || "新しいノード").trim().slice(0, 60) || "新しいノード",
+          x: Math.min(0.9, parent.x + 0.18),
+          y: Math.max(0.12, Math.min(0.88, parent.y + 0.08)),
+          tone: ["default", "yellow", "pink", "blue", "green"].includes(options.tone) ? options.tone : "default",
+          paper_ref: options.paper_ref && typeof options.paper_ref === "object"
+            ? {
+                pubmed_id: String(options.paper_ref.pubmed_id || "").trim(),
+                title: String(options.paper_ref.title || "").trim().replace(/\s+/g, " ").slice(0, 120),
+              }
+            : null,
+        };
+        mindMapState.nodes.push(node);
+        return node;
+      }
+
+      function addMindMapChild() {
+        const parent = getMindMapNode(selectedMindNodeId) || getMindMapNode(mindMapState.root_id);
+        if (!parent) return;
+        const node = addMindMapNode(parent.id, "新しいノード");
+        if (!node) return;
+        mindMapPopoverClosedForNodeId = null;
+        selectedMindNodeId = node.id;
+        editingMindNodeId = node.id;
+        autoLayoutMindMap();
+      }
+
+      function addMindMapSibling() {
+        const current = getMindMapNode(selectedMindNodeId);
+        if (!current || current.id === mindMapState.root_id) return;
+        const node = addMindMapNode(current.parent_id || mindMapState.root_id, "新しいノード");
+        if (!node) return;
+        mindMapPopoverClosedForNodeId = null;
+        selectedMindNodeId = node.id;
+        editingMindNodeId = node.id;
+        autoLayoutMindMap();
+      }
+
+      function addMindMapSuggestion(label) {
+        const parentId = selectedMindNodeId || mindMapState.root_id;
+        const node = addMindMapNode(parentId, label);
+        if (!node) return;
+        mindMapPopoverClosedForNodeId = null;
+        selectedMindNodeId = node.id;
+        autoLayoutMindMap();
+      }
+
+      function insertMindMapIcfTemplate() {
+        const baseNode = getMindMapNode(selectedMindNodeId) || getMindMapNode(mindMapState.root_id);
+        if (!baseNode) return;
+        const existingLabels = new Set(getMindMapChildren(baseNode.id).map((node) => node.text));
+        const icfNodes = [
+          { text: "健康状態", tone: "default" },
+          { text: "心身機能・構造", tone: "yellow" },
+          { text: "活動", tone: "blue" },
+          { text: "参加", tone: "green" },
+          { text: "環境因子", tone: "pink" },
+          { text: "個人因子", tone: "default" },
+        ];
+        let firstAddedId = null;
+        icfNodes.forEach((item) => {
+          if (existingLabels.has(item.text)) return;
+          const node = addMindMapNode(baseNode.id, item.text, { tone: item.tone });
+          if (!firstAddedId && node) firstAddedId = node.id;
+        });
+        mindMapPopoverClosedForNodeId = null;
+        selectedMindNodeId = firstAddedId || baseNode.id;
+        autoLayoutMindMap();
+      }
+
+      function linkMindMapPaper(pubmedId, title) {
+        const node = getMindMapNode(selectedMindNodeId);
+        if (!node || !pubmedId) return;
+        node.paper_ref = {
+          pubmed_id: String(pubmedId).trim(),
+          title: String(title || pubmedId).trim().replace(/\s+/g, " ").slice(0, 120),
+        };
+        mindMapPopoverClosedForNodeId = null;
+        scheduleMindMapSave();
+        renderMindMap();
+      }
+
+      function unlinkMindMapPaper() {
+        const node = getMindMapNode(selectedMindNodeId);
+        if (!node || !node.paper_ref) return;
+        node.paper_ref = null;
+        mindMapPopoverClosedForNodeId = null;
+        scheduleMindMapSave();
+        renderMindMap();
+      }
+
+      function openLinkedMindMapPaper() {
+        const node = getMindMapNode(selectedMindNodeId);
+        const pubmedId = node?.paper_ref?.pubmed_id;
+        if (!pubmedId) return;
+        window.open(`/paper?id=${encodeURIComponent(pubmedId)}`, "_blank", "noopener");
+      }
+
+      async function createMindMapFile(template = "blank") {
+        const defaultTitle = template === "icf" ? "ICFマップ" : "新しいマップ";
+        const nextTitle = window.prompt("新しいマップ名", defaultTitle);
+        if (nextTitle === null) return;
+        try {
+          const response = await fetch("/memo/mind-map/file/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: nextTitle, template }),
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok || !payload.file?.id) {
+            throw new Error(payload.error || "create_failed");
+          }
+          window.location.href = `/memo?tab=map&map_file_id=${payload.file.id}`;
+        } catch (error) {
+          window.alert("マップを作れませんでした。もう一度お試しください。");
+        }
+      }
+
+      async function renameMindMapFile() {
+        if (!currentMindMapFileId) return;
+        const nextTitle = window.prompt("マップ名を変更", currentMindMapFileTitle || "");
+        if (nextTitle === null) return;
+        try {
+          const response = await fetch(`/memo/mind-map/file/${currentMindMapFileId}/rename`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: nextTitle }),
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) {
+            throw new Error(payload.error || "rename_failed");
+          }
+          window.location.reload();
+        } catch (error) {
+          window.alert("名前を変更できませんでした。");
+        }
+      }
+
+      async function deleteMindMapFile() {
+        if (!currentMindMapFileId) return;
+        const confirmed = window.confirm("このマップを削除しますか？");
+        if (!confirmed) return;
+        try {
+          const response = await fetch(`/memo/mind-map/file/${currentMindMapFileId}/delete`, {
+            method: "POST",
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok || !payload.next_file_id) {
+            throw new Error(payload.error || "delete_failed");
+          }
+          window.location.href = `/memo?tab=map&map_file_id=${payload.next_file_id}`;
+        } catch (error) {
+          window.alert("マップを削除できませんでした。");
+        }
+      }
+
+      function deleteMindMapNode() {
+        const current = getMindMapNode(selectedMindNodeId);
+        if (!current || current.id === mindMapState.root_id) return;
+        const idsToDelete = new Set([current.id, ...getMindMapDescendantIds(current.id)]);
+        mindMapState.nodes = (mindMapState.nodes || []).filter((node) => !idsToDelete.has(node.id));
+        selectedMindNodeId = current.parent_id || mindMapState.root_id;
+        editingMindNodeId = null;
+        if (mindMapReparentSourceId && idsToDelete.has(mindMapReparentSourceId)) {
+          mindMapReparentSourceId = null;
+        }
+        autoLayoutMindMap();
+      }
+
+      function startMindMapDrag(event) {
+        if (!mindMapStage) return;
+        const nodeId = event.currentTarget.dataset.nodeId;
+        const node = getMindMapNode(nodeId);
+        if (!node || node.id === mindMapState.root_id) return;
+        const stageRect = mindMapStage.getBoundingClientRect();
+        mindMapDragState = {
+          nodeId,
           pointerId: event.pointerId,
           stageRect,
           startX: event.clientX,
           startY: event.clientY,
-          originX: position.x,
-          originY: position.y,
+          originX: node.x,
+          originY: node.y,
           moved: false,
         };
-        node.classList.add("is-dragging");
-        node.setPointerCapture?.(event.pointerId);
+        event.currentTarget.classList.add("is-dragging");
+        event.currentTarget.setPointerCapture?.(event.pointerId);
         event.preventDefault();
       }
 
-      function handleMemoMapNodeClick(event) {
-        if (event.currentTarget.dataset.justDragged === "1") {
-          event.currentTarget.dataset.justDragged = "0";
-          event.preventDefault();
-          return;
-        }
-        const href = event.currentTarget.dataset.href;
-        if (href) {
-          window.location.href = href;
-        }
-      }
-
-      function handleMemoMapNodeKeydown(event) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          const href = event.currentTarget.dataset.href;
-          if (href) window.location.href = href;
+      function updateMindMapDrag(event) {
+        if (!mindMapDragState) return;
+        const node = getMindMapNode(mindMapDragState.nodeId);
+        const nodeEl = mindMapNodeElements.get(mindMapDragState.nodeId);
+        if (!node || !nodeEl) return;
+        const dx = (event.clientX - mindMapDragState.startX) / mindMapDragState.stageRect.width;
+        const dy = (event.clientY - mindMapDragState.startY) / mindMapDragState.stageRect.height;
+        node.x = Math.max(0.08, Math.min(0.92, mindMapDragState.originX + dx));
+        node.y = Math.max(0.12, Math.min(0.88, mindMapDragState.originY + dy));
+        nodeEl.style.left = `${node.x * 100}%`;
+        nodeEl.style.top = `${node.y * 100}%`;
+        renderMindMapLines();
+        positionMindMapPopover();
+        if (Math.abs(event.clientX - mindMapDragState.startX) > 4 || Math.abs(event.clientY - mindMapDragState.startY) > 4) {
+          mindMapDragState.moved = true;
         }
       }
 
-      function updateMemoMapDrag(event) {
-        if (!memoMapDragState) return;
-        const { stageRect, originX, originY, startX, startY, nodeKey, node } = memoMapDragState;
-        const dx = (event.clientX - startX) / stageRect.width;
-        const dy = (event.clientY - startY) / stageRect.height;
-        const nextX = Math.max(0.08, Math.min(0.92, originX + dx));
-        const nextY = Math.max(0.12, Math.min(0.9, originY + dy));
-        memoMapLayout[nodeKey] = { x: nextX, y: nextY };
-        placeMemoMapElement(node, memoMapLayout[nodeKey]);
-        renderMemoMapLines(getMemoMapAnchors(), memoMindMapData.quickNodes || [], memoMindMapData.paperNodes || []);
-        if (Math.abs(event.clientX - startX) > 4 || Math.abs(event.clientY - startY) > 4) {
-          memoMapDragState.moved = true;
+      function endMindMapDrag() {
+        if (!mindMapDragState) return;
+        const nodeEl = mindMapNodeElements.get(mindMapDragState.nodeId);
+        if (nodeEl) {
+          nodeEl.classList.remove("is-dragging");
+          if (mindMapDragState.moved) {
+            nodeEl.dataset.justDragged = "1";
+            setTimeout(() => {
+              if (nodeEl) nodeEl.dataset.justDragged = "0";
+            }, 180);
+          }
         }
-      }
-
-      function endMemoMapDrag() {
-        if (!memoMapDragState) return;
-        const { node, moved } = memoMapDragState;
-        node.classList.remove("is-dragging");
-        if (moved) {
-          node.dataset.justDragged = "1";
-          scheduleMemoMapSave();
-          setTimeout(() => {
-            if (node) node.dataset.justDragged = "0";
-          }, 180);
+        if (mindMapDragState.moved) {
+          scheduleMindMapSave();
         }
-        memoMapDragState = null;
+        mindMapDragState = null;
       }
 
-      function resetMemoMindMap() {
-        memoMapLayout = {};
-        renderMemoMindMap();
-        scheduleMemoMapSave();
+      if (mindMapEditorInput) {
+        mindMapEditorInput.addEventListener("focus", () => {
+          const node = getMindMapNode(selectedMindNodeId);
+          if (node) {
+            mindMapEditorInput.value = node.text || "";
+          }
+        });
+        mindMapEditorInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            const node = getMindMapNode(selectedMindNodeId);
+            if (!node) return;
+            node.text = (mindMapEditorInput.value || "").trim().replace(/\s+/g, " ").slice(0, 60) || "無題";
+            scheduleMindMapSave();
+            renderMindMap();
+          }
+        });
+        mindMapEditorInput.addEventListener("blur", () => {
+          const node = getMindMapNode(selectedMindNodeId);
+          if (!node) return;
+          node.text = (mindMapEditorInput.value || "").trim().replace(/\s+/g, " ").slice(0, 60) || "無題";
+          scheduleMindMapSave();
+          renderMindMap();
+        });
       }
 
-      window.resetMemoMindMap = resetMemoMindMap;
+      window.addMindMapChild = addMindMapChild;
+      window.addMindMapSibling = addMindMapSibling;
+      window.deleteMindMapNode = deleteMindMapNode;
+      window.autoLayoutMindMap = autoLayoutMindMap;
+      window.addMindMapSuggestion = addMindMapSuggestion;
+      window.setMindMapNodeTone = setMindMapNodeTone;
+      window.toggleMindMapReparentMode = toggleMindMapReparentMode;
+      window.insertMindMapIcfTemplate = insertMindMapIcfTemplate;
+      window.linkMindMapPaper = linkMindMapPaper;
+      window.unlinkMindMapPaper = unlinkMindMapPaper;
+      window.openLinkedMindMapPaper = openLinkedMindMapPaper;
+      window.createMindMapFile = createMindMapFile;
+      window.renameMindMapFile = renameMindMapFile;
+      window.deleteMindMapFile = deleteMindMapFile;
 
-      document.addEventListener("pointermove", updateMemoMapDrag);
-      document.addEventListener("pointerup", endMemoMapDrag);
-      document.addEventListener("pointercancel", endMemoMapDrag);
-      window.addEventListener("resize", () => {
-        if (memoMapStage) renderMemoMindMap();
+      document.addEventListener("pointermove", updateMindMapDrag);
+      document.addEventListener("pointerup", endMindMapDrag);
+      document.addEventListener("pointercancel", endMindMapDrag);
+      if (mindMapStage) {
+        mindMapStage.addEventListener("click", (event) => {
+          const clickedNode = event.target.closest?.(".memo-map-node");
+          const clickedPopover = event.target.closest?.(".memo-map-popover");
+          const clickedToolbar = event.target.closest?.(".memo-map-stage-toolbar");
+          if (!clickedNode && !clickedPopover && !clickedToolbar && !mindMapPopover.hidden) {
+            closeMindMapPopover(selectedMindNodeId);
+          }
+        });
+      }
+      document.addEventListener("click", (event) => {
+        if (!mindMapStage || !mindMapReparentSourceId) return;
+        const withinMap = event.target.closest?.(".memo-map-stage");
+        if (!withinMap) {
+          mindMapReparentSourceId = null;
+          renderMindMap();
+        }
       });
 
-      if (memoMapStage) {
-        renderMemoMindMap();
+      window.addEventListener("resize", () => {
+        if (mindMapStage) renderMindMap();
+      });
+
+      if (mindMapStage) {
+        mindMapState = normalizeMindMapClient(mindMapState);
+        renderMindMap();
       }
     </script>
   </body>

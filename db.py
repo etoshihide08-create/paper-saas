@@ -5,6 +5,7 @@ import secrets
 import base64
 import json
 from datetime import datetime
+from typing import Any
 
 try:
     from cryptography.fernet import Fernet, InvalidToken
@@ -470,6 +471,31 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS memo_mind_maps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            map_json TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS memo_mind_map_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT DEFAULT '',
+            map_json TEXT DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    conn.commit()
+
     # paper likes (per-user)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS paper_likes (
@@ -590,6 +616,16 @@ def init_db():
     cur.execute("""
         CREATE UNIQUE INDEX IF NOT EXISTS idx_memo_map_layouts_user
         ON memo_map_layouts (user_id)
+    """)
+
+    cur.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_memo_mind_maps_user
+        ON memo_mind_maps (user_id)
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memo_mind_map_files_user_updated
+        ON memo_mind_map_files (user_id, updated_at DESC)
     """)
 
     cur.execute("""
@@ -1834,6 +1870,158 @@ def upsert_user_memo_map_layout(user_id: int, layout: dict):
     )
     conn.commit()
     conn.close()
+
+
+def get_user_memo_mind_map(user_id: int) -> dict:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT map_json FROM memo_mind_maps WHERE user_id = ?",
+        (user_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return {}
+    raw_value = row["map_json"] if isinstance(row, sqlite3.Row) else row[0]
+    try:
+        parsed = json.loads(raw_value or "{}")
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def upsert_user_memo_mind_map(user_id: int, mind_map: dict):
+    normalized_map = mind_map if isinstance(mind_map, dict) else {}
+    payload = json.dumps(normalized_map, ensure_ascii=False)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO memo_mind_maps (user_id, map_json, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+            map_json = excluded.map_json,
+            updated_at = excluded.updated_at
+        """,
+        (user_id, payload, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def list_user_memo_mind_map_files(user_id: int) -> list[dict]:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, user_id, title, map_json, created_at, updated_at
+        FROM memo_mind_map_files
+        WHERE user_id = ?
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (user_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    files = []
+    for row in rows:
+        item = dict(row)
+        try:
+            parsed = json.loads(item.get("map_json") or "{}")
+        except Exception:
+            parsed = {}
+        item["map_json"] = parsed if isinstance(parsed, dict) else {}
+        files.append(item)
+    return files
+
+
+def get_user_memo_mind_map_file(user_id: int, file_id: int) -> dict | None:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, user_id, title, map_json, created_at, updated_at
+        FROM memo_mind_map_files
+        WHERE user_id = ? AND id = ?
+        LIMIT 1
+        """,
+        (user_id, file_id),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    item = dict(row)
+    try:
+        parsed = json.loads(item.get("map_json") or "{}")
+    except Exception:
+        parsed = {}
+    item["map_json"] = parsed if isinstance(parsed, dict) else {}
+    return item
+
+
+def create_user_memo_mind_map_file(user_id: int, title: str, mind_map: dict | None = None) -> int:
+    normalized_map = mind_map if isinstance(mind_map, dict) else {}
+    payload = json.dumps(normalized_map, ensure_ascii=False)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO memo_mind_map_files (user_id, title, map_json, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (user_id, (title or "").strip() or "新しいマップ", payload, now, now),
+    )
+    new_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return int(new_id)
+
+
+def update_user_memo_mind_map_file(user_id: int, file_id: int, *, title: str | None = None, mind_map: dict | None = None) -> bool:
+    updates = []
+    params: list[Any] = []
+    if title is not None:
+        updates.append("title = ?")
+        params.append((title or "").strip() or "新しいマップ")
+    if mind_map is not None:
+        updates.append("map_json = ?")
+        params.append(json.dumps(mind_map if isinstance(mind_map, dict) else {}, ensure_ascii=False))
+    if not updates:
+        return False
+    updates.append("updated_at = ?")
+    params.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    params.extend([user_id, file_id])
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        UPDATE memo_mind_map_files
+        SET {", ".join(updates)}
+        WHERE user_id = ? AND id = ?
+        """,
+        tuple(params),
+    )
+    changed = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return changed
+
+
+def delete_user_memo_mind_map_file(user_id: int, file_id: int) -> bool:
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM memo_mind_map_files WHERE user_id = ? AND id = ?",
+        (user_id, file_id),
+    )
+    deleted = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
 
 
 def set_trial_extend_days(user_id, days):
