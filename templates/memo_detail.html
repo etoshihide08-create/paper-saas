@@ -1045,6 +1045,8 @@
         background: linear-gradient(180deg, rgba(244,247,251,0.1), rgba(244,247,251,0.95) 18%, rgba(244,247,251,0.98));
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
+        transition: bottom 0.1s ease;
+        --sai-bottom: env(safe-area-inset-bottom, 0);
       }
 
       .mobile-toolbar {
@@ -2603,6 +2605,32 @@
         clearTimeout(saveTimer);
         flushSaveForExit();
       });
+
+      // ── キーボード表示時にモバイルツールバーをキーボードの上へ移動 ──
+      (function() {
+        const shell = document.querySelector(".mobile-toolbar-shell");
+        if (!shell) return;
+
+        function adjustToolbar() {
+          if (!window.visualViewport) return;
+          // ビューポート下端 = window高さ - visualViewport高さ - visualViewport.offsetTop
+          const keyboardHeight = Math.max(
+            0,
+            window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop
+          );
+          // safe-area-inset-bottom はキーボードが出ていないときだけ考慮
+          const safeArea = keyboardHeight > 0 ? 0 : parseInt(
+            getComputedStyle(document.documentElement).getPropertyValue("--sai-bottom") || "0"
+          );
+          shell.style.bottom = (keyboardHeight + safeArea) + "px";
+          shell.style.paddingBottom = keyboardHeight > 0 ? "8px" : "";
+        }
+
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", adjustToolbar);
+          window.visualViewport.addEventListener("scroll", adjustToolbar);
+        }
+      })();
     </script>
   </body>
 </html>
