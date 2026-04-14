@@ -127,6 +127,7 @@ from db import (
     get_master_article_marketing_summary,
     create_user_feedback,
     upsert_paper_fulltext_cache,
+    seed_initial_promo_codes,
     MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
@@ -205,6 +206,7 @@ Entrez.email = os.getenv("ENTREZ_EMAIL")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 init_db()
 init_memos_tables()
+seed_initial_promo_codes()
 
 _master_autopost_scheduler_started = False
 _master_autopost_scheduler_lock = threading.Lock()

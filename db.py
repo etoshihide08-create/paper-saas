@@ -3319,3 +3319,34 @@ def create_user_feedback(user_id: int, category: str, message: str, page_context
     )
     conn.commit()
     conn.close()
+
+
+def seed_initial_promo_codes() -> None:
+    """初期プロモコードを投入する（既存コードはスキップ）。
+    アプリ起動時に呼び出すことで本番DBにも自動反映される。
+    """
+    initial_codes = [
+        # (code, plan_to_grant, free_days, grant_lifetime, max_uses, target_email)
+        ("MASTER-ET08",      "pro", 0,  1, 1, "e.toshihide08@gmail.com"),
+        ("LIFETIME1",        "pro", 0,  1, 1, ""),
+        ("LIFETIME-FDBC47",  "pro", 0,  1, 1, ""),
+        ("FREE90X5",         "pro", 90, 0, 5, ""),
+        ("FREE90-A9FDD0",    "pro", 90, 0, 1, ""),
+        ("FREE90-E2C645",    "pro", 90, 0, 1, ""),
+        ("FREE90-24A2DA",    "pro", 90, 0, 1, ""),
+        ("FREE90-351BA9",    "pro", 90, 0, 1, ""),
+        ("FREE90-8764C8",    "pro", 90, 0, 1, ""),
+    ]
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    for code, plan, days, lifetime, max_uses, email in initial_codes:
+        cur.execute(
+            """
+            INSERT OR IGNORE INTO friend_promo_codes
+                (code, plan_to_grant, free_days, grant_lifetime, max_uses, target_email, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
+            """,
+            (code, plan, days, lifetime, max_uses, email),
+        )
+    conn.commit()
+    conn.close()
