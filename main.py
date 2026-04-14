@@ -6,7 +6,9 @@ import base64
 import hashlib
 import threading
 import urllib.request as _urlreq
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import urllib.parse as _urlparse
+import xml.etree.ElementTree as ET
 from typing import Any
 from html import escape
 from html.parser import HTMLParser
@@ -32,6 +34,8 @@ from db import (
     get_public_papers,
     get_saved_paper_by_id,
     get_best_cached_paper,
+    get_paper_fulltext_cache,
+    get_fulltext_available_pubmed_ids,
     get_saved_papers_by_folder,
     get_paper_history,
     create_paper_comment,
@@ -122,6 +126,8 @@ from db import (
     set_user_article_attribution,
     get_master_article_marketing_summary,
     create_user_feedback,
+    upsert_paper_fulltext_cache,
+    MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
 from starlette.middleware.sessions import SessionMiddleware
@@ -2295,12 +2301,20 @@ search_id_cache: dict[str, dict[str, Any]] = {}
 search_summary_cache: dict[tuple[str, ...], dict[str, Any]] = {}
 title_translation_cache: dict[str, dict[str, Any]] = {}
 abstract_summary_cache: dict[str, dict[str, Any]] = {}
+fulltext_license_cache: dict[str, dict[str, Any]] = {}
+fulltext_section_translation_cache: dict[str, dict[str, Any]] = {}
 SEARCH_CACHE_TTL = 1800
 OPENAI_CACHE_TTL = 86400 * 30
+FULLTEXT_LICENSE_CACHE_TTL = 86400 * 30
 SEARCH_RESULTS_PER_PAGE = 25
 SEARCH_PRIORITY_TRANSLATION_COUNT = 12
 SEARCH_BACKGROUND_TRANSLATION_MAX = 20
 DEFAULT_SAVED_FOLDER_LABEL = "あとで見る"
+FULLTEXT_SAFE_LICENSE_URLS = {
+    "CC BY": "https://creativecommons.org/licenses/by/4.0/",
+    "CC BY-SA": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "CC0": "https://creativecommons.org/publicdomain/zero/1.0/",
+}
 AUTH_RATE_LIMITS = {
     "login": {"limit": 8, "window": 600},
     "register": {"limit": 6, "window": 900},
@@ -2938,6 +2952,33 @@ def normalize_paper_clinical_score(paper: dict | None) -> dict | None:
     return paper
 
 
+def attach_fulltext_availability(papers: list[dict] | None) -> list[dict]:
+    if not papers:
+        return papers or []
+
+    pubmed_ids: list[str] = []
+    for paper in papers:
+        pid = str(paper.get("pubmed_id") or paper.get("id") or "").strip()
+        if pid and pid not in pubmed_ids:
+            pubmed_ids.append(pid)
+
+    if not pubmed_ids:
+        for paper in papers:
+            paper["fulltext_available"] = False
+        return papers
+
+    try:
+        available_ids = get_fulltext_available_pubmed_ids(pubmed_ids)
+    except Exception:
+        available_ids = set()
+
+    for paper in papers:
+        pid = str(paper.get("pubmed_id") or paper.get("id") or "").strip()
+        paper["fulltext_available"] = pid in available_ids
+
+    return papers
+
+
 def _paper_display_title(paper: dict) -> str:
     return (
         (paper.get("custom_title") or "").strip()
@@ -2950,7 +2991,7 @@ def _paper_display_title(paper: dict) -> str:
 def _build_recommendation_sections(user_id: int) -> list[dict]:
     user_saved_map = {
         str(p["pubmed_id"]): p
-        for p in get_saved_papers(user_id=user_id, sources=MANUAL_SAVED_SOURCES)
+        for p in get_saved_papers(user_id=user_id, sources=MANUAL_FOLDER_SOURCES)
     }
 
     def decorate_user_state(paper: dict):
@@ -3765,6 +3806,307 @@ abstract:
         return result
 
 
+def _extract_pmcid_from_article(article_record: Any) -> str:
+    article_ids = []
+    try:
+        article_ids = article_record.get("PubmedData", {}).get("ArticleIdList", [])
+    except Exception:
+        article_ids = []
+
+    for article_id in article_ids:
+        value = str(article_id or "").strip()
+        if not value:
+            continue
+        id_type = ""
+        try:
+            id_type = str(getattr(article_id, "attributes", {}).get("IdType", "") or "").strip().lower()
+        except Exception:
+            id_type = ""
+        if id_type == "pmc":
+            return value if value.upper().startswith("PMC") else f"PMC{value}"
+        if value.upper().startswith("PMC"):
+            return value
+    return ""
+
+
+def _normalize_safe_fulltext_license(raw_license: str) -> tuple[str, str] | tuple[str, str]:
+    normalized = (raw_license or "").strip()
+    upper = normalized.upper()
+    if not normalized:
+        return "", ""
+    if "CC0" in upper:
+        return "CC0", FULLTEXT_SAFE_LICENSE_URLS["CC0"]
+    if "BY-SA" in upper and "NC" not in upper and "ND" not in upper:
+        return "CC BY-SA", FULLTEXT_SAFE_LICENSE_URLS["CC BY-SA"]
+    if ("CC BY" in upper or "CC-BY" in upper or upper.endswith("/BY/") or "/BY/" in upper) and "NC" not in upper and "ND" not in upper and "SA" not in upper:
+        return "CC BY", FULLTEXT_SAFE_LICENSE_URLS["CC BY"]
+    return "", ""
+
+
+def _fetch_pmc_oa_metadata(pmcid: str) -> dict[str, Any]:
+    clean_pmcid = (pmcid or "").strip()
+    if not clean_pmcid:
+        return {
+            "pmcid": "",
+            "license_name": "",
+            "license_url": "",
+            "source_url": "",
+            "is_translatable": False,
+        }
+
+    cached = _timed_cache_get(fulltext_license_cache, clean_pmcid, FULLTEXT_LICENSE_CACHE_TTL)
+    if cached is not None:
+        return cached
+
+    result = {
+        "pmcid": clean_pmcid,
+        "license_name": "",
+        "license_url": "",
+        "source_url": f"https://pmc.ncbi.nlm.nih.gov/articles/{clean_pmcid}/",
+        "is_translatable": False,
+    }
+
+    try:
+        oa_url = f"https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id={_urlparse.quote(clean_pmcid)}"
+        with _urlreq.urlopen(oa_url, timeout=12) as response:
+            xml_data = response.read()
+        root = ET.fromstring(xml_data)
+        record = root.find(".//record")
+        if record is not None:
+            raw_license = str(record.attrib.get("license", "") or "").strip()
+            license_name, license_url = _normalize_safe_fulltext_license(raw_license)
+            if license_name:
+                result["license_name"] = license_name
+                result["license_url"] = license_url
+                result["is_translatable"] = True
+    except Exception:
+        pass
+
+    _timed_cache_set(fulltext_license_cache, clean_pmcid, result)
+    return result
+
+
+def _fetch_pmc_fulltext_xml(pmcid: str) -> str:
+    clean_pmcid = (pmcid or "").strip()
+    if not clean_pmcid:
+        return ""
+    candidates = [clean_pmcid]
+    if clean_pmcid.upper().startswith("PMC"):
+        numeric_id = clean_pmcid[3:]
+        if numeric_id:
+            candidates.append(numeric_id)
+    for candidate in candidates:
+        try:
+            handle = Entrez.efetch(db="pmc", id=candidate, rettype="full", retmode="xml")
+            xml_data = handle.read()
+            handle.close()
+            if isinstance(xml_data, bytes):
+                return xml_data.decode("utf-8", errors="ignore")
+            return str(xml_data or "")
+        except Exception:
+            continue
+    return ""
+
+
+def _extract_safe_license_from_pmc_xml(xml_text: str) -> tuple[str, str]:
+    if not (xml_text or "").strip():
+        return "", ""
+
+    # First: parse the XML and check only the <permissions>/<license> elements
+    try:
+        root = ET.fromstring(xml_text)
+        license_texts: list[str] = []
+        for elem in root.iter():
+            tag = (elem.tag or "").split("}")[-1].lower()
+            if tag in ("license", "license-p", "license_ref", "ali:license_ref"):
+                text = " ".join((elem.text or "").split()).upper()
+                if text:
+                    license_texts.append(text)
+                for attrib_val in elem.attrib.values():
+                    v = attrib_val.upper()
+                    if "CREATIVECOMMONS" in v or "CC" in v:
+                        license_texts.append(v)
+        # Also check href/xlink:href attributes on license elements
+        for elem in root.iter():
+            tag = (elem.tag or "").split("}")[-1].lower()
+            if tag == "license":
+                for k, v in elem.attrib.items():
+                    if "href" in k.lower():
+                        license_texts.append(v.upper())
+        combined = " ".join(license_texts)
+        if combined:
+            if "CC0" in combined or "ZERO" in combined:
+                return "CC0", FULLTEXT_SAFE_LICENSE_URLS["CC0"]
+            if "BY-SA" in combined and "NC" not in combined and "ND" not in combined:
+                return "CC BY-SA", FULLTEXT_SAFE_LICENSE_URLS["CC BY-SA"]
+            if ("CC BY" in combined or "CC-BY" in combined or "/BY/" in combined) and "NC" not in combined and "ND" not in combined and "SA" not in combined:
+                return "CC BY", FULLTEXT_SAFE_LICENSE_URLS["CC BY"]
+    except Exception:
+        pass
+
+    return "", ""
+
+
+def _flatten_xml_text(element: ET.Element | None) -> str:
+    if element is None:
+        return ""
+    pieces = []
+    for part in element.itertext():
+        clean = " ".join(str(part or "").split()).strip()
+        if clean:
+            pieces.append(clean)
+    return "\n\n".join(pieces)
+
+
+def _extract_fulltext_sections_from_pmc_xml(xml_text: str) -> list[dict[str, str]]:
+    if not (xml_text or "").strip():
+        return []
+    try:
+        root = ET.fromstring(xml_text)
+    except Exception:
+        return []
+
+    body = root.find(".//body")
+    if body is None:
+        return []
+
+    sections: list[dict[str, str]] = []
+    top_level_sections = body.findall("./sec")
+    for index, sec in enumerate(top_level_sections, start=1):
+        title = _flatten_xml_text(sec.find("./title")) or f"Section {index}"
+        paragraphs = []
+        for paragraph in sec.findall(".//p"):
+            text = _flatten_xml_text(paragraph)
+            if text:
+                paragraphs.append(text)
+        section_text = "\n\n".join(paragraphs).strip()
+        if not section_text:
+            section_text = _flatten_xml_text(sec)
+        section_text = section_text.strip()
+        if not section_text:
+            continue
+        sections.append(
+            {
+                "title": title,
+                "text": section_text[:12000],
+            }
+        )
+
+    if sections:
+        return sections[:8]
+
+    fallback_text = _flatten_xml_text(body).strip()
+    if not fallback_text:
+        return []
+    return [{"title": "Full text", "text": fallback_text[:12000]}]
+
+
+def _chunk_text_for_translation(text: str, max_chars: int = 2200) -> list[str]:
+    normalized = (text or "").strip()
+    if not normalized:
+        return []
+
+    paragraphs = [chunk.strip() for chunk in normalized.split("\n\n") if chunk.strip()]
+    chunks: list[str] = []
+    current = ""
+    for paragraph in paragraphs:
+        candidate = f"{current}\n\n{paragraph}".strip() if current else paragraph
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            chunks.append(current)
+        if len(paragraph) <= max_chars:
+            current = paragraph
+            continue
+        start = 0
+        while start < len(paragraph):
+            piece = paragraph[start:start + max_chars]
+            chunks.append(piece)
+            start += max_chars
+        current = ""
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _translate_fulltext_section_to_japanese(title: str, text: str) -> dict[str, str]:
+    normalized_title = " ".join((title or "").split()).strip() or "Section"
+    normalized_text = (text or "").strip()
+    if not normalized_text:
+        return {"title": normalized_title, "title_jp": normalized_title, "text_jp": ""}
+
+    cache_key = hashlib.sha256(f"{normalized_title}\n{normalized_text}".encode("utf-8")).hexdigest()
+    cached = _timed_cache_get(fulltext_section_translation_cache, cache_key, OPENAI_CACHE_TTL)
+    if cached is not None:
+        return cached
+
+    translated_chunks: list[str] = []
+    for chunk in _chunk_text_for_translation(normalized_text):
+        try:
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=f"""
+次の医学論文の本文セクションを、日本の医療職が読みやすい自然な日本語に翻訳してください。
+
+条件:
+- 本文の意味を変えない
+- 断定や誇張を足さない
+- 箇条書きに勝手に変えない
+- 出力は翻訳本文だけ
+
+セクション:
+{normalized_title}
+
+本文:
+{chunk}
+"""
+            )
+            translated_chunks.append((response.output_text or "").strip() or chunk)
+        except Exception:
+            translated_chunks.append(chunk)
+
+    section_title_map = {
+        "abstract": "抄録",
+        "introduction": "背景",
+        "background": "背景",
+        "methods": "方法",
+        "materials and methods": "方法",
+        "results": "結果",
+        "discussion": "考察",
+        "conclusion": "結論",
+        "conclusions": "結論",
+        "limitations": "限界",
+    }
+    title_jp = section_title_map.get(normalized_title.lower(), normalized_title)
+
+    result = {
+        "title": normalized_title,
+        "title_jp": title_jp,
+        "text_jp": "\n\n".join(chunk for chunk in translated_chunks if chunk).strip(),
+    }
+    _timed_cache_set(fulltext_section_translation_cache, cache_key, result)
+    return result
+
+
+def _translate_fulltext_sections_to_japanese(sections: list[dict[str, str]]) -> list[dict[str, str]]:
+    target = sections[:8]
+    results: list[dict[str, str] | None] = [None] * len(target)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {
+            executor.submit(
+                _translate_fulltext_section_to_japanese,
+                s.get("title") or "",
+                s.get("text") or "",
+            ): i
+            for i, s in enumerate(target)
+        }
+        for future in as_completed(futures):
+            results[futures[future]] = future.result()
+    translated_sections = [r for r in results if r is not None]
+    return translated_sections
+
+
 @app.get("/")
 def root(request: Request):
 
@@ -3828,7 +4170,7 @@ def root(request: Request):
         try:
             manual_saved_map = {
                 str(p["pubmed_id"]): p
-                for p in get_saved_papers(user_id=current_user_id, sources=MANUAL_SAVED_SOURCES)
+                for p in get_saved_papers(user_id=current_user_id, sources=MANUAL_FOLDER_SOURCES)
             }
             seen_folders = {DEFAULT_SAVED_FOLDER_LABEL}
             for folder_name in get_folder_name_suggestions(user_id=current_user_id):
@@ -3854,6 +4196,10 @@ def root(request: Request):
         comment_counts = get_paper_comment_counts(ranking_pmids)
     except Exception:
         comment_counts = {}
+    try:
+        fulltext_available_ids = get_fulltext_available_pubmed_ids(ranking_pmids)
+    except Exception:
+        fulltext_available_ids = set()
 
     def decorate_home_papers(paper_list: list[dict]) -> list[dict]:
         decorated: list[dict] = []
@@ -3870,6 +4216,7 @@ def root(request: Request):
             item["liked"] = get_paper_liked(pid, current_user_id) if pid and current_user_id else False
             item["comment_count"] = int(comment_counts.get(pid, 0))
             item["likes"] = int((saved.get("likes") if saved else item.get("likes")) or 0)
+            item["fulltext_available"] = pid in fulltext_available_ids
             decorated.append(item)
         return decorated
 
@@ -4722,7 +5069,7 @@ def saved_export(request: Request):
     plan = get_user_plan(user)
     if plan not in ("pro", "expert"):
         return RedirectResponse("/plans?error=export_requires_pro", status_code=303)
-    papers = get_saved_papers(current_user["id"], sources=MANUAL_SAVED_SOURCES)
+    papers = get_saved_papers(current_user["id"], sources=MANUAL_FOLDER_SOURCES)
     return templates.TemplateResponse("saved_export_print.html", {
         "request": request,
         "papers": papers,
@@ -4788,7 +5135,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     manual_saved_papers = get_saved_papers_by_pubmed_ids(
         page_id_list,
         current_user["id"] if current_user else None,
-        sources=MANUAL_SAVED_SOURCES,
+        sources=MANUAL_FOLDER_SOURCES,
     )
     saved_map = {str(p["pubmed_id"]): p for p in saved_papers}
     manual_saved_map = {str(p["pubmed_id"]): p for p in manual_saved_papers}
@@ -4909,6 +5256,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
     papers_map = {str(p["pubmed_id"]): p for p in papers}
     papers = [papers_map[str(pmid)] for pmid in page_id_list if str(pmid) in papers_map]
     papers = rerank_search_papers(papers, keyword, converted_keyword)
+    papers = attach_fulltext_availability(papers)
 
     untranslated_items = [
         (str(paper["pubmed_id"]), str(paper.get("title") or ""))
@@ -5085,6 +5433,7 @@ def paper(
     id: str,
     translate: int = 0,
     summarize: int = 0,
+    fulltext: int = 0,
     save_error: str = ""
 ):
     current_user = get_current_user(request)
@@ -5105,6 +5454,7 @@ def paper(
 
     article = records["PubmedArticle"][0]
     data = article["MedlineCitation"]["Article"]
+    pmcid = _extract_pmcid_from_article(article)
 
     title = str(data.get("ArticleTitle", ""))
 
@@ -5151,9 +5501,17 @@ def paper(
     summary_jp = ""
     clinical_score = ""
     clinical_reason = ""
+    fulltext_license_name = ""
+    fulltext_license_url = ""
+    fulltext_source_url = ""
+    fulltext_available = False
+    fulltext_sections_jp: list[dict[str, str]] = []
+    fulltext_sections: list[dict[str, str]] = []
+    fulltext_notice = ""
 
     saved_paper = get_saved_paper_by_id(id, user_id=current_user_id)
     shared_cached_paper = get_best_cached_paper(id)
+    fulltext_cached = get_paper_fulltext_cache(id)
     raw_cached_score = ""
 
     for cached_source in [saved_paper, shared_cached_paper]:
@@ -5173,6 +5531,55 @@ def paper(
     if raw_cached_score:
         clinical_score = normalize_clinical_score(raw_cached_score)
 
+    if fulltext_cached:
+        fulltext_license_name = fulltext_cached.get("license_name") or ""
+        fulltext_license_url = fulltext_cached.get("license_url") or ""
+        fulltext_source_url = fulltext_cached.get("source_url") or ""
+        fulltext_available = bool(fulltext_cached.get("is_translatable"))
+        fulltext_sections = fulltext_cached.get("sections_json") or []
+        fulltext_sections_jp = fulltext_cached.get("sections_jp_json") or []
+        if not pmcid:
+            pmcid = fulltext_cached.get("pmcid") or ""
+
+    # A previous false cache can come from a temporary metadata fetch miss.
+    # Re-check safe-license eligibility on detail pages unless we already have
+    # a confirmed translatable cache for the same PMCID.
+    should_refresh_fulltext_meta = bool(
+        pmcid and (
+            not fulltext_cached
+            or (fulltext_cached.get("pmcid") or "") != pmcid
+            or not bool(fulltext_cached.get("is_translatable"))
+        )
+    )
+
+    fulltext_xml = ""
+
+    if should_refresh_fulltext_meta:
+        fulltext_meta = _fetch_pmc_oa_metadata(pmcid)
+        fulltext_license_name = fulltext_meta.get("license_name") or fulltext_license_name
+        fulltext_license_url = fulltext_meta.get("license_url") or fulltext_license_url
+        fulltext_source_url = fulltext_meta.get("source_url") or fulltext_source_url or f"https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/"
+        fulltext_available = bool(fulltext_meta.get("is_translatable"))
+
+        if pmcid and not fulltext_available:
+            fulltext_xml = _fetch_pmc_fulltext_xml(pmcid)
+            xml_license_name, xml_license_url = _extract_safe_license_from_pmc_xml(fulltext_xml)
+            if xml_license_name:
+                fulltext_license_name = xml_license_name
+                fulltext_license_url = xml_license_url
+                fulltext_available = True
+
+        upsert_paper_fulltext_cache(
+            pubmed_id=id,
+            pmcid=pmcid,
+            license_name=fulltext_license_name,
+            license_url=fulltext_license_url,
+            source_url=fulltext_source_url,
+            is_translatable=fulltext_available,
+            sections=fulltext_sections,
+            sections_jp=fulltext_sections_jp,
+        )
+
     if not jp_title:
         jp_title = translate_title_to_japanese(title)
 
@@ -5185,6 +5592,28 @@ def paper(
         clinical_reason = summary_result["reason"]
 
         clinical_score = normalize_clinical_score(summary_result.get("score"), default="3.0")
+
+    if fulltext == 1 and fulltext_available and not fulltext_sections_jp:
+        if not fulltext_sections and pmcid:
+            if not fulltext_xml:
+                fulltext_xml = _fetch_pmc_fulltext_xml(pmcid)
+            fulltext_sections = _extract_fulltext_sections_from_pmc_xml(fulltext_xml)
+        if fulltext_sections:
+            fulltext_sections_jp = _translate_fulltext_sections_to_japanese(fulltext_sections)
+            upsert_paper_fulltext_cache(
+                pubmed_id=id,
+                pmcid=pmcid,
+                license_name=fulltext_license_name,
+                license_url=fulltext_license_url,
+                source_url=fulltext_source_url,
+                is_translatable=fulltext_available,
+                sections=fulltext_sections,
+                sections_jp=fulltext_sections_jp,
+            )
+        else:
+            fulltext_notice = "この論文は公開ライセンス条件を満たしていますが、本文構造を取得できませんでした。"
+    elif fulltext == 1 and not fulltext_available:
+        fulltext_notice = "本文翻訳は、公開ライセンス確認済み論文のみ対応しています。"
 
     manual_summary_requested = current_user_id is not None and summary_action_requested
     if manual_summary_requested:
@@ -5312,6 +5741,13 @@ def paper(
         "summary_jp": summary_jp,
         "clinical_score": clinical_score,
         "clinical_reason": clinical_reason,
+        "pmcid": pmcid,
+        "fulltext_available": fulltext_available,
+        "fulltext_license_name": fulltext_license_name,
+        "fulltext_license_url": fulltext_license_url,
+        "fulltext_source_url": fulltext_source_url or (f"https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/" if pmcid else ""),
+        "fulltext_sections_jp": fulltext_sections_jp,
+        "fulltext_notice": fulltext_notice,
         "likes": int(refreshed_saved.get("likes") or 0) if refreshed_saved else 0,
         "liked": get_paper_liked(id, current_user_id) if current_user_id else False,
         "is_favorite": int(refreshed_saved.get("is_favorite") or 0) if refreshed_saved else 0,
@@ -5345,6 +5781,51 @@ def paper(
         "upgrade_nudge": paper_upgrade_nudge,
     }
 )
+
+
+@app.get("/api/paper/fulltext")
+def api_paper_fulltext(request: Request, id: str):
+    """非同期で本文翻訳を取得・実行するエンドポイント。"""
+    cached = get_paper_fulltext_cache(id)
+    if cached and cached.get("sections_jp_json"):
+        return JSONResponse({
+            "status": "ok",
+            "license_name": cached.get("license_name") or "",
+            "license_url": cached.get("license_url") or "",
+            "source_url": cached.get("source_url") or "",
+            "sections": cached.get("sections_jp_json") or [],
+        })
+
+    if not cached or not cached.get("is_translatable"):
+        return JSONResponse({"status": "unavailable"}, status_code=200)
+
+    pmcid = cached.get("pmcid") or ""
+    if not pmcid:
+        return JSONResponse({"status": "unavailable"}, status_code=200)
+
+    fulltext_xml = _fetch_pmc_fulltext_xml(pmcid)
+    sections = _extract_fulltext_sections_from_pmc_xml(fulltext_xml)
+    if not sections:
+        return JSONResponse({"status": "error", "message": "本文構造を取得できませんでした。"}, status_code=200)
+
+    sections_jp = _translate_fulltext_sections_to_japanese(sections)
+    upsert_paper_fulltext_cache(
+        pubmed_id=id,
+        pmcid=pmcid,
+        license_name=cached.get("license_name") or "",
+        license_url=cached.get("license_url") or "",
+        source_url=cached.get("source_url") or "",
+        is_translatable=True,
+        sections=sections,
+        sections_jp=sections_jp,
+    )
+    return JSONResponse({
+        "status": "ok",
+        "license_name": cached.get("license_name") or "",
+        "license_url": cached.get("license_url") or "",
+        "source_url": cached.get("source_url") or "",
+        "sections": sections_jp,
+    })
 
 
 @app.get("/paper/{pubmed_id}/comments")
@@ -5492,7 +5973,7 @@ def saved(request: Request):
     papers = (
         get_public_papers()
         if is_guest
-        else get_saved_papers(user_id=current_user_id, sources=MANUAL_SAVED_SOURCES)
+        else get_saved_papers(user_id=current_user_id, sources=MANUAL_FOLDER_SOURCES)
     )
     history_rows = [] if is_guest else get_paper_history(current_user_id)
 
@@ -5744,7 +6225,7 @@ def saved_folder(request: Request, folder_name: str, sort: str = "saved"):
     papers = get_saved_papers_by_folder(
         display_folder_name,
         user_id=current_user_id,
-        sources=MANUAL_SAVED_SOURCES,
+        sources=MANUAL_FOLDER_SOURCES,
     )
 
     for paper in papers:
@@ -6030,6 +6511,7 @@ def ranking_list(request: Request, sort: str = "likes"):
         page_description = "SaaS内で保存・要約された論文の中から読めるランキング一覧です。"
 
     papers = [normalize_paper_clinical_score(dict(paper)) for paper in papers]
+    papers = attach_fulltext_availability(papers)
 
     return templates.TemplateResponse(
         "public_list.html",
@@ -6072,6 +6554,7 @@ def public_list(request: Request, sort: str = "likes"):
         )
 
     papers = [normalize_paper_clinical_score(dict(paper)) for paper in papers]
+    papers = attach_fulltext_availability(papers)
 
     return templates.TemplateResponse(
         "public_list.html",

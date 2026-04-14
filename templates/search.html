@@ -410,14 +410,36 @@
         border: 1px solid rgba(217, 119, 6, 0.12);
       }
 
+      .paper-status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0 0 12px;
+      }
+
       .score-line span {
         color: #374151;
         font-weight: 700;
       }
 
+      .fulltext-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
       .saved-badge {
-        display: inline-block;
-        margin: 0 0 12px 8px;
+        display: inline-flex;
+        align-items: center;
         background: var(--green-bg);
         color: var(--green-text);
         font-size: 12px;
@@ -920,12 +942,20 @@
           {% endif %}
 
           <!-- prettier-ignore -->
-          {% if paper.clinical_score %}
-          <div class="score-line">
-            ⭐ {{ paper.clinical_score }} <span>臨床参考度</span>
+          {% if paper.clinical_score or paper.fulltext_available or paper.is_saved %}
+          <div class="paper-status-row">
+            {% if paper.clinical_score %}
+            <div class="score-line">
+              ⭐ {{ paper.clinical_score }} <span>臨床参考度</span>
+            </div>
+            {% endif %}
+            {% if paper.fulltext_available %}
+            <div class="fulltext-badge">本文翻訳対応</div>
+            {% endif %}
+            {% if paper.is_saved %}
+            <div class="saved-badge">保存済み要約あり</div>
+            {% endif %}
           </div>
-          {% endif %} {% if paper.is_saved %}
-          <div class="saved-badge">保存済み要約あり</div>
           {% endif %} {% if paper.summary_jp %}
           <details class="summary-toggle js-summary-toggle">
             <summary>▶ 要約を見る</summary>
@@ -971,9 +1001,10 @@
             >
 
             {% if paper.authors %}
-            <span class="meta-item"
-              ><strong>著者:</strong> {{ paper.authors }}</span
-            >
+            <span class="meta-item"><strong>著者:</strong>
+              {% set author_list = paper.authors.split(', ') %}
+              {% if author_list|length > 3 %}{{ author_list[:3] | join(', ') }} 他{{ author_list|length - 3 }}名{% else %}{{ paper.authors }}{% endif %}
+            </span>
             {% endif %} {% if paper.journal %}
             <span class="meta-item"
               ><strong>雑誌:</strong> {{ paper.journal }}</span

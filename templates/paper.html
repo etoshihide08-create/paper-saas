@@ -507,6 +507,21 @@
         box-shadow: 0 8px 18px rgba(99, 102, 241, 0.2);
       }
 
+      .outline-btn {
+        background: #fff;
+        color: var(--blue);
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+      }
+
+      .action-request-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+      }
+
       .save-btn {
         background: var(--green);
         color: white;
@@ -1043,6 +1058,53 @@
         letter-spacing: -0.01em;
       }
 
+      .section-subtitle {
+        margin: -4px 0 12px;
+        font-size: 12px;
+        color: var(--subtext);
+        line-height: 1.7;
+      }
+
+      .fulltext-license-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+
+      .fulltext-section {
+        border-top: 1px solid rgba(229, 231, 235, 0.9);
+        padding-top: 14px;
+        margin-top: 14px;
+      }
+
+      .fulltext-section:first-of-type {
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+      }
+
+      .fulltext-section-title {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .fulltext-section-body {
+        font-size: 14px;
+        line-height: 1.9;
+        color: #374151;
+        white-space: pre-wrap;
+      }
+
       .summary-box {
         background: linear-gradient(180deg, #f9fbff 0%, #f7faff 100%);
         border: 1px solid #dbeafe;
@@ -1540,18 +1602,26 @@
         <div class="alert-box">{{ save_error_message }}</div>
         {% endif %}
 
-        {% if paper.summary_jp %}
-        <div class="status-chip">✓ 要約済み</div>
-        {% else %}
-        <div style="margin-top: 14px;">
+        <div class="action-request-row">
+          {% if paper.summary_jp %}
+          <div class="status-chip">✓ 要約済み</div>
+          {% else %}
           <form action="/paper" method="get" onsubmit="showSummaryLoading(this)">
             <input type="hidden" name="id" value="{{ paper.id }}" />
             <input type="hidden" name="translate" value="{% if paper.jp %}1{% else %}0{% endif %}" />
             <input type="hidden" name="summarize" value="1" />
             <button class="btn summary-btn" type="submit">要約する</button>
           </form>
+          {% endif %}
+
+          {% if paper.fulltext_available %}
+          {% if paper.fulltext_sections_jp %}
+          <div class="status-chip">✓ 本文翻訳済み</div>
+          {% else %}
+          <button class="btn outline-btn" id="fulltext-btn" onclick="loadFulltext('{{ paper.id }}')">本文翻訳</button>
+          {% endif %}
+          {% endif %}
         </div>
-        {% endif %}
 
         <div class="memo-cta-row">
           <div class="memo-cta-copy">気づきや臨床での使いどころは、論文メモに残してあとで見返せます。</div>
@@ -1563,6 +1633,10 @@
             <button type="submit" class="memo-cta-btn">論文メモを書く</button>
           </form>
         </div>
+
+        {% if paper.fulltext_notice %}
+        <div class="helper-text">{{ paper.fulltext_notice }}</div>
+        {% endif %}
       </div>
 
       {% if upgrade_nudge %}
@@ -1585,6 +1659,33 @@
         </div>
       </div>
       {% endif %}
+
+      <!-- 本文翻訳エリア（JS非同期ロード / サーバーキャッシュ済みの場合は即時表示） -->
+      <div id="fulltext-card" class="card" {% if not paper.fulltext_sections_jp %}style="display:none"{% endif %}>
+        <h2 class="section-title">本文翻訳</h2>
+        <div class="section-subtitle">公開ライセンスが確認できた論文のみ、日本語で表示しています。</div>
+        <div id="fulltext-license-area">
+          {% if paper.fulltext_license_name %}
+          <div class="fulltext-license-chip">
+            📄 {{ paper.fulltext_license_name }}
+            {% if paper.fulltext_license_url %}
+            <a href="{{ paper.fulltext_license_url }}" target="_blank" rel="noopener noreferrer" style="color:inherit;">ライセンス</a>
+            {% endif %}
+            {% if paper.fulltext_source_url %}
+            <a href="{{ paper.fulltext_source_url }}" target="_blank" rel="noopener noreferrer" style="color:inherit;">原文</a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        <div id="fulltext-sections">
+          {% for section in paper.fulltext_sections_jp %}
+          <div class="fulltext-section">
+            <h3 class="fulltext-section-title">{{ section.title_jp or section.title }}</h3>
+            <div class="fulltext-section-body">{{ section.text_jp }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
 
       <div class="card">
         <h2 class="section-title">論文情報</h2>
@@ -2090,6 +2191,56 @@
         }
 
         window.location.href = "/";
+      }
+
+      async function loadFulltext(paperId) {
+        const btn = document.getElementById("fulltext-btn");
+        if (btn) {
+          btn.textContent = "翻訳中...";
+          btn.disabled = true;
+          btn.style.opacity = "0.7";
+          btn.style.cursor = "not-allowed";
+        }
+        try {
+          const res = await fetch(`/api/paper/fulltext?id=${encodeURIComponent(paperId)}`);
+          const data = await res.json();
+          if (data.status === "ok" && data.sections && data.sections.length > 0) {
+            // ライセンスチップ
+            const licenseArea = document.getElementById("fulltext-license-area");
+            if (licenseArea && data.license_name) {
+              licenseArea.innerHTML = `<div class="fulltext-license-chip">📄 ${data.license_name}${data.license_url ? ` <a href="${data.license_url}" target="_blank" rel="noopener noreferrer" style="color:inherit;">ライセンス</a>` : ""}${data.source_url ? ` <a href="${data.source_url}" target="_blank" rel="noopener noreferrer" style="color:inherit;">原文</a>` : ""}</div>`;
+            }
+            // セクション表示
+            const sectionsEl = document.getElementById("fulltext-sections");
+            if (sectionsEl) {
+              sectionsEl.innerHTML = data.sections.map(s =>
+                `<div class="fulltext-section"><h3 class="fulltext-section-title">${s.title_jp || s.title || ""}</h3><div class="fulltext-section-body">${s.text_jp || ""}</div></div>`
+              ).join("");
+            }
+            // カード表示 & ボタンをステータスに変更
+            const card = document.getElementById("fulltext-card");
+            if (card) card.style.display = "";
+            if (btn) {
+              btn.replaceWith(Object.assign(document.createElement("div"), { className: "status-chip", textContent: "✓ 本文翻訳済み" }));
+            }
+            card?.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            if (btn) {
+              btn.textContent = "本文翻訳";
+              btn.disabled = false;
+              btn.style.opacity = "";
+              btn.style.cursor = "";
+            }
+            alert(data.message || "本文翻訳は、公開ライセンス確認済み論文のみ対応しています。");
+          }
+        } catch {
+          if (btn) {
+            btn.textContent = "本文翻訳";
+            btn.disabled = false;
+            btn.style.opacity = "";
+            btn.style.cursor = "";
+          }
+        }
       }
 
       function showSummaryLoading(form) {

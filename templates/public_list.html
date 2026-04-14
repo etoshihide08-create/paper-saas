@@ -255,6 +255,27 @@ body {
     color: #b45309;
 }
 
+.paper-chip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.paper-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,0.12);
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+}
+
 .meta {
     margin-top: 12px;
     color: #666;
@@ -339,6 +360,12 @@ body {
                         {{ paper.title }}
                     </a>
                 </div>
+
+                {% if paper.fulltext_available %}
+                <div class="paper-chip-row">
+                    <div class="paper-chip">本文翻訳対応</div>
+                </div>
+                {% endif %}
 
                 <div class="metrics">
                     <div class="likes">👍 {{ paper.likes or 0 }}</div>

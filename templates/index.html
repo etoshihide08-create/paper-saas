@@ -836,6 +836,12 @@
         font-weight: 700;
       }
 
+      .ranking-clinical-chip.is-fulltext {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.12);
+        color: #1d4ed8;
+      }
+
       .ranking-social-row {
         display: flex;
         align-items: center;
@@ -2127,6 +2133,9 @@
               {% if paper.clinical_score %}
               <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
               {% endif %}
+              {% if paper.fulltext_available %}
+              <div class="ranking-clinical-chip is-fulltext">本文翻訳対応</div>
+              {% endif %}
               <div class="ranking-social-row">
                 <button type="button"
                   class="ranking-social-btn comment"
@@ -2256,6 +2265,9 @@
               {% if paper.clinical_score %}
               <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
               {% endif %}
+              {% if paper.fulltext_available %}
+              <div class="ranking-clinical-chip is-fulltext">本文翻訳対応</div>
+              {% endif %}
               <div class="ranking-social-row">
                 <button type="button"
                   class="ranking-social-btn comment"
@@ -2382,6 +2394,9 @@
               <div class="ranking-title-ja">{{ paper.jp_title or paper.title }}</div>
               {% if paper.clinical_score %}
               <div class="ranking-clinical-chip">参考度 {{ "%.1f"|format((paper.clinical_score|float)) }}</div>
+              {% endif %}
+              {% if paper.fulltext_available %}
+              <div class="ranking-clinical-chip is-fulltext">本文翻訳対応</div>
               {% endif %}
               <div class="ranking-social-row">
                 <button type="button"
@@ -2925,6 +2940,18 @@
 
       // ── Search Tag Picker ──
       const SEARCH_TAGS = {
+        "豆知識":         {
+          "睡眠":       ["睡眠不足", "睡眠の質", "昼寝", "中途覚醒", "朝風呂", "夜スマホ", "入眠", "寝だめ"],
+          "疲労回復":   ["休養", "入浴", "ストレッチ", "回復食", "マッサージ", "疲労感", "睡眠回復", "倦怠感"],
+          "ダイエット": ["減量", "体脂肪", "食事管理", "有酸素運動", "リバウンド", "BMI", "生活習慣", "体重管理"],
+          "筋トレ":     ["運動習慣", "筋力トレーニング", "自重トレ", "高齢者筋トレ", "筋肉痛", "負荷設定", "回数設定", "休息"],
+          "たんぱく質": ["たんぱく質", "プロテイン", "摂取量", "摂取タイミング", "高齢者栄養", "食事摂取", "腎機能", "筋肉量"],
+          "水分補給":   ["脱水", "水分補給", "スポーツドリンク", "コーヒー", "入浴前後", "運動時", "高齢者脱水", "熱中症"],
+          "姿勢":       ["姿勢", "猫背", "座位姿勢", "立位姿勢", "スマホ首", "デスクワーク", "足を組む", "姿勢改善"],
+          "腰痛セルフケア": ["腰痛", "温熱", "冷却", "コルセット", "腰痛体操", "ストレッチ", "安静", "受診目安"],
+          "転倒予防":   ["転倒予防", "バランス", "つまずき", "杖", "靴", "住環境", "夜間トイレ", "下肢筋力"],
+          "フレイル予防": ["フレイル", "サルコペニア", "歩行速度", "食欲低下", "社会参加", "外出", "低栄養", "介護予防"],
+        },
         "整形":           {
           "上肢":     ["肩関節周囲炎（五十肩）", "腱板損傷", "肩峰下インピンジメント症候群", "反復性肩関節脱臼", "肘関節拘縮", "手根管症候群", "手指屈筋腱損傷", "CRPS", "スプリント療法"],
           "下肢":     ["変形性膝関節症", "人工膝関節術後", "変形性股関節症", "人工股関節術後", "足関節不安定性", "アキレス腱断裂", "膝蓋大腿関節症"],

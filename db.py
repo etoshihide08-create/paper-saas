@@ -193,6 +193,22 @@ def init_db():
     """)
     conn.commit()
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS paper_fulltext_cache (
+            pubmed_id TEXT PRIMARY KEY,
+            pmcid TEXT DEFAULT '',
+            license_name TEXT DEFAULT '',
+            license_url TEXT DEFAULT '',
+            source_url TEXT DEFAULT '',
+            is_translatable INTEGER DEFAULT 0,
+            sections_json TEXT DEFAULT '',
+            sections_jp_json TEXT DEFAULT '',
+            checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            translated_at TEXT DEFAULT ''
+        )
+    """)
+    conn.commit()
+
     # saved_papers migrations
 
     for sql in [
@@ -260,6 +276,7 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_paper_comments_pubmed_created ON paper_comments(pubmed_id, created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_paper_comments_user_created ON paper_comments(user_id, created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_user_feedback_user_created ON user_feedback(user_id, created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_fulltext_pmcid ON paper_fulltext_cache(pmcid)",
     ]:
         cur.execute(sql)
     conn.commit()
@@ -648,6 +665,7 @@ def init_db():
 
 
 MANUAL_SAVED_SOURCES = ("manual_save", "manual_summary")
+MANUAL_FOLDER_SOURCES = ("manual_save",)
 
 
 def _normalize_saved_sources(sources):
@@ -979,6 +997,126 @@ def get_best_cached_paper(pubmed_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def get_paper_fulltext_cache(pubmed_id: str) -> dict | None:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM paper_fulltext_cache
+        WHERE pubmed_id = ?
+        LIMIT 1
+        """,
+        (pubmed_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+
+    item = dict(row)
+    for key in ("sections_json", "sections_jp_json"):
+        raw_value = item.get(key) or ""
+        if not raw_value:
+            item[key] = []
+            continue
+        try:
+            item[key] = json.loads(raw_value)
+        except Exception:
+            item[key] = []
+    item["is_translatable"] = bool(int(item.get("is_translatable") or 0))
+    return item
+
+
+def get_fulltext_available_pubmed_ids(pubmed_ids: list[str] | tuple[str, ...]) -> set[str]:
+    normalized_ids = [
+        str(pubmed_id).strip()
+        for pubmed_id in (pubmed_ids or [])
+        if str(pubmed_id).strip()
+    ]
+    if not normalized_ids:
+        return set()
+
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join(["?"] * len(normalized_ids))
+    cur.execute(
+        f"""
+        SELECT pubmed_id
+        FROM paper_fulltext_cache
+        WHERE is_translatable = 1
+          AND pubmed_id IN ({placeholders})
+        """,
+        normalized_ids,
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return {str(row["pubmed_id"]).strip() for row in rows if str(row["pubmed_id"]).strip()}
+
+
+def upsert_paper_fulltext_cache(
+    pubmed_id: str,
+    pmcid: str = "",
+    license_name: str = "",
+    license_url: str = "",
+    source_url: str = "",
+    is_translatable: bool = False,
+    sections: list[dict[str, Any]] | None = None,
+    sections_jp: list[dict[str, Any]] | None = None,
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO paper_fulltext_cache (
+            pubmed_id,
+            pmcid,
+            license_name,
+            license_url,
+            source_url,
+            is_translatable,
+            sections_json,
+            sections_jp_json,
+            checked_at,
+            translated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+        ON CONFLICT(pubmed_id) DO UPDATE SET
+            pmcid = excluded.pmcid,
+            license_name = excluded.license_name,
+            license_url = excluded.license_url,
+            source_url = excluded.source_url,
+            is_translatable = excluded.is_translatable,
+            sections_json = CASE
+                WHEN excluded.sections_json != '' THEN excluded.sections_json
+                ELSE paper_fulltext_cache.sections_json
+            END,
+            sections_jp_json = CASE
+                WHEN excluded.sections_jp_json != '' THEN excluded.sections_jp_json
+                ELSE paper_fulltext_cache.sections_jp_json
+            END,
+            checked_at = CURRENT_TIMESTAMP,
+            translated_at = CASE
+                WHEN excluded.sections_jp_json != '' THEN excluded.translated_at
+                ELSE paper_fulltext_cache.translated_at
+            END
+        """,
+        (
+            pubmed_id,
+            (pmcid or "").strip(),
+            (license_name or "").strip(),
+            (license_url or "").strip(),
+            (source_url or "").strip(),
+            1 if is_translatable else 0,
+            json.dumps(sections or [], ensure_ascii=False) if sections else "",
+            json.dumps(sections_jp or [], ensure_ascii=False) if sections_jp else "",
+            datetime.utcnow().isoformat() if sections_jp else "",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
 def get_saved_papers_by_folder(folder_name, user_id=None, sources=None):
     conn = get_connection()
     cur = conn.cursor()
@@ -1307,7 +1445,7 @@ def get_folder_name_suggestions(user_id=None):
             SELECT folder_name
             FROM saved_papers
             WHERE user_id IS NULL
-              AND save_source IN ('manual_save', 'manual_summary')
+              AND save_source IN ('manual_save')
               AND folder_name IS NOT NULL
               AND TRIM(folder_name) != ''
               AND folder_name != '自動保存'
@@ -1319,7 +1457,7 @@ def get_folder_name_suggestions(user_id=None):
             SELECT folder_name
             FROM saved_papers
             WHERE user_id = ?
-              AND save_source IN ('manual_save', 'manual_summary')
+              AND save_source IN ('manual_save')
               AND folder_name IS NOT NULL
               AND TRIM(folder_name) != ''
               AND folder_name != '自動保存'
@@ -1576,7 +1714,7 @@ def count_user_saved_papers(user_id):
         SELECT COUNT(*)
         FROM saved_papers
         WHERE user_id = ?
-          AND save_source IN ('manual_save', 'manual_summary')
+          AND save_source IN ('manual_save')
     """, (user_id,))
 
     count = cur.fetchone()[0]
