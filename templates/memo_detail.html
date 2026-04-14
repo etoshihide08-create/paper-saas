@@ -2508,9 +2508,14 @@
 
       document.addEventListener("mouseup", refreshPaperSelectionToolbar);
       document.addEventListener("touchend", () => {
-        setTimeout(refreshPaperSelectionToolbar, 30);
+        setTimeout(refreshPaperSelectionToolbar, 300);
       });
-      document.addEventListener("scroll", hidePaperSelectionToolbar, true);
+      // シート内のスクロールではポップアップを消さない
+      document.addEventListener("scroll", function(e) {
+        const sheet = document.getElementById("paper-summary-sheet-backdrop");
+        if (sheet && sheet.contains(e.target)) return;
+        hidePaperSelectionToolbar();
+      }, true);
       window.addEventListener("resize", hidePaperSelectionToolbar);
       document.addEventListener("click", function(event) {
         if (!paperSelectionToolbar) return;
