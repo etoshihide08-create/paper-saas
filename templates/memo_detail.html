@@ -1488,12 +1488,12 @@
         </div>
 
         <div class="paper-selection-toolbar" id="paper-selection-toolbar">
-          <button type="button" class="paper-selection-btn quote" onclick="quoteSelectedReference()" title="選択文を引用して貼る">引用</button>
-          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('yellow')" title="黄色マーカー"><span class="paper-selection-swatch color-yellow"></span></button>
-          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('pink')" title="ピンクマーカー"><span class="paper-selection-swatch color-pink"></span></button>
-          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('blue')" title="水色マーカー"><span class="paper-selection-swatch color-blue"></span></button>
-          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('green')" title="黄緑マーカー"><span class="paper-selection-swatch color-green"></span></button>
-          <button type="button" class="paper-selection-btn clear" onclick="clearPaperHighlightSelection()" title="マーカーを解除">解除</button>
+          <button type="button" class="paper-selection-btn quote" onclick="quoteSelectedReference()" ontouchend="event.preventDefault();quoteSelectedReference()" title="選択文を引用して貼る">引用</button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('yellow')" ontouchend="event.preventDefault();applyPaperHighlight('yellow')" title="黄色マーカー"><span class="paper-selection-swatch color-yellow"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('pink')" ontouchend="event.preventDefault();applyPaperHighlight('pink')" title="ピンクマーカー"><span class="paper-selection-swatch color-pink"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('blue')" ontouchend="event.preventDefault();applyPaperHighlight('blue')" title="水色マーカー"><span class="paper-selection-swatch color-blue"></span></button>
+          <button type="button" class="paper-selection-btn" onclick="applyPaperHighlight('green')" ontouchend="event.preventDefault();applyPaperHighlight('green')" title="黄緑マーカー"><span class="paper-selection-swatch color-green"></span></button>
+          <button type="button" class="paper-selection-btn clear" onclick="clearPaperHighlightSelection()" ontouchend="event.preventDefault();clearPaperHighlightSelection()" title="マーカーを解除">解除</button>
         </div>
 
         <!-- 論文バナー（論文メモのみ） -->
@@ -1771,6 +1771,7 @@
       let needsSave = false;
       let lastEditorRange = null;
       let activePaperSelection = null;
+      let _lastPaperSelection = null; // iOS: selectionchange で消えても保持
       let paperHighlights = [];
 
       if (titleInput) autoResize(titleInput);
@@ -2244,6 +2245,7 @@
 
       function hidePaperSelectionToolbar() {
         activePaperSelection = null;
+        _lastPaperSelection = null;
         if (!paperSelectionToolbar) return;
         paperSelectionToolbar.classList.remove("open");
       }
@@ -2263,6 +2265,7 @@
       function showPaperSelectionToolbar(selectionInfo) {
         if (!paperSelectionToolbar || !selectionInfo) return;
         activePaperSelection = selectionInfo;
+        _lastPaperSelection = selectionInfo; // iOS用に保持
         paperSelectionToolbar.classList.add("open");
         requestAnimationFrame(() => {
           positionPaperSelectionToolbar(selectionInfo.range.getBoundingClientRect());
@@ -2279,8 +2282,9 @@
       }
 
       function quoteSelectedReference() {
-        if (!activePaperSelection) return;
-        const plainText = activePaperSelection.text.replace(/\u00a0/g, " ").trim();
+        const sel = activePaperSelection || _lastPaperSelection;
+        if (!sel) return;
+        const plainText = sel.text.replace(/\u00a0/g, " ").trim();
         if (!plainText) return;
         const quotedText = escapeHtml(plainText).replace(/\n/g, "<br>");
         insertHTML(`<div>${quotedText}</div><div><br></div>`);
@@ -2290,8 +2294,9 @@
       }
 
       function applyPaperHighlight(color) {
-        if (!activePaperSelection) return;
-        const { section, start, end } = activePaperSelection;
+        const sel = activePaperSelection || _lastPaperSelection;
+        if (!sel) return;
+        const { section, start, end } = sel;
         replaceHighlightRange(section, start, end, color);
         persistPaperHighlights();
         renderPaperHighlights();
@@ -2301,8 +2306,9 @@
       }
 
       function clearPaperHighlightSelection() {
-        if (!activePaperSelection) return;
-        const { section, start, end } = activePaperSelection;
+        const sel = activePaperSelection || _lastPaperSelection;
+        if (!sel) return;
+        const { section, start, end } = sel;
         replaceHighlightRange(section, start, end, null);
         persistPaperHighlights();
         renderPaperHighlights();
@@ -2481,20 +2487,56 @@
 
       updateHeadingButtonsState();
 
+      // ツールバー上の mousedown/touchstart で selection が消えないように preventDefault
       if (paperSelectionToolbar) {
         paperSelectionToolbar.addEventListener("mousedown", function(event) {
           event.preventDefault();
         });
+        // touchstart: iOS が tap 時に selection を解除するのを防ぐ
+        // ただし各ボタンの ontouchend で直接 action を呼ぶので click は不要
         paperSelectionToolbar.addEventListener("touchstart", function(event) {
           event.preventDefault();
         }, { passive: false });
       }
 
-      document.addEventListener("mouseup", refreshPaperSelectionToolbar);
-      document.addEventListener("touchend", () => {
-        setTimeout(refreshPaperSelectionToolbar, 30);
+      // iOS対応: selectionchange でツールバー表示 (touchend より確実)
+      let _paperSelDebounce = null;
+      let _toolbarTouching = false; // ツールバー操作中フラグ
+      if (paperSelectionToolbar) {
+        paperSelectionToolbar.addEventListener("touchstart", () => { _toolbarTouching = true; }, { passive: true });
+        paperSelectionToolbar.addEventListener("touchend", () => { setTimeout(() => { _toolbarTouching = false; }, 300); }, { passive: true });
+      }
+
+      document.addEventListener("selectionchange", function() {
+        if (_toolbarTouching) return; // ツールバー操作中は無視
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+          // 論文本文内の選択のみ対象
+          const anchor = sel.anchorNode;
+          const inRef = anchor && (
+            (anchor.nodeType === Node.TEXT_NODE && anchor.parentElement?.closest(".paper-reference-body[data-ref-section]")) ||
+            (anchor.nodeType === Node.ELEMENT_NODE && anchor.closest?.(".paper-reference-body[data-ref-section]"))
+          );
+          if (inRef) {
+            clearTimeout(_paperSelDebounce);
+            _paperSelDebounce = setTimeout(refreshPaperSelectionToolbar, 200);
+            return;
+          }
+        }
+        // 論文本文外の selectionchange ではツールバーを消す（ツールバー操作中を除く）
+        if (!_toolbarTouching) {
+          clearTimeout(_paperSelDebounce);
+          hidePaperSelectionToolbar();
+        }
       });
-      document.addEventListener("scroll", hidePaperSelectionToolbar, true);
+
+      document.addEventListener("mouseup", refreshPaperSelectionToolbar);
+      // シート内のスクロールではポップアップを消さない
+      document.addEventListener("scroll", function(e) {
+        const sheet = document.getElementById("paper-summary-sheet-backdrop");
+        if (sheet && sheet.contains(e.target)) return;
+        hidePaperSelectionToolbar();
+      }, true);
       window.addEventListener("resize", hidePaperSelectionToolbar);
       document.addEventListener("click", function(event) {
         if (!paperSelectionToolbar) return;
