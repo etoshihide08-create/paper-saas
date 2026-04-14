@@ -1146,11 +1146,11 @@
       }
       .highlight-popup.show { display: flex; }
       .hl-color-row { display: flex; gap: 6px; padding: 4px 8px; }
-      .hl-color-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; }
+      .hl-color-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; flex-shrink: 0; }
       .hl-color-btn:hover { border-color: #fff; }
-      .hl-remove-btn { padding: 5px 12px; font-size: 12px; color: #f87171; background: none; border: none; cursor: pointer; text-align: left; }
+      .hl-remove-btn { padding: 8px 14px; font-size: 13px; color: #f87171; background: none; border: none; cursor: pointer; text-align: left; width: 100%; }
       .hl-remove-btn:hover { color: #fca5a5; }
-      .hl-add-memo-btn { padding: 5px 12px; font-size: 12px; color: #86efac; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: left; width: 100%; }
+      .hl-add-memo-btn { padding: 8px 14px; font-size: 13px; color: #86efac; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: left; width: 100%; }
       .hl-add-memo-btn:hover { color: #bbf7d0; }
 
       .meta-list {
@@ -1829,7 +1829,7 @@
     </div>
 
     <!-- Highlight popup -->
-    <div class="highlight-popup" id="hl-popup">
+    <div class="highlight-popup" id="hl-popup" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()">
       <div class="hl-color-row">
         <button class="hl-color-btn" style="background:#fef08a;" onclick="applyHighlight('#fef08a')" title="黄"></button>
         <button class="hl-color-btn" style="background:#bbf7d0;" onclick="applyHighlight('#bbf7d0')" title="緑"></button>
@@ -1838,7 +1838,7 @@
         <button class="hl-color-btn" style="background:#fce7f3;" onclick="applyHighlight('#fce7f3')" title="ピンク"></button>
       </div>
       <button class="hl-remove-btn" onclick="removeHighlight()">ハイライトを削除</button>
-      <button class="hl-add-memo-btn" onclick="addSelectionToMemo()">📝 メモに追加</button>
+      <button class="hl-add-memo-btn" onclick="addSelectionToMemo()">📝 メモに追加（引用）</button>
     </div>
 
     <script src="/static/js/paper_organize.js"></script>
@@ -2348,20 +2348,11 @@
       }
 
       // テキスト選択時のポップアップ（新規ハイライト）
-      function onSelectionEnd(e) {
-        if (e.target && e.target.closest) {
-          if (e.target.closest("#hl-popup")) return;
-          if (e.target.closest("mark.hl")) return;
-        }
-        if (hlPopupMode === "edit") return; // markタップ処理中は割り込まない
-
+      function tryShowSelectionPopup() {
+        if (hlPopupMode === "edit") return;
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed) {
-          if (hlPopupMode !== "edit") {
-            setTimeout(() => {
-              if (hlPopupMode !== "edit") hidePopup();
-            }, 200);
-          }
+          if (hlPopupMode !== "edit") hidePopup();
           return;
         }
         const text = sel.toString().trim();
@@ -2375,12 +2366,46 @@
         hlPopupMode = "new";
         hlPopupId = null;
         hlPopupText = text;
-        showPopupAt(rect.left, rect.bottom + 8);
+        // スマホ：選択範囲の上に表示（ネイティブメニューと重ならないよう上側を優先）
+        const isMobile = window.matchMedia("(pointer: coarse)").matches;
+        const popupY = isMobile
+          ? Math.max(rect.top - 80, 8)
+          : rect.bottom + 8;
+        showPopupAt(rect.left, popupY);
       }
 
-      document.addEventListener("mouseup", onSelectionEnd);
+      // PC: mouseup
+      document.addEventListener("mouseup", function(e) {
+        if (e.target && e.target.closest) {
+          if (e.target.closest("#hl-popup")) return;
+          if (e.target.closest("mark.hl")) return;
+        }
+        setTimeout(tryShowSelectionPopup, 10);
+      });
+
+      // スマホ: selectionchange が最も確実（iOS/Android 両対応）
+      let _scTimer = null;
+      document.addEventListener("selectionchange", function() {
+        clearTimeout(_scTimer);
+        _scTimer = setTimeout(function() {
+          if (hlPopupMode === "edit") return;
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed) return; // collapseはtouchendで処理
+          tryShowSelectionPopup();
+        }, 300); // 300ms待って選択が安定してから
+      });
+
+      // タップで選択解除 → ポップアップを閉じる
       document.addEventListener("touchend", function(e) {
-        setTimeout(() => onSelectionEnd(e), 150);
+        if (e.target && e.target.closest) {
+          if (e.target.closest("#hl-popup")) return;
+          if (e.target.closest("mark.hl")) return;
+        }
+        setTimeout(function() {
+          if (hlPopupMode === "edit") return;
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed) hidePopup();
+        }, 350);
       });
 
       function applyHighlight(color) {
