@@ -37,11 +37,13 @@
         box-sizing: border-box;
       }
 
-      body {
+      html, body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         background: var(--bg);
         color: var(--text);
         margin: 0;
+        overflow-x: hidden;
+        max-width: 100%;
       }
 
       .app-layout { min-height: 100vh; }
@@ -50,12 +52,15 @@
       .main-area {
         min-height: 100vh;
         padding: 20px 14px 40px;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       .container {
         max-width: 860px;
         margin: 0 auto;
         padding-bottom: 80px;
+        width: 100%;
       }
 
       .sidebar-title {
