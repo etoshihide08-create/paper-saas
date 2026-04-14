@@ -183,6 +183,92 @@ body {
     letter-spacing: 0;
 }
 
+/* Avatar crop modal */
+.crop-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.crop-modal-overlay.open { display: flex; }
+.crop-modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    width: min(360px, 92vw);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+.crop-modal-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    text-align: center;
+}
+.crop-viewport {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    position: relative;
+    background: #e2e8f0;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.crop-viewport:active { cursor: grabbing; }
+.crop-img {
+    position: absolute;
+    transform-origin: center center;
+    pointer-events: none;
+}
+.crop-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.crop-zoom-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.crop-zoom-row span { font-size: 18px; line-height: 1; }
+.crop-zoom-row input[type=range] {
+    flex: 1;
+    accent-color: var(--primary);
+}
+.crop-actions {
+    display: flex;
+    gap: 10px;
+}
+.crop-btn-cancel {
+    flex: 1;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #334155;
+}
+.crop-btn-ok {
+    flex: 1;
+    padding: 11px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Avatar picker */
 .avatar-picker {
     display: none;
@@ -929,6 +1015,26 @@ body {
             <button type="button" class="edit-profile-btn" onclick="toggleProfileForm()">編集</button>
         </div>
 
+        <!-- 画像トリミングモーダル -->
+        <div class="crop-modal-overlay" id="crop-modal-overlay">
+            <div class="crop-modal">
+                <p class="crop-modal-title">位置・サイズを調整</p>
+                <div class="crop-viewport" id="crop-viewport">
+                    <img class="crop-img" id="crop-img" draggable="false">
+                </div>
+                <p class="crop-hint">ドラッグで移動 ／ スライダーで拡大縮小</p>
+                <div class="crop-zoom-row">
+                    <span>🔍</span>
+                    <input type="range" id="crop-zoom" min="0.5" max="3" step="0.01" value="1">
+                    <span>＋</span>
+                </div>
+                <div class="crop-actions">
+                    <button class="crop-btn-cancel" onclick="closeCropModal()">キャンセル</button>
+                    <button class="crop-btn-ok" onclick="confirmCrop()">確定</button>
+                </div>
+            </div>
+        </div>
+
         <!-- アバター選択パネル -->
         <div class="avatar-picker" id="avatar-picker">
             <div class="avatar-picker-title">アイコンを選ぶ</div>
@@ -1263,25 +1369,128 @@ function selectAvatar(emoji) {
     showToast("保存ボタンで確定されます");
 }
 
+// ---- Avatar crop editor ----
+const CROP_SIZE = 200; // output px
+let _cropState = { scale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0, natW: 0, natH: 0 };
+
 function handleAvatarUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-        const dataUrl = e.target.result;
-        // Store as data URL (base64) — max ~100KB recommended
-        if (dataUrl.length > 150000) {
-            showToast("画像が大きすぎます。小さい画像を選んでください。");
-            return;
-        }
-        document.getElementById("avatar-input").value = dataUrl;
-        const display = document.getElementById("avatar-display");
-        display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
-        document.getElementById("profile-form").classList.add("open");
-        document.getElementById("avatar-picker").classList.remove("open");
-        showToast("保存ボタンで確定されます");
+        const img = document.getElementById("crop-img");
+        img.onload = function() {
+            _cropState.natW = img.naturalWidth;
+            _cropState.natH = img.naturalHeight;
+            // fit initial scale so short side fills viewport
+            const fitScale = Math.max(CROP_SIZE / img.naturalWidth, CROP_SIZE / img.naturalHeight);
+            _cropState.scale = fitScale;
+            _cropState.x = (CROP_SIZE - img.naturalWidth * fitScale) / 2;
+            _cropState.y = (CROP_SIZE - img.naturalHeight * fitScale) / 2;
+            document.getElementById("crop-zoom").min = fitScale * 0.5;
+            document.getElementById("crop-zoom").max = fitScale * 4;
+            document.getElementById("crop-zoom").step = fitScale * 0.01;
+            document.getElementById("crop-zoom").value = fitScale;
+            applyCropTransform();
+            document.getElementById("crop-modal-overlay").classList.add("open");
+            document.getElementById("avatar-picker").classList.remove("open");
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+    // reset input so same file can be re-selected
+    event.target.value = "";
+}
+
+function applyCropTransform() {
+    const img = document.getElementById("crop-img");
+    img.style.width  = _cropState.natW + "px";
+    img.style.height = _cropState.natH + "px";
+    img.style.transform = `translate(${_cropState.x}px, ${_cropState.y}px) scale(${_cropState.scale})`;
+    img.style.transformOrigin = "0 0";
+}
+
+// zoom slider
+document.addEventListener("DOMContentLoaded", function() {
+    const slider = document.getElementById("crop-zoom");
+    const vp = document.getElementById("crop-viewport");
+
+    slider.addEventListener("input", function() {
+        const newScale = parseFloat(this.value);
+        // zoom toward center of viewport
+        const cx = CROP_SIZE / 2, cy = CROP_SIZE / 2;
+        const ratio = newScale / _cropState.scale;
+        _cropState.x = cx - ratio * (cx - _cropState.x);
+        _cropState.y = cy - ratio * (cy - _cropState.y);
+        _cropState.scale = newScale;
+        applyCropTransform();
+    });
+
+    // drag — mouse
+    vp.addEventListener("mousedown", function(e) {
+        _cropState.dragging = true;
+        _cropState.lastX = e.clientX;
+        _cropState.lastY = e.clientY;
+        e.preventDefault();
+    });
+    window.addEventListener("mousemove", function(e) {
+        if (!_cropState.dragging) return;
+        _cropState.x += e.clientX - _cropState.lastX;
+        _cropState.y += e.clientY - _cropState.lastY;
+        _cropState.lastX = e.clientX;
+        _cropState.lastY = e.clientY;
+        applyCropTransform();
+    });
+    window.addEventListener("mouseup", function() { _cropState.dragging = false; });
+
+    // drag — touch
+    vp.addEventListener("touchstart", function(e) {
+        if (e.touches.length !== 1) return;
+        _cropState.dragging = true;
+        _cropState.lastX = e.touches[0].clientX;
+        _cropState.lastY = e.touches[0].clientY;
+        e.preventDefault();
+    }, { passive: false });
+    window.addEventListener("touchmove", function(e) {
+        if (!_cropState.dragging || e.touches.length !== 1) return;
+        _cropState.x += e.touches[0].clientX - _cropState.lastX;
+        _cropState.y += e.touches[0].clientY - _cropState.lastY;
+        _cropState.lastX = e.touches[0].clientX;
+        _cropState.lastY = e.touches[0].clientY;
+        applyCropTransform();
+    }, { passive: false });
+    window.addEventListener("touchend", function() { _cropState.dragging = false; });
+});
+
+function closeCropModal() {
+    document.getElementById("crop-modal-overlay").classList.remove("open");
+}
+
+function confirmCrop() {
+    const img = document.getElementById("crop-img");
+    const canvas = document.createElement("canvas");
+    canvas.width = CROP_SIZE;
+    canvas.height = CROP_SIZE;
+    const ctx = canvas.getContext("2d");
+    // clip to circle
+    ctx.beginPath();
+    ctx.arc(CROP_SIZE/2, CROP_SIZE/2, CROP_SIZE/2, 0, Math.PI*2);
+    ctx.clip();
+    // draw scaled/translated image
+    ctx.drawImage(
+        img,
+        _cropState.x,
+        _cropState.y,
+        _cropState.natW * _cropState.scale,
+        _cropState.natH * _cropState.scale
+    );
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+    document.getElementById("avatar-input").value = dataUrl;
+    const display = document.getElementById("avatar-display");
+    display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
+    document.getElementById("profile-form").classList.add("open");
+    closeCropModal();
+    showToast("保存ボタンで確定されます");
 }
 
 function copyRefCode() {
