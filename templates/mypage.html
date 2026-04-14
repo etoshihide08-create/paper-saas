@@ -1351,22 +1351,26 @@ function toggleAvatarPicker() {
     picker.classList.toggle("open");
 }
 
+function submitAvatarOnly() {
+    // display_name と bio を現在の値で埋めてサブミット
+    const form = document.getElementById("profile-form");
+    const nameInput = form.querySelector("[name='display_name']");
+    const bioInput  = form.querySelector("[name='bio']");
+    // 未入力なら現在表示値を補完（編集フォームが閉じていても保持）
+    if (!nameInput.value) nameInput.value = document.querySelector(".avatar-name")?.textContent?.trim() || "";
+    if (!bioInput.value)  bioInput.value  = document.querySelector(".avatar-bio")?.textContent?.trim() || "";
+    form.submit();
+}
+
 function selectAvatar(emoji) {
-    // Update hidden input
     document.getElementById("avatar-input").value = emoji;
-    // Update display
     const display = document.getElementById("avatar-display");
-    // Remove img if present, set text
     display.innerHTML = emoji + '<div class="avatar-edit-hint">変更</div>';
-    // Highlight selected
     document.querySelectorAll(".avatar-option").forEach(el => {
         el.classList.toggle("selected", el.textContent.trim() === emoji);
     });
-    // Open profile form to save
-    document.getElementById("profile-form").classList.add("open");
-    // Close picker
     document.getElementById("avatar-picker").classList.remove("open");
-    showToast("保存ボタンで確定されます");
+    submitAvatarOnly();
 }
 
 // ---- Avatar crop editor ----
@@ -1488,9 +1492,8 @@ function confirmCrop() {
     document.getElementById("avatar-input").value = dataUrl;
     const display = document.getElementById("avatar-display");
     display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
-    document.getElementById("profile-form").classList.add("open");
     closeCropModal();
-    showToast("保存ボタンで確定されます");
+    submitAvatarOnly();
 }
 
 function copyRefCode() {
