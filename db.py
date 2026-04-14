@@ -3357,6 +3357,43 @@ def seed_initial_promo_codes() -> None:
     conn.close()
 
 
+def delete_user_account(user_id: int) -> None:
+    """ユーザーアカウントと関連データを全て削除する（退会処理）。"""
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    tables_with_user_id = [
+        "saved_papers",
+        "paper_history",
+        "paper_comments",
+        "user_feedback",
+        "paper_fulltext_cache",
+        "memos",
+        "paper_memos",
+        "memo_map_layouts",
+        "memo_mind_maps",
+        "memo_mind_map_files",
+        "posts",
+        "post_likes",
+        "user_tags",
+        "user_interest_tags",
+        "paper_likes",
+        "supporter_campaign_claims",
+        "master_article_drafts",
+        "master_wordpress_settings",
+        "master_wordpress_autopost_settings",
+        "master_wordpress_autopost_logs",
+        "master_article_marketing_events",
+    ]
+    for table in tables_with_user_id:
+        try:
+            cur.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+        except sqlite3.OperationalError:
+            pass
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+
 def get_all_friend_promo_codes() -> list[dict]:
     """全プロモコードを返す（管理用）。"""
     conn = sqlite3.connect(DB_NAME)

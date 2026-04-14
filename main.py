@@ -127,6 +127,7 @@ from db import (
     get_master_article_marketing_summary,
     create_user_feedback,
     upsert_paper_fulltext_cache,
+    delete_user_account,
     seed_initial_promo_codes,
     get_all_friend_promo_codes,
     create_friend_promo_code,
@@ -4852,6 +4853,22 @@ def mypage_profile_update(
         avatar.strip()[:200000],
     )
     return RedirectResponse("/mypage?saved=1", status_code=303)
+
+
+@app.post("/mypage/delete-account")
+def mypage_delete_account(
+    request: Request,
+    confirm: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login", status_code=303)
+    if confirm.strip() != "退会する":
+        return RedirectResponse("/mypage?delete_error=1", status_code=303)
+    user_id = current_user["id"]
+    request.session.clear()
+    delete_user_account(user_id)
+    return RedirectResponse("/", status_code=303)
 
 
 @app.post("/mypage/feedback")
