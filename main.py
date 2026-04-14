@@ -5845,7 +5845,15 @@ def paper(
 
 @app.get("/api/paper/fulltext")
 def api_paper_fulltext(request: Request, id: str):
-    """非同期で本文翻訳を取得・実行するエンドポイント。"""
+    """非同期で本文翻訳を取得・実行するエンドポイント。Proプラン以上が必要。"""
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"status": "login_required"}, status_code=200)
+    user = get_user_by_id(current_user["id"])
+    user = check_trial_expired(user)
+    if get_user_plan(user) not in ("pro", "expert"):
+        return JSONResponse({"status": "plan_required"}, status_code=200)
+
     cached = get_paper_fulltext_cache(id)
     if cached and cached.get("sections_jp_json"):
         return JSONResponse({

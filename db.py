@@ -3327,15 +3327,15 @@ def seed_initial_promo_codes() -> None:
     """
     initial_codes = [
         # (code, plan_to_grant, free_days, grant_lifetime, max_uses, target_email)
-        ("MASTER-ET08",      "pro", 0,  1, 1, "e.toshihide08@gmail.com"),
-        ("LIFETIME1",        "pro", 0,  1, 1, ""),
-        ("LIFETIME-FDBC47",  "pro", 0,  1, 1, ""),
-        ("FREE90X5",         "pro", 90, 0, 5, ""),
-        ("FREE90-A9FDD0",    "pro", 90, 0, 1, ""),
-        ("FREE90-E2C645",    "pro", 90, 0, 1, ""),
-        ("FREE90-24A2DA",    "pro", 90, 0, 1, ""),
-        ("FREE90-351BA9",    "pro", 90, 0, 1, ""),
-        ("FREE90-8764C8",    "pro", 90, 0, 1, ""),
+        ("MASTER-ET08",      "expert", 0,  1, 1, "e.toshihide08@gmail.com"),
+        ("LIFETIME1",        "expert", 0,  1, 1, ""),
+        ("LIFETIME-FDBC47",  "expert", 0,  1, 1, ""),
+        ("FREE90X5",         "expert", 90, 0, 5, ""),
+        ("FREE90-A9FDD0",    "expert", 90, 0, 1, ""),
+        ("FREE90-E2C645",    "expert", 90, 0, 1, ""),
+        ("FREE90-24A2DA",    "expert", 90, 0, 1, ""),
+        ("FREE90-351BA9",    "expert", 90, 0, 1, ""),
+        ("FREE90-8764C8",    "expert", 90, 0, 1, ""),
     ]
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -3347,6 +3347,11 @@ def seed_initial_promo_codes() -> None:
             VALUES (?, ?, ?, ?, ?, ?, 1)
             """,
             (code, plan, days, lifetime, max_uses, email),
+        )
+        # 既存コードもプランを最新に更新
+        cur.execute(
+            "UPDATE friend_promo_codes SET plan_to_grant = ? WHERE code = ?",
+            (plan, code),
         )
     conn.commit()
     conn.close()

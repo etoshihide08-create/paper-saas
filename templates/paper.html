@@ -2224,6 +2224,12 @@
               btn.replaceWith(Object.assign(document.createElement("div"), { className: "status-chip", textContent: "✓ 本文翻訳済み" }));
             }
             card?.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else if (data.status === "login_required") {
+            if (btn) { btn.textContent = "本文翻訳"; btn.disabled = false; btn.style.opacity = ""; btn.style.cursor = ""; }
+            window.location.href = "/login?from=paper";
+          } else if (data.status === "plan_required") {
+            if (btn) { btn.textContent = "本文翻訳"; btn.disabled = false; btn.style.opacity = ""; btn.style.cursor = ""; }
+            alert("本文翻訳はProプラン以上でご利用いただけます。");
           } else {
             if (btn) {
               btn.textContent = "本文翻訳";
