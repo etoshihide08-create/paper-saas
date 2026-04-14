@@ -128,6 +128,9 @@ from db import (
     create_user_feedback,
     upsert_paper_fulltext_cache,
     seed_initial_promo_codes,
+    get_all_friend_promo_codes,
+    create_friend_promo_code,
+    toggle_friend_promo_code_active,
     MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
@@ -4649,6 +4652,8 @@ def master_settings_page(request: Request, notice: str = Query(""), error: str =
     effective_config = get_wordpress_config_for_user(user["id"]) or {}
     autopost_summary = _build_master_autopost_summary(get_master_wordpress_autopost_settings(user["id"]))
     autopost_logs = get_master_wordpress_autopost_logs(user["id"], limit=8)
+    app_base_url = get_app_base_url_for_user(user["id"], request)
+    promo_codes = get_all_friend_promo_codes()
     return templates.TemplateResponse(
         "master_settings.html",
         {
@@ -4668,9 +4673,11 @@ def master_settings_page(request: Request, notice: str = Query(""), error: str =
             "wordpress_config_source": effective_config.get("source") or "",
             "effective_site_url": effective_config.get("site_url") or "",
             "effective_username": effective_config.get("username") or "",
-            "effective_app_base_url": get_app_base_url_for_user(user["id"], request),
+            "effective_app_base_url": app_base_url,
             "autopost_summary": autopost_summary,
             "autopost_logs": autopost_logs,
+            "promo_codes": promo_codes,
+            "app_base_url": app_base_url,
         }
     )
 
@@ -4773,6 +4780,57 @@ def master_settings_autopost(
     notice = "自動投稿を有効化しました。" if enabled else "自動投稿を停止しました。"
     return RedirectResponse(
         f"/master/settings?notice={_urlparse.quote(notice)}",
+        status_code=303,
+    )
+
+
+@app.post("/master/promo-codes/create")
+def master_promo_code_create(
+    request: Request,
+    code: str = Form(""),
+    plan_to_grant: str = Form("pro"),
+    free_days: int = Form(90),
+    grant_lifetime: str = Form("0"),
+    max_uses: int = Form(1),
+    target_email: str = Form(""),
+):
+    user, redirect = require_master_user(request)
+    if redirect:
+        return redirect
+    code = code.strip().upper()
+    if not code:
+        return RedirectResponse(
+            f"/master/settings?error={_urlparse.quote('コードを入力してください。')}#promo-section",
+            status_code=303,
+        )
+    ok = create_friend_promo_code(
+        code=code,
+        plan_to_grant=plan_to_grant,
+        free_days=free_days,
+        grant_lifetime=1 if str(grant_lifetime).strip() in ("1", "true", "on") else 0,
+        max_uses=max_uses,
+        target_email=target_email,
+    )
+    if not ok:
+        return RedirectResponse(
+            f"/master/settings?error={_urlparse.quote(f'コード {code} は既に存在します。')}#promo-section",
+            status_code=303,
+        )
+    return RedirectResponse(
+        f"/master/settings?notice={_urlparse.quote(f'コード {code} を作成しました。')}#promo-section",
+        status_code=303,
+    )
+
+
+@app.post("/master/promo-codes/{code_id}/toggle")
+def master_promo_code_toggle(request: Request, code_id: int):
+    user, redirect = require_master_user(request)
+    if redirect:
+        return redirect
+    is_active = toggle_friend_promo_code_active(code_id)
+    label = "有効化" if is_active else "無効化"
+    return RedirectResponse(
+        f"/master/settings?notice={_urlparse.quote(f'コードを{label}しました。')}#promo-section",
         status_code=303,
     )
 

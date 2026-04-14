@@ -3350,3 +3350,63 @@ def seed_initial_promo_codes() -> None:
         )
     conn.commit()
     conn.close()
+
+
+def get_all_friend_promo_codes() -> list[dict]:
+    """全プロモコードを返す（管理用）。"""
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM friend_promo_codes ORDER BY id DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def create_friend_promo_code(
+    code: str,
+    plan_to_grant: str,
+    free_days: int,
+    grant_lifetime: int,
+    max_uses: int,
+    target_email: str = "",
+) -> bool:
+    """新規プロモコードを作成する。重複コードは False を返す。"""
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO friend_promo_codes
+                (code, plan_to_grant, free_days, grant_lifetime, max_uses, target_email, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
+            """,
+            (
+                code.strip().upper(),
+                plan_to_grant,
+                int(free_days),
+                int(grant_lifetime),
+                int(max_uses),
+                (target_email or "").strip().lower(),
+            ),
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+
+def toggle_friend_promo_code_active(code_id: int) -> bool:
+    """is_active を反転させて、反転後の値を返す。"""
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE friend_promo_codes SET is_active = 1 - is_active WHERE id = ?",
+        (code_id,),
+    )
+    conn.commit()
+    cur.execute("SELECT is_active FROM friend_promo_codes WHERE id = ?", (code_id,))
+    row = cur.fetchone()
+    conn.close()
+    return bool(row[0]) if row else False

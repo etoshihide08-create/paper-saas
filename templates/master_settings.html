@@ -215,6 +215,91 @@ body {
         grid-template-columns: 1fr;
     }
 }
+.promo-section {
+    margin-top: 24px;
+}
+.promo-section .panel {
+    margin-bottom: 18px;
+}
+.promo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.promo-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 0 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.promo-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.promo-table tr:last-child td {
+    border-bottom: none;
+}
+.code-text {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0f172a;
+}
+.badge-active {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #dcfce7;
+    color: #15803d;
+}
+.badge-inactive {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #64748b;
+}
+.url-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.url-cell a {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 12px;
+}
+.url-cell a:hover {
+    text-decoration: underline;
+}
+.toggle-btn {
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    cursor: pointer;
+}
+.create-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 640px) {
+    .create-grid { grid-template-columns: 1fr 1fr; }
+    .promo-table th:nth-child(4),
+    .promo-table td:nth-child(4) { display: none; }
+}
 </style>
 </head>
 <body>
@@ -389,6 +474,104 @@ body {
                         </div>
                         {% endif %}
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- 招待コード管理 -->
+        <div class="promo-section" id="promo-section">
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="panel-title">招待コード管理</p>
+                    <p class="panel-copy">コードごとに配布URL・使用状況を確認できます。URLを相手に送るだけで招待できます。</p>
+                </div>
+                <div class="panel-body" style="overflow-x:auto;">
+                    {% if promo_codes %}
+                    <table class="promo-table">
+                        <thead>
+                            <tr>
+                                <th>コード</th>
+                                <th>プラン</th>
+                                <th>使用</th>
+                                <th>ロック先メール</th>
+                                <th>配布URL</th>
+                                <th>状態</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in promo_codes %}
+                            <tr>
+                                <td><span class="code-text">{{ c.code }}</span></td>
+                                <td>
+                                    {% if c.grant_lifetime %}永年無料{% else %}Pro {{ c.free_days }}日{% endif %}
+                                </td>
+                                <td>{{ c.used_count }}/{{ c.max_uses }}</td>
+                                <td style="font-size:12px;color:#475569;">{{ c.target_email or '—' }}</td>
+                                <td class="url-cell">
+                                    {% set offer_url = (app_base_url or '') + '/special-offer/' + c.code %}
+                                    <a href="{{ offer_url }}" target="_blank">{{ offer_url }}</a>
+                                </td>
+                                <td>
+                                    {% if c.is_active %}
+                                    <span class="badge-active">有効</span>
+                                    {% else %}
+                                    <span class="badge-inactive">無効</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form action="/master/promo-codes/{{ c.id }}/toggle" method="post" style="margin:0;">
+                                        <button type="submit" class="toggle-btn">
+                                            {% if c.is_active %}無効化{% else %}有効化{% endif %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p style="color:#64748b;font-size:14px;">コードはまだありません。</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <p class="panel-title">新しいコードを作成</p>
+                    <p class="panel-copy">コードは自動で大文字に変換されます。永年無料にする場合は「永年無料」にチェックしてください。</p>
+                </div>
+                <div class="panel-body">
+                    <form action="/master/promo-codes/create" method="post">
+                        <div class="create-grid">
+                            <div class="field">
+                                <label for="new_code">コード名</label>
+                                <input id="new_code" type="text" name="code" placeholder="FRIEND-001" autocomplete="off">
+                            </div>
+                            <div class="field">
+                                <label for="new_free_days">無料日数</label>
+                                <input id="new_free_days" type="number" name="free_days" value="90" min="0">
+                                <div class="field-note">永年無料の場合は 0 のままでOK</div>
+                            </div>
+                            <div class="field">
+                                <label for="new_max_uses">最大使用回数</label>
+                                <input id="new_max_uses" type="number" name="max_uses" value="1" min="1">
+                            </div>
+                            <div class="field">
+                                <label for="new_target_email">ロック先メール（任意）</label>
+                                <input id="new_target_email" type="email" name="target_email" placeholder="（空白 = 先着1名）">
+                            </div>
+                            <div class="field" style="align-self:end;">
+                                <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px;color:#475569;">
+                                    <input type="checkbox" name="grant_lifetime" value="1" style="width:auto;">
+                                    永年無料にする
+                                </label>
+                                <input type="hidden" name="plan_to_grant" value="pro">
+                            </div>
+                        </div>
+                        <div class="actions" style="margin-top:8px;">
+                            <button type="submit" class="btn btn-primary">コードを作成する</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
