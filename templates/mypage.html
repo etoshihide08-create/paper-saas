@@ -1203,32 +1203,28 @@ body {
                 <span class="row-icon">🚪</span>
                 ログアウト
             </a>
-        </div>
-    </div>
-
-    <!-- 退会 -->
-    <div class="section" id="delete-account-section" style="margin-top:8px;">
-        <div class="section-header" style="color:#b91c1c;">アカウント削除</div>
-        <div class="feedback-box">
-            {% if request.query_params.get('delete_error') %}
-            <p style="color:#b91c1c;font-size:13px;margin:0 0 12px;">「退会する」と正確に入力してください。</p>
-            {% endif %}
-            <p style="font-size:13px;color:#64748b;line-height:1.8;margin:0 0 14px;">
-                退会すると、保存した論文・メモ・コメントなどすべてのデータが削除されます。この操作は取り消せません。
-            </p>
-            <button type="button" onclick="document.getElementById('delete-confirm-area').style.display=''" style="background:none;border:none;color:#b91c1c;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;">
-                退会手続きを行う
-            </button>
-            <div id="delete-confirm-area" style="display:none;margin-top:16px;">
-                <form action="/mypage/delete-account" method="post">
-                    <p style="font-size:13px;color:#0f172a;margin:0 0 10px;">確認のため「<strong>退会する</strong>」と入力してください。</p>
-                    <input type="text" name="confirm" placeholder="退会する" autocomplete="off"
-                        style="width:100%;border:1.5px solid #fca5a5;border-radius:12px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px;">
-                    <button type="submit"
-                        style="width:100%;background:#b91c1c;color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">
-                        アカウントを削除する
-                    </button>
-                </form>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;text-align:center;">
+                {% if request.query_params.get('delete_error') %}
+                <p style="color:#b91c1c;font-size:12px;margin:0 0 8px;">「退会する」と正確に入力してください。</p>
+                {% endif %}
+                <button type="button" onclick="document.getElementById('delete-confirm-area').style.display=''"
+                    style="background:none;border:none;color:#94a3b8;font-size:12px;cursor:pointer;padding:0;text-decoration:underline;">
+                    退会する
+                </button>
+                <div id="delete-confirm-area" style="display:none;margin-top:14px;text-align:left;">
+                    <p style="font-size:12px;color:#64748b;line-height:1.7;margin:0 0 10px;">
+                        退会するとすべてのデータが削除されます。この操作は取り消せません。<br>
+                        確認のため「<strong>退会する</strong>」と入力してください。
+                    </p>
+                    <form action="/mypage/delete-account" method="post">
+                        <input type="text" name="confirm" placeholder="退会する" autocomplete="off"
+                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;">
+                        <button type="submit"
+                            style="width:100%;background:#fee2e2;color:#b91c1c;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">
+                            アカウントを削除する
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
