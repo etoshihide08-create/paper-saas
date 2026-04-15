@@ -913,7 +913,7 @@ body {
 
         <div class="avatar-row">
             <div class="avatar-circle" id="avatar-display" onclick="toggleAvatarPicker()" title="アバターを変更">
-                {% if current_user.avatar and current_user.avatar.startswith('http') %}
+                {% if current_user.avatar and (current_user.avatar.startswith('http') or current_user.avatar.startswith('data:')) %}
                     <img src="{{ current_user.avatar }}" alt="avatar">
                 {% elif current_user.avatar and current_user.avatar|length <= 4 %}
                     {{ current_user.avatar }}
