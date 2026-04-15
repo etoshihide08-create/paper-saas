@@ -4836,6 +4836,24 @@ def master_promo_code_toggle(request: Request, code_id: int):
     )
 
 
+@app.post("/mypage/avatar")
+def mypage_avatar_update(
+    request: Request,
+    avatar: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    user = get_user_by_id(current_user["id"])
+    update_user_profile(
+        current_user["id"],
+        (user.get("display_name") or "").strip()[:40],
+        (user.get("bio") or "").strip()[:160],
+        avatar.strip()[:300000],
+    )
+    return JSONResponse({"ok": True})
+
+
 @app.post("/mypage/profile")
 def mypage_profile_update(
     request: Request,
