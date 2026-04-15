@@ -1308,6 +1308,33 @@ def get_paper_comments(pubmed_id: str, limit: int = 50):
     return [dict(row) for row in rows]
 
 
+def update_paper_comment(comment_id: int, user_id: int, content: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute(
+        "UPDATE paper_comments SET content = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+        ((content or "").strip(), now, int(comment_id), int(user_id)),
+    )
+    updated = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+def delete_paper_comment(comment_id: int, user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM paper_comments WHERE id = ? AND user_id = ?",
+        (int(comment_id), int(user_id)),
+    )
+    deleted = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
+
+
 def get_paper_comment_counts(pubmed_ids):
     ids = [str(pid).strip() for pid in (pubmed_ids or []) if str(pid).strip()]
     if not ids:

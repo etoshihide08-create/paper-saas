@@ -1138,6 +1138,45 @@
       .comment-like-btn:hover { color: #ef4444; }
       .comment-like-btn.liked { color: #ef4444; }
 
+      .comment-menu-btn {
+        background: none; border: none; padding: 4px; cursor: pointer;
+        font-size: 16px; color: #94a3b8; margin-left: auto;
+      }
+      .comment-menu-btn:hover { color: #374151; }
+      .comment-menu-popup {
+        position: absolute; right: 0; top: 24px;
+        background: #fff; border: 1px solid #e5e7eb;
+        border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+        min-width: 120px; z-index: 400; overflow: hidden; display: none;
+      }
+      .comment-menu-popup.open { display: block; }
+      .comment-menu-item {
+        display: block; width: 100%; padding: 11px 16px;
+        background: none; border: none; text-align: left;
+        font-size: 14px; cursor: pointer; color: #374151;
+      }
+      .comment-menu-item:hover { background: #f9fafb; }
+      .comment-menu-item.danger { color: #ef4444; }
+      .comment-item { position: relative; }
+
+      /* インライン編集エリア */
+      .comment-edit-area {
+        display: none; margin-top: 6px;
+      }
+      .comment-edit-area.open { display: block; }
+      .comment-edit-textarea {
+        width: 100%; background: #f3f4f6; border: 1px solid #d1d5db;
+        border-radius: 12px; padding: 8px 12px; font-size: 14px;
+        font-family: inherit; line-height: 1.6; resize: none; outline: none;
+        box-sizing: border-box;
+      }
+      .comment-edit-textarea:focus { border-color: #93c5fd; }
+      .comment-edit-actions {
+        display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px;
+      }
+      .comment-edit-cancel { background: none; border: 1px solid #d1d5db; border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: #6b7280; }
+      .comment-edit-save { background: #2563eb; border: none; border-radius: 8px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: #fff; font-weight: 700; }
+
       /* 入力エリア固定フッター (Instagram 風) */
       .comment-sheet-input-wrap {
         flex-shrink: 0;
@@ -1986,7 +2025,7 @@
           <div class="comment-sheet-list" id="paper-comment-list">
             {% if paper_comments %}
               {% for comment in paper_comments %}
-              <div class="comment-item">
+              <div class="comment-item" id="comment-item-{{ comment.id }}">
                 <div class="comment-avatar">
                   {% if comment.avatar %}
                     {% if comment.avatar.startswith('data:') or comment.avatar.startswith('http') %}
@@ -1999,8 +2038,22 @@
                   <div class="comment-item-header">
                     <span class="comment-name">{{ comment.display_name or "ユーザー" }}</span>
                     <span class="comment-time">{{ comment.created_label }}</span>
+                    {% if comment.is_own %}
+                    <button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(event,{{ comment.id }})" aria-label="メニュー">⋯</button>
+                    <div class="comment-menu-popup" id="comment-menu-{{ comment.id }}">
+                      <button type="button" class="comment-menu-item" onclick="startEditComment({{ comment.id }})">編集</button>
+                      <button type="button" class="comment-menu-item danger" onclick="deleteComment({{ comment.id }})">削除</button>
+                    </div>
+                    {% endif %}
                   </div>
-                  <div class="comment-body">{{ comment.content }}</div>
+                  <div class="comment-body" id="comment-body-{{ comment.id }}">{{ comment.content }}</div>
+                  <div class="comment-edit-area" id="comment-edit-{{ comment.id }}">
+                    <textarea class="comment-edit-textarea" id="comment-edit-ta-{{ comment.id }}" rows="3">{{ comment.content }}</textarea>
+                    <div class="comment-edit-actions">
+                      <button type="button" class="comment-edit-cancel" onclick="cancelEditComment({{ comment.id }})">キャンセル</button>
+                      <button type="button" class="comment-edit-save" onclick="saveEditComment({{ comment.id }})">保存</button>
+                    </div>
+                  </div>
                   <div class="comment-actions-row">
                     <button type="button" class="comment-like-btn" onclick="toggleCommentLike(this)">♡ いいね</button>
                   </div>
@@ -2198,22 +2251,106 @@
           updatePaperCommentCount(0);
           return;
         }
-        list.innerHTML = comments.map((comment) => `
-          <div class="comment-item">
+        list.innerHTML = comments.map((comment) => {
+          const cid = comment.id;
+          const menuHtml = comment.is_own ? `
+            <button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(event,${cid})" aria-label="メニュー">⋯</button>
+            <div class="comment-menu-popup" id="comment-menu-${cid}">
+              <button type="button" class="comment-menu-item" onclick="startEditComment(${cid})">編集</button>
+              <button type="button" class="comment-menu-item danger" onclick="deleteComment(${cid})">削除</button>
+            </div>
+          ` : "";
+          return `
+          <div class="comment-item" id="comment-item-${cid}">
             <div class="comment-avatar">${renderPaperCommentAvatar(comment)}</div>
             <div class="comment-main">
               <div class="comment-item-header">
                 <span class="comment-name">${escapeHtml(comment.display_name || "ユーザー")}</span>
                 <span class="comment-time">${escapeHtml(comment.created_label || "")}</span>
+                ${menuHtml}
               </div>
-              <div class="comment-body">${escapeHtml(comment.content || "").replace(/\n/g, "<br>")}</div>
+              <div class="comment-body" id="comment-body-${cid}">${escapeHtml(comment.content || "").replace(/\n/g, "<br>")}</div>
+              <div class="comment-edit-area" id="comment-edit-${cid}">
+                <textarea class="comment-edit-textarea" id="comment-edit-ta-${cid}" rows="3">${escapeHtml(comment.content || "")}</textarea>
+                <div class="comment-edit-actions">
+                  <button type="button" class="comment-edit-cancel" onclick="cancelEditComment(${cid})">キャンセル</button>
+                  <button type="button" class="comment-edit-save" onclick="saveEditComment(${cid})">保存</button>
+                </div>
+              </div>
               <div class="comment-actions-row">
                 <button type="button" class="comment-like-btn" onclick="toggleCommentLike(this)">♡ いいね</button>
               </div>
             </div>
-          </div>
-        `).join("");
+          </div>`;
+        }).join("");
         updatePaperCommentCount(comments.length);
+      }
+
+      function toggleCommentMenu(event, cid) {
+        event.stopPropagation();
+        const popup = document.getElementById(`comment-menu-${cid}`);
+        if (!popup) return;
+        const isOpen = popup.classList.contains("open");
+        // 他を全部閉じる
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+        if (!isOpen) popup.classList.add("open");
+      }
+
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+      });
+
+      function startEditComment(cid) {
+        document.getElementById(`comment-menu-${cid}`)?.classList.remove("open");
+        document.getElementById(`comment-body-${cid}`).style.display = "none";
+        const ea = document.getElementById(`comment-edit-${cid}`);
+        ea.classList.add("open");
+        const ta = document.getElementById(`comment-edit-ta-${cid}`);
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+      }
+
+      function cancelEditComment(cid) {
+        document.getElementById(`comment-body-${cid}`).style.display = "";
+        document.getElementById(`comment-edit-${cid}`).classList.remove("open");
+      }
+
+      async function saveEditComment(cid) {
+        const ta = document.getElementById(`comment-edit-ta-${cid}`);
+        const content = (ta?.value || "").trim();
+        if (!content) { showToast("内容を入力してください"); return; }
+        const fd = new FormData();
+        fd.append("content", content);
+        try {
+          const r = await fetch(`/comments/${cid}`, { method: "PUT", body: fd });
+          const d = await r.json();
+          if (!d.ok) { showToast(d.message || "更新に失敗しました"); return; }
+          const body = document.getElementById(`comment-body-${cid}`);
+          body.innerHTML = escapeHtml(d.content).replace(/\n/g, "<br>");
+          body.style.display = "";
+          document.getElementById(`comment-edit-${cid}`).classList.remove("open");
+          showToast("更新しました");
+        } catch { showToast("更新に失敗しました"); }
+      }
+
+      async function deleteComment(cid) {
+        document.getElementById(`comment-menu-${cid}`)?.classList.remove("open");
+        if (!confirm("このコメントを削除しますか？")) return;
+        try {
+          const r = await fetch(`/comments/${cid}`, { method: "DELETE" });
+          const d = await r.json();
+          if (!d.ok) { showToast(d.message || "削除に失敗しました"); return; }
+          const item = document.getElementById(`comment-item-${cid}`);
+          item?.remove();
+          // カウント更新
+          const list = document.getElementById("paper-comment-list");
+          const remaining = list?.querySelectorAll(".comment-item").length || 0;
+          updatePaperCommentCount(remaining);
+          if (remaining === 0) {
+            list.innerHTML = `<div class="comment-sheet-empty"><span class="comment-sheet-empty-icon">💬</span>まだコメントはありません。<br>最初のひとことを残してみましょう。</div>`;
+          }
+          showToast("削除しました");
+        } catch { showToast("削除に失敗しました"); }
       }
 
       function openPaperCommentSheet() {

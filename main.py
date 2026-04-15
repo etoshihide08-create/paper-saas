@@ -39,6 +39,8 @@ from db import (
     get_saved_papers_by_folder,
     get_paper_history,
     create_paper_comment,
+    update_paper_comment,
+    delete_paper_comment,
     get_paper_comments,
     get_paper_comment_counts,
     toggle_favorite,
@@ -5979,6 +5981,37 @@ def create_paper_comment_api(
             "count": len(comments),
         }
     )
+
+
+@app.put("/comments/{comment_id}")
+def update_comment_api(
+    request: Request,
+    comment_id: int,
+    content: str = Form(""),
+):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "message": "ログインが必要です"}, status_code=401)
+    clean = (content or "").strip()
+    if not clean:
+        return JSONResponse({"ok": False, "message": "内容を入力してください"}, status_code=400)
+    if len(clean) > 240:
+        return JSONResponse({"ok": False, "message": "240文字以内で入力してください"}, status_code=400)
+    ok = update_paper_comment(comment_id, current_user["id"], clean)
+    if not ok:
+        return JSONResponse({"ok": False, "message": "更新できませんでした"}, status_code=403)
+    return JSONResponse({"ok": True, "content": clean})
+
+
+@app.delete("/comments/{comment_id}")
+def delete_comment_api(request: Request, comment_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "message": "ログインが必要です"}, status_code=401)
+    ok = delete_paper_comment(comment_id, current_user["id"])
+    if not ok:
+        return JSONResponse({"ok": False, "message": "削除できませんでした"}, status_code=403)
+    return JSONResponse({"ok": True})
 
 
 @app.post("/save")
