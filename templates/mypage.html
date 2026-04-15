@@ -1245,18 +1245,29 @@ function handleAvatarUpload(event) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-        const dataUrl = e.target.result;
-        // Store as data URL (base64) — max ~100KB recommended
-        if (dataUrl.length > 150000) {
-            showToast("画像が大きすぎます。小さい画像を選んでください。");
-            return;
-        }
-        document.getElementById("avatar-input").value = dataUrl;
-        const display = document.getElementById("avatar-display");
-        display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
-        document.getElementById("profile-form").classList.add("open");
-        document.getElementById("avatar-picker").classList.remove("open");
-        showToast("保存ボタンで確定されます");
+        const img = new Image();
+        img.onload = function() {
+            // 200x200 の中央クロップ + JPEG圧縮
+            const SIZE = 200;
+            const canvas = document.createElement("canvas");
+            canvas.width = SIZE;
+            canvas.height = SIZE;
+            const ctx = canvas.getContext("2d");
+            ctx.beginPath();
+            ctx.arc(SIZE/2, SIZE/2, SIZE/2, 0, Math.PI*2);
+            ctx.clip();
+            const scale = Math.max(SIZE / img.width, SIZE / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            ctx.drawImage(img, (SIZE - w) / 2, (SIZE - h) / 2, w, h);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+            document.getElementById("avatar-input").value = dataUrl;
+            const display = document.getElementById("avatar-display");
+            display.innerHTML = `<img src="${dataUrl}" alt="avatar"><div class="avatar-edit-hint">変更</div>`;
+            document.getElementById("avatar-picker").classList.remove("open");
+            submitAvatarOnly();
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
