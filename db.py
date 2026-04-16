@@ -76,6 +76,14 @@ def decrypt_wordpress_secret(value: str) -> tuple[str, bool]:
 def get_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
+    # 並行アクセス性能向上: WALモード + ロック待機5秒
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA temp_store=MEMORY")
+    except Exception:
+        pass
     return conn
 
 
@@ -174,6 +182,17 @@ def init_db():
             content TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS paper_comment_likes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comment_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(comment_id, user_id),
+            FOREIGN KEY (comment_id) REFERENCES paper_comments(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
@@ -277,6 +296,8 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_paper_comments_user_created ON paper_comments(user_id, created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_user_feedback_user_created ON user_feedback(user_id, created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_paper_fulltext_pmcid ON paper_fulltext_cache(pmcid)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_comment_likes_comment ON paper_comment_likes(comment_id)",
+        "CREATE INDEX IF NOT EXISTS idx_paper_comment_likes_user ON paper_comment_likes(user_id)",
     ]:
         cur.execute(sql)
     conn.commit()
@@ -1333,6 +1354,62 @@ def delete_paper_comment(comment_id: int, user_id: int):
     conn.commit()
     conn.close()
     return deleted
+
+
+def toggle_comment_like(comment_id: int, user_id: int) -> dict:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id FROM paper_comment_likes WHERE comment_id = ? AND user_id = ?",
+        (int(comment_id), int(user_id)),
+    )
+    existing = cur.fetchone()
+    if existing:
+        cur.execute(
+            "DELETE FROM paper_comment_likes WHERE comment_id = ? AND user_id = ?",
+            (int(comment_id), int(user_id)),
+        )
+        liked = False
+    else:
+        cur.execute(
+            "INSERT INTO paper_comment_likes (comment_id, user_id) VALUES (?, ?)",
+            (int(comment_id), int(user_id)),
+        )
+        liked = True
+    cur.execute(
+        "SELECT COUNT(*) FROM paper_comment_likes WHERE comment_id = ?",
+        (int(comment_id),),
+    )
+    count = cur.fetchone()[0]
+    conn.commit()
+    conn.close()
+    return {"liked": liked, "count": count}
+
+
+def get_comment_like_info(comment_ids: list, user_id: int | None = None) -> dict:
+    """Returns {comment_id: {"count": int, "liked": bool}} for given comment_ids."""
+    if not comment_ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" * len(comment_ids))
+    cur.execute(
+        f"SELECT comment_id, COUNT(*) FROM paper_comment_likes WHERE comment_id IN ({placeholders}) GROUP BY comment_id",
+        [int(cid) for cid in comment_ids],
+    )
+    counts = {row[0]: row[1] for row in cur.fetchall()}
+    liked_set = set()
+    if user_id:
+        cur.execute(
+            f"SELECT comment_id FROM paper_comment_likes WHERE comment_id IN ({placeholders}) AND user_id = ?",
+            [int(cid) for cid in comment_ids] + [int(user_id)],
+        )
+        liked_set = {row[0] for row in cur.fetchall()}
+    conn.close()
+    return {
+        cid: {"count": counts.get(int(cid), 0), "liked": int(cid) in liked_set}
+        for cid in comment_ids
+    }
 
 
 def get_paper_comment_counts(pubmed_ids):

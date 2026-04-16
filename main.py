@@ -43,6 +43,8 @@ from db import (
     delete_paper_comment,
     get_paper_comments,
     get_paper_comment_counts,
+    toggle_comment_like,
+    get_comment_like_info,
     toggle_favorite,
     add_like,
     toggle_public,
@@ -218,132 +220,415 @@ _master_autopost_scheduler_started = False
 _master_autopost_scheduler_lock = threading.Lock()
 
 JAPANESE_MEDICAL_KEYWORDS = {
+    # ── 脳・神経疾患 ──
     "脳卒中": "stroke",
     "脳梗塞": "cerebral infarction",
     "脳出血": "intracerebral hemorrhage",
     "くも膜下出血": "subarachnoid hemorrhage",
+    "脳性麻痺": "cerebral palsy",
+    "脊髄損傷": "spinal cord injury",
+    "頭部外傷": "traumatic brain injury",
+    "TBI": "traumatic brain injury",
+    "パーキンソン病": "Parkinson disease",
+    "アルツハイマー病": "Alzheimer disease",
+    "認知症": "dementia",
+    "多発性硬化症": "multiple sclerosis",
+    "ALS": "amyotrophic lateral sclerosis",
+    "筋萎縮性側索硬化症": "amyotrophic lateral sclerosis",
+    "ギランバレー症候群": "Guillain-Barre syndrome",
+    "末梢神経障害": "peripheral neuropathy",
+    "神経変性疾患": "neurodegenerative disease",
+    "てんかん": "epilepsy",
+    "脊髄症": "myelopathy",
+
+    # ── 整形・筋骨格 ──
+    "変形性膝関節症": "knee osteoarthritis",
+    "変形性股関節症": "hip osteoarthritis",
+    "変形性脊椎症": "spondylosis",
+    "腰痛": "low back pain",
+    "腰椎": "lumbar spine",
+    "頸椎": "cervical spine",
+    "頸部痛": "neck pain",
+    "肩関節": "shoulder joint",
+    "肩関節周囲炎": "adhesive capsulitis",
+    "五十肩": "frozen shoulder",
+    "腱板断裂": "rotator cuff tear",
+    "膝関節": "knee joint",
+    "前十字靭帯": "anterior cruciate ligament",
+    "ACL": "anterior cruciate ligament",
+    "半月板": "meniscus",
+    "足関節捻挫": "ankle sprain",
+    "大腿骨近位部骨折": "hip fracture",
+    "骨粗鬆症": "osteoporosis",
+    "骨密度": "bone mineral density",
+    "圧迫骨折": "vertebral compression fracture",
+    "人工膝関節": "total knee arthroplasty",
+    "TKA": "total knee arthroplasty",
+    "人工股関節": "total hip arthroplasty",
+    "THA": "total hip arthroplasty",
+    "脊柱側弯症": "scoliosis",
+    "関節リウマチ": "rheumatoid arthritis",
+    "RA": "rheumatoid arthritis",
+    "筋肉痛": "muscle pain",
+    "肉離れ": "muscle strain",
+
+    # ── 呼吸・循環 ──
+    "心不全": "heart failure",
+    "心筋梗塞": "myocardial infarction",
+    "狭心症": "angina",
+    "心房細動": "atrial fibrillation",
+    "高血圧": "hypertension",
+    "心臓リハビリ": "cardiac rehabilitation",
+    "呼吸不全": "respiratory failure",
+    "COPD": "chronic obstructive pulmonary disease",
+    "慢性閉塞性肺疾患": "chronic obstructive pulmonary disease",
+    "誤嚥性肺炎": "aspiration pneumonia",
+    "人工呼吸器": "mechanical ventilation",
+    "気管切開": "tracheostomy",
+    "呼吸リハビリ": "pulmonary rehabilitation",
+    "酸素療法": "oxygen therapy",
+
+    # ── 代謝・内科 ──
+    "糖尿病": "diabetes",
+    "2型糖尿病": "type 2 diabetes",
+    "肥満": "obesity",
+    "メタボリックシンドローム": "metabolic syndrome",
+    "慢性腎臓病": "chronic kidney disease",
+    "CKD": "chronic kidney disease",
+    "透析": "hemodialysis",
+    "腎臓リハ": "renal rehabilitation",
+    "腎臓機能": "renal function",
+    "がん": "cancer",
+    "がんリハ": "cancer rehabilitation",
+    "腫瘍": "tumor",
+    "乳がん": "breast cancer",
+    "大腸がん": "colorectal cancer",
+
+    # ── 高齢者・フレイル ──
+    "フレイル": "frailty",
+    "プレフレイル": "prefrailty",
+    "サルコペニア": "sarcopenia",
+    "ロコモティブシンドローム": "locomotive syndrome",
+    "ロコモ": "locomotive syndrome",
+    "廃用症候群": "deconditioning",
+    "廃用": "deconditioning",
+    "高齢者": "older adults",
+    "老年": "geriatric",
+
+    # ── 小児・発達 ──
+    "発達障害": "developmental disorder",
+    "自閉症": "autism spectrum disorder",
+    "注意欠如多動症": "attention deficit hyperactivity disorder",
+    "ADHD": "attention deficit hyperactivity disorder",
+    "知的障害": "intellectual disability",
+    "ダウン症候群": "Down syndrome",
+
+    # ── リハビリ職種・技法 ──
     "リハビリ": "rehabilitation",
     "理学療法": "physical therapy",
     "作業療法": "occupational therapy",
-    "言語療法": "speech therapy",
+    "言語療法": "speech-language therapy",
+    "言語聴覚": "speech-language therapy",
+    "運動療法": "exercise therapy",
+    "筋力トレーニング": "resistance training",
+    "筋トレ": "resistance training",
+    "有酸素運動": "aerobic exercise",
+    "ストレッチ": "stretching",
+    "ストレッチング": "stretching",
+    "マッサージ": "massage therapy",
+    "温熱療法": "thermotherapy",
+    "電気刺激": "electrical stimulation",
+    "NMES": "neuromuscular electrical stimulation",
+    "FES": "functional electrical stimulation",
+    "TMS": "transcranial magnetic stimulation",
+    "rTMS": "repetitive transcranial magnetic stimulation",
+    "CIMT": "constraint-induced movement therapy",
+    "CI療法": "constraint-induced movement therapy",
+    "ロボットリハビリ": "robot-assisted rehabilitation",
+    "ロボット補助歩行": "robot-assisted gait training",
+    "鏡療法": "mirror therapy",
+    "虚像療法": "mirror therapy",
+    "水中リハビリ": "aquatic therapy",
+    "水中歩行": "hydrotherapy",
+    "テレリハ": "telerehabilitation",
+    "遠隔リハ": "telerehabilitation",
+    "訓練": "training",
+    "介入": "intervention",
+
+    # ── 動作・機能 ──
     "歩行": "gait",
     "歩行訓練": "gait training",
+    "歩行分析": "gait analysis",
+    "歩行速度": "gait speed",
     "バランス": "balance",
+    "バランス訓練": "balance training",
+    "立位バランス": "standing balance",
+    "転倒": "fall",
+    "転倒予防": "fall prevention",
     "立位": "standing",
     "座位": "sitting",
     "起立": "sit to stand",
     "移乗": "transfer",
     "上肢": "upper limb",
+    "上肢機能": "upper extremity function",
     "下肢": "lower limb",
+    "下肢筋力": "lower limb strength",
     "手": "hand",
+    "手指": "finger",
+    "手機能": "hand function",
     "腕": "arm",
     "肩": "shoulder",
     "肘": "elbow",
     "膝": "knee",
     "足関節": "ankle",
-    "麻痺": "paralysis",
-    "片麻痺": "hemiplegia",
-    "両麻痺": "diplegia",
+    "股関節": "hip joint",
+    "握力": "grip strength",
     "筋力": "muscle strength",
     "筋力低下": "muscle weakness",
     "持久力": "endurance",
     "可動域": "range of motion",
+    "関節可動域": "range of motion",
+    "ROM": "range of motion",
     "痙縮": "spasticity",
     "拘縮": "contracture",
-    "疼痛": "pain",
-    "慢性疼痛": "chronic pain",
-    "しびれ": "numbness",
-    "感覚障害": "sensory impairment",
-    "高次脳機能": "higher brain function",
-    "注意障害": "attention disorder",
-    "失語": "aphasia",
+    "関節拘縮": "joint contracture",
+    "拘縮予防": "contracture prevention",
+    "麻痺": "paralysis",
+    "片麻痺": "hemiplegia",
+    "両麻痺": "diplegia",
+    "四肢麻痺": "tetraplegia",
+    "対麻痺": "paraplegia",
+    "早期離床": "early mobilization",
+    "離床": "mobilization",
+    "ICU離床": "ICU mobilization",
+    "術後離床": "postoperative mobilization",
+
+    # ── 嚥下・栄養 ──
     "嚥下": "swallowing",
     "嚥下障害": "dysphagia",
+    "嚥下訓練": "swallowing therapy",
+    "経管栄養": "tube feeding",
+    "経腸栄養": "enteral nutrition",
+    "低栄養": "malnutrition",
+    "栄養不良": "malnutrition",
+    "栄養管理": "nutritional management",
+    "栄養状態": "nutritional status",
+    "栄養介入": "nutritional intervention",
+    "栄養スクリーニング": "nutritional screening",
+
+    # ── 疼痛・感覚 ──
+    "疼痛": "pain",
+    "慢性疼痛": "chronic pain",
+    "急性疼痛": "acute pain",
+    "腰背部痛": "low back pain",
+    "肩こり": "neck and shoulder pain",
+    "神経因性疼痛": "neuropathic pain",
+    "しびれ": "numbness",
+    "感覚障害": "sensory impairment",
+    "痛み": "pain",
+
+    # ── 高次脳・認知・精神 ──
+    "高次脳機能": "higher brain function",
+    "高次脳機能障害": "higher brain function disorder",
+    "注意障害": "attention disorder",
+    "記憶障害": "memory disorder",
+    "遂行機能障害": "executive dysfunction",
+    "失語": "aphasia",
+    "失語症": "aphasia",
+    "失行": "apraxia",
+    "失認": "agnosia",
+    "半側空間無視": "hemispatial neglect",
     "認知": "cognition",
     "認知障害": "cognitive impairment",
+    "認知機能": "cognitive function",
     "うつ": "depression",
-    "予後": "prognosis",
-    "目標設定": "goal setting",
-    "退院": "discharge",
-    "在宅": "home discharge",
+    "不安": "anxiety",
+    "睡眠障害": "sleep disorder",
+    "睡眠": "sleep",
+    "QOL": "quality of life",
+    "生活の質": "quality of life",
+    "意欲": "motivation",
+    "モチベーション": "motivation",
+
+    # ── ADL・社会参加 ──
     "日常生活動作": "activities of daily living",
     "ADL": "activities of daily living",
     "IADL": "instrumental activities of daily living",
-    "転倒": "fall",
-    "転倒予防": "fall prevention",
-    "脊髄損傷": "spinal cord injury",
-    "脳性麻痺": "cerebral palsy",
-    "パーキンソン病": "Parkinson disease",
-    "整形": "orthopedics",
-    "変形性膝関節症": "knee osteoarthritis",
-    "股関節": "hip joint",
+    "手段的ADL": "instrumental activities of daily living",
+    "生活機能": "functional capacity",
+    "社会参加": "social participation",
+    "復職": "return to work",
+    "就労支援": "vocational rehabilitation",
+
+    # ── 退院・地域 ──
+    "退院": "discharge",
+    "在宅": "home discharge",
+    "在宅復帰": "home discharge",
+    "在宅リハ": "home rehabilitation",
+    "訪問リハ": "home visit rehabilitation",
+    "通所リハ": "day service rehabilitation",
+    "地域リハ": "community rehabilitation",
+    "再入院": "readmission",
+    "再入院予防": "readmission prevention",
+    "退院支援": "discharge planning",
+
+    # ── 評価ツール ──
+    "FIM": "functional independence measure",
+    "バーセルインデックス": "Barthel index",
+    "MBI": "modified Barthel index",
+    "MMSE": "mini-mental state examination",
+    "MoCA": "Montreal Cognitive Assessment",
+    "GCS": "Glasgow Coma Scale",
+    "NIHSS": "National Institutes of Health Stroke Scale",
+    "Berg Balance Scale": "Berg Balance Scale",
+    "BBS": "Berg Balance Scale",
+    "TUG": "timed up and go",
+    "Timed Up and Go": "timed up and go",
+    "6分間歩行試験": "6-minute walk test",
+    "6MWT": "6-minute walk test",
+    "10m歩行テスト": "10-meter walk test",
+    "10MWT": "10-meter walk test",
+    "VAS": "visual analog scale",
+    "NRS": "numeric rating scale",
+    "BI": "Barthel index",
+    "HDS-R": "Hasegawa dementia scale",
+    "SPPB": "short physical performance battery",
+    "CS-30": "chair stand test",
+
+    # ── 装具・補助具 ──
+    "装具": "orthosis",
+    "AFO": "ankle foot orthosis",
+    "KAFO": "knee ankle foot orthosis",
+    "短下肢装具": "ankle foot orthosis",
+    "長下肢装具": "knee ankle foot orthosis",
+    "車椅子": "wheelchair",
+    "杖": "cane",
+    "歩行器": "walker",
+    "ロフストランドクラッチ": "Lofstrand crutch",
+    "義肢": "prosthesis",
+    "義足": "prosthetic leg",
+    "スプリント": "splint",
+
+    # ── スポーツ・外傷 ──
+    "スポーツリハ": "sports rehabilitation",
+    "スポーツ障害": "sports injury",
+    "スポーツ": "sport",
+    "アスリート": "athlete",
+    "肉離れ": "muscle strain",
+    "靭帯損傷": "ligament injury",
+
+    # ── ICU・急性期 ──
+    "ICU": "intensive care unit",
+    "集中治療": "intensive care",
+    "急性期": "acute phase",
+    "人工呼吸管理": "mechanical ventilation",
+    "sepsis": "sepsis",
+    "敗血症": "sepsis",
+
+    # ── その他医療・リハ ──
+    "褥瘡": "pressure ulcer",
+    "床ずれ": "pressure ulcer",
+    "浮腫": "edema",
+    "リンパ浮腫": "lymphedema",
     "骨折": "fracture",
-    "大腿骨近位部骨折": "hip fracture",
-    "人工膝関節": "total knee arthroplasty",
-    "人工股関節": "total hip arthroplasty",
-    "呼吸": "respiration",
-    "心肺": "cardiopulmonary",
-    "心不全": "heart failure",
-    "呼吸リハビリ": "pulmonary rehabilitation",
-    "運動療法": "exercise therapy",
-    "介入": "intervention",
-    "訓練": "training",
+    "骨格筋": "skeletal muscle",
+    "心拍数": "heart rate",
+    "血圧": "blood pressure",
+    "酸素飽和度": "oxygen saturation",
+    "SpO2": "oxygen saturation",
+    "体力": "physical fitness",
+    "運動機能": "motor function",
+    "運動学習": "motor learning",
+    "運動制御": "motor control",
+    "バイオメカニクス": "biomechanics",
+    "筋電図": "electromyography",
+    "EMG": "electromyography",
+    "感染対策": "infection control",
+    "患者教育": "patient education",
+    "自己管理": "self-management",
+    "家族支援": "family support",
+    "多職種連携": "interprofessional collaboration",
+    "チームアプローチ": "team approach",
+
+    # ── 研究デザイン ──
     "評価": "assessment",
     "尺度": "scale",
+    "信頼性": "reliability",
+    "妥当性": "validity",
+    "感度": "sensitivity",
+    "特異度": "specificity",
+    "予後": "prognosis",
+    "目標設定": "goal setting",
     "ランダム化比較試験": "randomized controlled trial",
     "RCT": "randomized controlled trial",
     "症例報告": "case report",
-    "コホート": "cohort",
+    "コホート": "cohort study",
+    "コホート研究": "cohort study",
+    "横断研究": "cross-sectional study",
+    "観察研究": "observational study",
     "メタアナリシス": "meta-analysis",
     "システマティックレビュー": "systematic review",
+    "エビデンス": "evidence",
+
+    # ── 一般語 ──
+    "呼吸": "respiration",
+    "呼吸機能": "respiratory function",
+    "心肺": "cardiopulmonary",
+    "持久力": "endurance",
+    "体力": "physical capacity",
+    "介護": "long-term care",
+    "介護予防": "nursing care prevention",
+    "リスク管理": "risk management",
+    "安全管理": "patient safety",
 }
 
 SEARCH_QUERY_ALIASES = {
+    # ── タグ対応の複合クエリ ──
     "中枢": "(stroke OR cerebral infarction OR intracerebral hemorrhage OR spinal cord injury OR traumatic brain injury)",
-    "脳神経": "(Parkinson disease OR multiple sclerosis OR amyotrophic lateral sclerosis OR peripheral neuropathy)",
-    "呼吸器": "(pulmonary rehabilitation OR COPD OR respiratory failure OR aspiration pneumonia)",
-    "循環器": "(cardiac rehabilitation OR heart failure OR myocardial infarction OR arrhythmia)",
-    "腎臓機能": "(chronic kidney disease OR dialysis OR renal rehabilitation)",
-    "高齢者・フレイル": "(frailty OR sarcopenia OR older adults OR geriatric rehabilitation)",
-    "廃用症候群": "(deconditioning OR disuse syndrome OR prolonged bed rest OR early mobilization)",
-    "リスク管理": "(risk management OR fall prevention OR complication prevention OR vital sign monitoring)",
-    "訪問・地域": "(home rehabilitation OR community rehabilitation OR home care)",
-    "小児リハ": "(pediatric rehabilitation OR cerebral palsy OR developmental disorder)",
+    "脳神経": "(Parkinson disease OR multiple sclerosis OR amyotrophic lateral sclerosis OR peripheral neuropathy OR neurodegenerative)",
+    "呼吸器": "(pulmonary rehabilitation OR COPD OR respiratory failure OR aspiration pneumonia OR mechanical ventilation)",
+    "循環器": "(cardiac rehabilitation OR heart failure OR myocardial infarction OR arrhythmia OR atrial fibrillation)",
+    "腎臓機能": "(chronic kidney disease OR dialysis OR renal rehabilitation OR renal function)",
+    "高齢者・フレイル": "(frailty OR sarcopenia OR older adults OR geriatric rehabilitation OR locomotive syndrome)",
+    "廃用症候群": "(deconditioning OR disuse syndrome OR prolonged bed rest OR early mobilization OR hospital-acquired weakness)",
+    "リスク管理": "(risk management OR fall prevention OR complication prevention OR vital sign monitoring OR patient safety)",
+    "訪問・地域": "(home rehabilitation OR community rehabilitation OR home care OR home visit)",
+    "小児リハ": "(pediatric rehabilitation OR cerebral palsy OR developmental disorder OR autism spectrum disorder)",
     "防災リハ": "(disaster rehabilitation OR shelter support OR disaster support)",
-    "ADL": "(activities of daily living OR ADL OR instrumental activities of daily living)",
-    "離床": "(early mobilization OR ICU mobilization OR postoperative mobilization)",
-    "装具": "(orthosis OR ankle foot orthosis OR AFO OR KAFO OR splint)",
-    "検査測定": "(assessment OR outcome measure OR evaluation)",
-    "栄養管理": "(nutrition management OR malnutrition OR nutritional assessment)",
-    "画像所見": "(MRI OR CT OR radiograph OR ultrasound imaging)",
-    "嚥下・言語": "(dysphagia OR swallowing rehabilitation OR aphasia OR communication disorder)",
-    "認知": "(cognition OR cognitive impairment OR dementia)",
-    "目標設定・教育": "(goal setting OR patient education OR self management)",
-    "アセスメント": "(clinical reasoning OR assessment OR prognosis)",
-    "多職種連携": "(interprofessional collaboration OR multidisciplinary team)",
-    "再入院予防": "(readmission prevention OR discharge planning)",
-    "心のケア": "(motivation OR depression OR anxiety OR psychological support)",
-    "病期・場面": "(acute care OR ICU OR rehabilitation ward OR home care)",
-    "基礎医学": "(anatomy OR physiology OR kinesiology OR pathology)",
-    "評価・研究デザイン": "(randomized controlled trial OR systematic review OR meta-analysis OR cohort study)",
-    "フレイル": "frailty",
-    "プレフレイル": "prefrailty",
-    "サルコペニア": "sarcopenia",
-    "ロコモティブシンドローム": "locomotive syndrome",
-    "在宅復帰": "home discharge",
-    "早期離床": "early mobilization",
-    "ICU離床": "ICU mobilization",
-    "術後離床": "postoperative mobilization",
-    "AFO": "ankle foot orthosis",
-    "KAFO": "knee ankle foot orthosis",
-    "Berg Balance Scale": "Berg Balance Scale",
-    "6分間歩行試験": "6-minute walk test",
-    "10m歩行テスト": "10-meter walk test",
-    "歩行分析": "gait analysis",
-    "栄養スクリーニング": "nutritional screening",
-    "感染対策": "infection control",
-    "患者教育": "patient education",
-    "家族支援": "family support",
+    "ADL": "(activities of daily living OR functional independence OR Barthel index OR FIM OR ADL)",
+    "ADL・生活機能": "(activities of daily living OR functional independence OR Barthel index OR FIM OR IADL)",
+    "離床": "(early mobilization OR ICU mobilization OR postoperative mobilization OR bed mobility)",
+    "装具": "(orthosis OR ankle foot orthosis OR AFO OR KAFO OR splint OR prosthesis OR wheelchair)",
+    "検査測定": "(assessment OR outcome measure OR evaluation OR reliability OR validity)",
+    "栄養管理": "(nutrition management OR malnutrition OR nutritional assessment OR enteral nutrition OR nutritional intervention)",
+    "画像所見": "(MRI OR CT imaging OR radiograph OR ultrasound imaging OR echocardiography)",
+    "嚥下・言語": "(dysphagia OR swallowing rehabilitation OR aphasia OR communication disorder OR deglutition)",
+    "認知": "(cognition OR cognitive impairment OR dementia OR Alzheimer OR MMSE OR MoCA)",
+    "目標設定・教育": "(goal setting OR patient education OR self management OR shared decision making)",
+    "アセスメント": "(clinical reasoning OR assessment OR prognosis OR outcome measure)",
+    "多職種連携": "(interprofessional collaboration OR multidisciplinary team OR team approach OR care coordination)",
+    "再入院予防": "(readmission prevention OR discharge planning OR hospital readmission OR transitional care)",
+    "心のケア": "(motivation OR depression OR anxiety OR psychological support OR mental health)",
+    "病期・場面": "(acute care OR ICU OR rehabilitation ward OR home care OR long-term care)",
+    "基礎医学": "(anatomy OR physiology OR kinesiology OR pathology OR biomechanics)",
+    "評価・研究デザイン": "(randomized controlled trial OR systematic review OR meta-analysis OR cohort study OR observational study)",
+    "歩行・バランス": "(gait OR walking OR balance OR postural stability OR timed up and go OR fall risk)",
+    "上肢": "(upper extremity OR upper limb OR arm function OR hand function OR grip strength OR shoulder)",
+    "嚥下障害": "(dysphagia OR swallowing disorder OR aspiration OR oral feeding OR videofluoroscopy)",
+    "疼痛管理": "(pain management OR chronic pain OR neuropathic pain OR low back pain OR analgesic)",
+    "転倒リスク": "(fall risk OR fall prevention OR fall incidence OR balance assessment)",
+    "廃用予防": "(deconditioning prevention OR early mobilization OR physical activity OR exercise program)",
+    "低栄養": "(malnutrition OR undernutrition OR nutritional deficiency OR albumin OR weight loss)",
+    "拘縮予防": "(contracture prevention OR joint contracture OR stretching OR passive range of motion OR positioning)",
+    "スポーツリハ": "(sports rehabilitation OR sports injury OR athletic training OR ACL OR return to sport)",
+    "糖尿病リハ": "(diabetes rehabilitation OR diabetic neuropathy OR glycemic control OR exercise diabetes)",
+    "がんリハ": "(cancer rehabilitation OR oncology rehabilitation OR cancer-related fatigue OR chemotherapy)",
+    "ポリファーマシー": "(polypharmacy OR multiple medications OR drug interaction OR deprescribing)",
+    "褥瘡管理": "(pressure ulcer OR pressure injury OR wound care OR skin breakdown OR repositioning)",
+    "リンパ浮腫": "(lymphedema OR lymphatic drainage OR manual lymphatic drainage OR compression therapy)",
+    "心肺リハ": "(cardiopulmonary rehabilitation OR cardiac rehabilitation OR pulmonary rehabilitation OR exercise tolerance)",
+    "運動学習": "(motor learning OR motor control OR motor skill OR neuroplasticity OR practice)",
+    "テレリハ": "(telerehabilitation OR remote rehabilitation OR digital health OR mHealth OR telemedicine rehabilitation)",
 }
 
 COMMON_DISCOVERY_TAGS = [
@@ -2350,26 +2635,61 @@ def _chunked(items: list[Any], size: int) -> list[list[Any]]:
     return [items[idx: idx + size] for idx in range(0, len(items), size)]
 
 
+def _build_pubmed_query(keyword: str) -> str:
+    """
+    素のキーワードを PubMed 向けクエリに変換する。
+    - フィールドタグなしの短語は [Title/Abstract] を付与して自動マッピングを抑制
+    - 既にフィールドタグ・演算子が含まれている場合はそのまま返す
+    - 複数単語はANDで結合して各概念にフィールドを付ける
+    """
+    kw = (keyword or "").strip()
+    if not kw:
+        return kw
+    # 既にPubMed構文（フィールドタグ、論理演算子）が含まれていればそのまま
+    if "[" in kw or " AND " in kw or " OR " in kw:
+        return kw
+    words = kw.split()
+    if len(words) == 1:
+        return f"{kw}[Title/Abstract]"
+    # 2語以上: 全体を引用句でくくった[Title/Abstract]と、各語AND検索の両方を OR で試せるよう、
+    # まずは全体フレーズとして扱う（最も精度高い）
+    phrase = f'"{kw}"[Title/Abstract]'
+    return phrase
+
+
 def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
     cached_id_list = _timed_cache_get(search_id_cache, converted_keyword, SEARCH_CACHE_TTL)
     if cached_id_list is not None:
         return cached_id_list
 
-    try:
-        handle = Entrez.esearch(
-            db="pubmed",
-            term=converted_keyword,
-            retmax=250
-        )
-        record = Entrez.read(handle)
-        handle.close()
-        id_list = record.get("IdList", [])
-        if not isinstance(id_list, list):
-            id_list = []
-        _timed_cache_set(search_id_cache, converted_keyword, id_list)
-        return id_list
-    except Exception:
-        return None
+    # フレーズ検索（高精度）→ 結果が少なければ緩いクエリにフォールバック
+    queries_to_try: list[str] = []
+    built = _build_pubmed_query(converted_keyword)
+    if built != converted_keyword:
+        queries_to_try.append(built)
+    queries_to_try.append(converted_keyword)
+
+    for query in queries_to_try:
+        try:
+            handle = Entrez.esearch(
+                db="pubmed",
+                term=query,
+                retmax=100,
+                sort="relevance",
+            )
+            record = Entrez.read(handle)
+            handle.close()
+            id_list = record.get("IdList", [])
+            if not isinstance(id_list, list):
+                id_list = []
+            if id_list:
+                _timed_cache_set(search_id_cache, converted_keyword, id_list)
+                return id_list
+        except Exception:
+            continue
+
+    _timed_cache_set(search_id_cache, converted_keyword, [])
+    return []
 
 
 def build_search_query_candidates(keyword: str) -> list[str]:
@@ -2401,21 +2721,28 @@ def _ask_gpt_for_search_keyword(keyword: str) -> str:
     try:
         response = client.responses.create(
             model="gpt-4.1-mini",
-            input=f"""
-次の検索キーワードを、PubMed検索に適した英語の医学検索語へ変換してください。
+            input=f"""次の検索キーワードを、PubMed検索式に変換してください。
 
-条件:
-- 出力は英語の検索語のみ
-- 余計な説明は不要
-- 単語をスペース区切りで出す
-- 医学・リハビリ分野として自然な語を使う
-- もとの意味を変えない
+ルール:
+- 出力はPubMed検索式のみ（説明・改行不要）
+- 各概念に [Title/Abstract] フィールドタグを付ける
+- 複数概念は AND で結合する
+- フレーズは二重引用符でくくる
+- 同義語が重要な場合のみ OR を使う
+- 医学・リハビリ分野として最も一般的な英語表現を使う
+- MeSH Termsは使わず Title/Abstract のみでよい
+
+例:
+  入力: 脳卒中 歩行訓練
+  出力: "stroke"[Title/Abstract] AND "gait training"[Title/Abstract]
+
+  入力: 変形性膝関節症 運動療法
+  出力: "knee osteoarthritis"[Title/Abstract] AND ("exercise therapy"[Title/Abstract] OR "physical therapy"[Title/Abstract])
 
 検索キーワード:
-{normalized_keyword}
-"""
+{normalized_keyword}"""
         )
-        return " ".join(response.output_text.strip().split())
+        return response.output_text.strip()
     except Exception:
         return ""
 
@@ -2425,6 +2752,7 @@ def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
     if not normalized_keyword:
         return "", []
 
+    # ① まずローカル辞書で変換を試みる（無料・高速）
     candidates = build_search_query_candidates(normalized_keyword)
     fallback_candidate = candidates[0] if candidates else normalized_keyword
 
@@ -2433,6 +2761,7 @@ def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
         if id_list:
             return candidate, id_list
 
+    # ② 辞書でヒットしなかった日本語クエリのみGPTにフォールバック
     if contains_japanese(normalized_keyword):
         gpt_candidate = _ask_gpt_for_search_keyword(normalized_keyword)
         if gpt_candidate and gpt_candidate not in candidates:
@@ -2684,33 +3013,54 @@ def score_search_paper_relevance(paper: dict[str, Any], original_keyword: str, c
     score = 0
     title = str(paper.get("title") or "").lower()
     jp_title = str(paper.get("jp_title") or "").lower()
+    abstract = str(paper.get("abstract") or "").lower()
     journal = str(paper.get("journal") or "").lower()
     tag_text = " ".join(paper.get("tags") or []).lower()
 
-    for token in _tokenize_search_terms(original_keyword):
+    orig_tokens = _tokenize_search_terms(original_keyword)
+    conv_tokens = _tokenize_search_terms(converted_keyword)
+
+    # ── 元キーワード（日本語含む）でのスコアリング ──
+    for token in orig_tokens:
         if contains_japanese(token):
             if jp_title == token:
-                score += 60
+                score += 80
             elif token in jp_title:
-                score += 28
+                score += 40
             if token in tag_text:
-                score += 18
+                score += 20
         else:
             if title == token:
-                score += 56
+                score += 70
             elif token in title:
-                score += 22
+                score += 32
+            if token in abstract:
+                score += 12
             if token in journal:
                 score += 6
 
-    for token in _tokenize_search_terms(converted_keyword):
+    # ── 変換後キーワード（英語）でのスコアリング ──
+    # converted_keyword に PubMed フィールドタグが含まれる場合はトークンから記号を除去
+    clean_conv_tokens = [
+        re.sub(r'\[.*?\]', '', t).strip().strip('"') for t in conv_tokens
+    ]
+    clean_conv_tokens = [t for t in clean_conv_tokens if t]
+    for token in clean_conv_tokens:
         if token in title:
-            score += 14
-        elif token in journal:
+            score += 18
+        if token in abstract:
+            score += 8
+        if token in journal:
             score += 4
 
+    # ── 全トークンがtitleに含まれるボーナス（完全一致に近い） ──
+    all_eng_tokens = [t for t in orig_tokens if not contains_japanese(t)] + clean_conv_tokens
+    if all_eng_tokens and all(t in title for t in all_eng_tokens):
+        score += 30
+
+    # ── clinical_score ボーナス ──
     try:
-        score += int(float(str(paper.get("clinical_score") or "").strip()) * 2)
+        score += int(float(str(paper.get("clinical_score") or "").strip()) * 3)
     except (TypeError, ValueError):
         pass
 
@@ -3556,17 +3906,22 @@ def _paper_comment_display_name(comment_row: dict) -> str:
     return "ユーザー"
 
 
-def _serialize_paper_comment(comment_row: dict, current_user_id: int | None = None) -> dict:
+def _serialize_paper_comment(comment_row: dict, current_user_id: int | None = None, like_info: dict | None = None) -> dict:
     created_at = str(comment_row.get("created_at") or "").strip()
+    cid = int(comment_row.get("id") or 0)
+    li = (like_info or {}).get(cid, {"count": 0, "liked": False})
     return {
-        "id": int(comment_row.get("id") or 0),
+        "id": cid,
         "pubmed_id": str(comment_row.get("pubmed_id") or ""),
         "display_name": _paper_comment_display_name(comment_row),
         "avatar": (comment_row.get("user_avatar") or "").strip(),
         "content": str(comment_row.get("content") or "").strip(),
         "created_at": created_at,
         "created_label": created_at[:16].replace("T", " ") if created_at else "",
+        "user_id": int(comment_row.get("user_id") or 0),
         "is_own": bool(current_user_id and int(comment_row.get("user_id") or 0) == int(current_user_id)),
+        "like_count": li["count"],
+        "liked_by_me": li["liked"],
     }
     
 def translate_title_to_japanese(title: str) -> str:
@@ -5821,8 +6176,10 @@ def paper(
         except Exception:
             save_folder_choices = [DEFAULT_SAVED_FOLDER_LABEL]
     paper_comments_raw = get_paper_comments(id, limit=40)
+    _pc_ids = [int(r.get("id") or 0) for r in paper_comments_raw]
+    _pc_likes = get_comment_like_info(_pc_ids, current_user_id)
     paper_comments = [
-        _serialize_paper_comment(comment_row, current_user_id=current_user_id)
+        _serialize_paper_comment(comment_row, current_user_id=current_user_id, like_info=_pc_likes)
         for comment_row in paper_comments_raw
     ]
 
@@ -5937,9 +6294,12 @@ def api_paper_fulltext(request: Request, id: str):
 def paper_comments_api(request: Request, pubmed_id: str):
     current_user = get_current_user(request)
     current_user_id = current_user["id"] if current_user else None
+    rows = get_paper_comments(pubmed_id, limit=60)
+    cids = [int(r.get("id") or 0) for r in rows]
+    likes = get_comment_like_info(cids, current_user_id)
     comments = [
-        _serialize_paper_comment(comment_row, current_user_id=current_user_id)
-        for comment_row in get_paper_comments(pubmed_id, limit=60)
+        _serialize_paper_comment(r, current_user_id=current_user_id, like_info=likes)
+        for r in rows
     ]
     return JSONResponse({"ok": True, "comments": comments, "count": len(comments)})
 
@@ -5969,9 +6329,12 @@ def create_paper_comment_api(
         paper_title=paper_title,
         paper_jp_title=paper_jp_title,
     )
+    rows = get_paper_comments(pubmed_id, limit=60)
+    cids = [int(r.get("id") or 0) for r in rows]
+    likes = get_comment_like_info(cids, current_user["id"])
     comments = [
-        _serialize_paper_comment(comment_row, current_user_id=current_user["id"])
-        for comment_row in get_paper_comments(pubmed_id, limit=60)
+        _serialize_paper_comment(r, current_user_id=current_user["id"], like_info=likes)
+        for r in rows
     ]
     return JSONResponse(
         {
@@ -6012,6 +6375,15 @@ def delete_comment_api(request: Request, comment_id: int):
     if not ok:
         return JSONResponse({"ok": False, "message": "削除できませんでした"}, status_code=403)
     return JSONResponse({"ok": True})
+
+
+@app.post("/comments/{comment_id}/like")
+def like_comment_api(request: Request, comment_id: int):
+    current_user = get_current_user(request)
+    if not current_user:
+        return JSONResponse({"ok": False, "message": "ログインが必要です"}, status_code=401)
+    result = toggle_comment_like(comment_id, current_user["id"])
+    return JSONResponse({"ok": True, "liked": result["liked"], "count": result["count"]})
 
 
 @app.post("/save")

@@ -974,19 +974,20 @@
         align-items: flex-end;
         justify-content: center;
         z-index: 300;
-        padding: 0;
+        padding: 0 0 env(safe-area-inset-bottom);
       }
       .comment-sheet-backdrop.open { display: flex; }
 
       .comment-sheet {
         width: min(560px, 100%);
-        height: 88vh;
+        height: min(85vh, 100%);
         background: #fff;
         border-radius: 20px 20px 0 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
         box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+        margin-bottom: 16px;
       }
 
       .comment-sheet-drag {
@@ -1736,6 +1737,17 @@
         .mobile-footer {
           display: none;
         }
+
+        .comment-sheet-backdrop {
+          align-items: center;
+          padding: 40px;
+        }
+        .comment-sheet {
+          max-width: 560px;
+          height: min(80vh, 760px);
+          border-radius: 24px;
+          margin-bottom: 0;
+        }
       }
     </style>
   </head>
@@ -2021,6 +2033,7 @@
             </div>
             <button type="button" class="comment-sheet-close-btn" onclick="closePaperCommentSheet()" aria-label="閉じる">✕</button>
           </div>
+          <div class="save-sheet-paper" id="paper-comment-paper-title">{{ paper.jp_title or paper.title }}</div>
           <!-- コメント一覧 -->
           <div class="comment-sheet-list" id="paper-comment-list">
             {% if paper_comments %}
@@ -2038,7 +2051,7 @@
                   <div class="comment-item-header">
                     <span class="comment-name">{{ comment.display_name or "ユーザー" }}</span>
                     <span class="comment-time">{{ comment.created_label }}</span>
-                    {% if comment.is_own %}
+                    {% if current_user and comment.user_id == current_user.id %}
                     <button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(event,{{ comment.id }})" aria-label="メニュー">⋯</button>
                     <div class="comment-menu-popup" id="comment-menu-{{ comment.id }}">
                       <button type="button" class="comment-menu-item" onclick="startEditComment({{ comment.id }})">編集</button>
@@ -2055,7 +2068,9 @@
                     </div>
                   </div>
                   <div class="comment-actions-row">
-                    <button type="button" class="comment-like-btn" onclick="toggleCommentLike(this)">♡ いいね</button>
+                    <button type="button" class="comment-like-btn{% if comment.liked_by_me %} liked{% endif %}" data-cid="{{ comment.id }}" onclick="toggleCommentLike(this)">
+                      {{ '♥' if comment.liked_by_me else '♡' }} いいね{% if comment.like_count %} {{ comment.like_count }}{% endif %}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2168,6 +2183,7 @@
       const defaultPaperFolder = {{ default_saved_folder_label | tojson | safe }};
       const paperFolderChoices = {{ save_folder_choices | tojson | safe }};
       const paperUserLoggedIn = {{ 'true' if current_user else 'false' }};
+      const CURRENT_USER_ID = {{ current_user.id | tojson if current_user else 'null' }};
       const paperSavePayload = {
         pubmed_id: {{ paper.id | tojson }},
         title: {{ (paper.title or "") | tojson }},
@@ -2253,7 +2269,7 @@
         }
         list.innerHTML = comments.map((comment) => {
           const cid = comment.id;
-          const menuHtml = comment.is_own ? `
+          const menuHtml = (CURRENT_USER_ID && comment.user_id == CURRENT_USER_ID) ? `
             <button type="button" class="comment-menu-btn" onclick="toggleCommentMenu(event,${cid})" aria-label="メニュー">⋯</button>
             <div class="comment-menu-popup" id="comment-menu-${cid}">
               <button type="button" class="comment-menu-item" onclick="startEditComment(${cid})">編集</button>
@@ -2278,7 +2294,9 @@
                 </div>
               </div>
               <div class="comment-actions-row">
-                <button type="button" class="comment-like-btn" onclick="toggleCommentLike(this)">♡ いいね</button>
+                <button type="button" class="comment-like-btn${comment.liked_by_me ? ' liked' : ''}" data-cid="${cid}" onclick="toggleCommentLike(this)">
+                  ${comment.liked_by_me ? '♥' : '♡'} いいね${comment.like_count ? ' ' + comment.like_count : ''}
+                </button>
               </div>
             </div>
           </div>`;
@@ -2384,6 +2402,16 @@
         if (sheet) {
           sheet.classList.remove("open");
           sheet.setAttribute("aria-hidden", "true");
+          // キーボード対応で変更したスタイルをリセット
+          sheet.style.top = "";
+          sheet.style.height = "";
+          sheet.style.bottom = "";
+          sheet.style.paddingBottom = "";
+        }
+        // フォーカスを外してキーボードを確実に閉じる
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === "TEXTAREA" || activeEl.tagName === "INPUT")) {
+          activeEl.blur();
         }
         if (!document.getElementById("paper-save-sheet")?.classList.contains("open")) {
           document.body.classList.remove("modal-open");
@@ -2406,9 +2434,20 @@
         }
       }
 
-      function toggleCommentLike(btn) {
-        btn.classList.toggle("liked");
-        btn.textContent = btn.classList.contains("liked") ? "♥ いいね" : "♡ いいね";
+      async function toggleCommentLike(btn) {
+        const cid = btn.dataset.cid;
+        if (!cid || !CURRENT_USER_ID) return;
+        btn.disabled = true;
+        try {
+          const r = await fetch(`/comments/${cid}/like`, { method: "POST" });
+          const d = await r.json();
+          if (d.ok) {
+            btn.classList.toggle("liked", d.liked);
+            btn.innerHTML = `${d.liked ? '♥' : '♡'} いいね${d.count ? ' ' + d.count : ''}`;
+          }
+        } finally {
+          btn.disabled = false;
+        }
       }
 
       async function submitPaperCommentNew() {
@@ -2864,6 +2903,38 @@
 
       // Initial render
       if (highlights.length) renderHighlights();
+
+      // ── コメントシート: キーボード出現時の画面ジャンプ防止 ──
+      (function() {
+        if (!window.visualViewport) return;
+        let _raf;
+
+        function syncSheetsToViewport() {
+          cancelAnimationFrame(_raf);
+          _raf = requestAnimationFrame(function() {
+            const vv  = window.visualViewport;
+            const kbH   = Math.max(0, window.innerHeight - vv.height);
+            const vtTop = vv.offsetTop || 0;
+
+            document.querySelectorAll(".comment-sheet-backdrop.open").forEach(function(el) {
+              if (kbH > 80 || vtTop > 1) {
+                el.style.top    = vtTop + "px";
+                el.style.height = vv.height + "px";
+                el.style.bottom = "auto";
+                el.style.paddingBottom = (kbH + 10) + "px";
+              } else {
+                el.style.top    = "";
+                el.style.height = "";
+                el.style.bottom = "";
+                el.style.paddingBottom = "";
+              }
+            });
+          });
+        }
+
+        window.visualViewport.addEventListener("resize", syncSheetsToViewport);
+        window.visualViewport.addEventListener("scroll", syncSheetsToViewport);
+      })();
     </script>
       </div>
       </main>

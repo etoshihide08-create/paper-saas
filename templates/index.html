@@ -1105,7 +1105,7 @@
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         z-index: 215;
-        padding: 18px 16px calc(86px + env(safe-area-inset-bottom));
+        padding: 0 0 env(safe-area-inset-bottom);
       }
 
       .comment-sheet-backdrop.open {
@@ -1115,128 +1115,99 @@
       .comment-sheet {
         width: min(100%, 560px);
         background: rgba(255,255,255,0.98);
-        border-radius: 26px 26px 20px 20px;
-        box-shadow: 0 28px 56px rgba(15,23,42,0.24);
-        padding: 18px 16px 16px;
-        max-height: min(80vh, 760px);
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -8px 32px rgba(15,23,42,0.16);
+        padding: 14px 16px 0;
+        height: min(85vh, 100%);
         display: flex;
         flex-direction: column;
+        margin-bottom: 16px;
       }
 
-      .comment-sheet-list {
-        display: grid;
-        gap: 10px;
-        overflow-y: auto;
-        padding-right: 2px;
-        margin: 2px 0 14px;
-      }
-
+      .comment-sheet-list { flex: 1; overflow-y: auto; }
       .comment-sheet-empty {
-        padding: 14px;
-        border-radius: 16px;
-        background: #f8fafc;
-        color: #64748b;
-        font-size: 13px;
-        line-height: 1.7;
-        text-align: center;
+        padding: 24px 16px; text-align: center; color: #94a3b8; font-size: 14px;
       }
 
-      .comment-item {
-        padding: 12px 13px;
-        border-radius: 16px;
-        background: #fff;
-        border: 1px solid rgba(37,99,235,0.08);
-        box-shadow: var(--shadow-soft);
+      /* ── paper.html準拠 コメントアイテム ── */
+      .comment-item { display: flex; gap: 12px; padding: 10px 16px; align-items: flex-start; position: relative; }
+      .comment-avatar {
+        width: 36px; height: 36px; border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; flex-shrink: 0; overflow: hidden;
       }
-
-      .comment-item-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
+      .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+      .comment-main { flex: 1; min-width: 0; }
+      .comment-item-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+      .comment-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+      .comment-time { font-size: 12px; color: #94a3b8; }
+      .comment-menu-btn {
+        background: none; border: none; padding: 4px; cursor: pointer;
+        font-size: 16px; color: #94a3b8; margin-left: auto;
       }
-
-      .comment-item-avatar {
-        width: 34px;
-        height: 34px;
-        border-radius: 999px;
-        background: #eff6ff;
-        color: #2563eb;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 800;
-        overflow: hidden;
-        flex-shrink: 0;
+      .comment-menu-btn:hover { color: #374151; }
+      .comment-menu-popup {
+        position: absolute; right: 0; top: 24px;
+        background: #fff; border: 1px solid #e5e7eb;
+        border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+        min-width: 120px; z-index: 400; overflow: hidden; display: none;
       }
-
-      .comment-item-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      .comment-menu-popup.open { display: block; }
+      .comment-menu-item {
+        display: block; width: 100%; padding: 11px 16px;
+        background: none; border: none; text-align: left;
+        font-size: 14px; cursor: pointer; color: #374151;
       }
-
-      .comment-item-meta {
-        min-width: 0;
+      .comment-menu-item:hover { background: #f9fafb; }
+      .comment-menu-item.danger { color: #ef4444; }
+      .comment-body { font-size: 14px; line-height: 1.7; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+      .comment-edit-area { display: none; margin-top: 6px; }
+      .comment-edit-area.open { display: block; }
+      .comment-edit-textarea {
+        width: 100%; background: #f3f4f6; border: 1px solid #d1d5db;
+        border-radius: 12px; padding: 8px 12px; font-size: 14px;
+        font-family: inherit; line-height: 1.6; resize: none; outline: none; box-sizing: border-box;
       }
+      .comment-edit-textarea:focus { border-color: #93c5fd; }
+      .comment-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+      .comment-edit-cancel { background: none; border: 1px solid #d1d5db; border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: #6b7280; }
+      .comment-edit-save { background: #2563eb; border: none; border-radius: 8px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: #fff; font-weight: 700; }
+      .comment-actions-row { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+      .comment-like-btn { background: none; border: none; padding: 0; cursor: pointer; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 3px; }
+      .comment-like-btn:hover { color: #ef4444; }
+      .comment-like-btn.liked { color: #ef4444; }
 
-      .comment-item-name {
-        font-size: 13px;
-        font-weight: 800;
-        color: #16324f;
+      /* ── Instagram風入力エリア (paper.html準拠) ── */
+      .comment-sheet-input-wrap {
+        flex-shrink: 0; border-top: 1px solid #f1f5f9; background: #fff;
+        padding: 10px 12px; padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        display: flex; align-items: flex-end; gap: 10px;
       }
-
-      .comment-item-time {
-        font-size: 11px;
-        color: #64748b;
-        margin-top: 2px;
+      .comment-sheet-input-avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 700; flex-shrink: 0; overflow: hidden;
       }
-
-      .comment-item-body {
-        font-size: 14px;
-        line-height: 1.7;
-        color: #334155;
-        white-space: pre-wrap;
-        word-break: break-word;
+      .comment-sheet-input-avatar img { width: 100%; height: 100%; object-fit: cover; }
+      .comment-sheet-input-box {
+        flex: 1; display: flex; align-items: flex-end;
+        background: #f3f4f6; border-radius: 22px; padding: 8px 14px; gap: 8px;
       }
-
-      .comment-sheet-form {
-        display: grid;
-        gap: 10px;
-        margin-top: auto;
-      }
-
       .comment-sheet-textarea {
-        width: 100%;
-        min-height: 96px;
-        resize: vertical;
-        border: 1px solid #dbe3ee;
-        border-radius: 16px;
-        padding: 12px 14px;
-        font: inherit;
-        font-size: 14px;
-        line-height: 1.7;
-        outline: none;
+        flex: 1; background: none; border: none; outline: none;
+        font-size: 14px; font-family: inherit; line-height: 1.6;
+        resize: none; max-height: 100px; color: #0f172a; overflow-y: auto;
       }
-
-      .comment-sheet-textarea:focus {
-        border-color: rgba(37,99,235,0.28);
-        box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+      .comment-sheet-textarea::placeholder { color: #94a3b8; }
+      .comment-sheet-send-btn {
+        background: none; border: none; padding: 0; cursor: pointer;
+        font-size: 22px; line-height: 1; color: #2563eb; flex-shrink: 0;
+        opacity: 0.4; transition: opacity 0.15s;
       }
-
-      .comment-sheet-actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .comment-sheet-note {
-        font-size: 12px;
-        color: #64748b;
-        line-height: 1.6;
-      }
+      .comment-sheet-send-btn.active { opacity: 1; }
+      .comment-sheet-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
       .site-toast {
         position: fixed;
@@ -1267,14 +1238,24 @@
       }
 
       @media (min-width: 760px) {
-        .save-sheet-backdrop,
-        .comment-sheet-backdrop {
+        .save-sheet-backdrop {
           align-items: center;
           padding: 32px;
         }
 
-        .save-sheet,
+        .comment-sheet-backdrop {
+          align-items: center;
+          padding: 40px;
+        }
+
         .comment-sheet {
+          max-width: 560px;
+          height: min(80vh, 760px);
+          border-radius: 24px;
+          margin-bottom: 0;
+        }
+
+        .save-sheet {
           border-radius: 24px;
         }
       }
@@ -1868,6 +1849,162 @@
           font-weight: 800;
           margin-bottom: 4px;
         }
+      }
+      /* ── モバイル: フッター キーボード対応 ── */
+      .mobile-footer {
+        transition: transform 0.22s cubic-bezier(.4,0,.2,1), opacity 0.22s ease;
+      }
+      .mobile-footer.keyboard-open {
+        transform: translateY(110%);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* ── モバイル: 検索オーバーレイ ── */
+      .search-overlay {
+        display: none;
+      }
+      @media (max-width: 1023px) {
+        .search-overlay {
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          inset: 0;
+          background: #fff;
+          z-index: 2000;
+          transform: translateY(100%);
+          transition: transform 0.24s cubic-bezier(.2,.8,.2,1);
+          will-change: transform;
+        }
+        .search-overlay.open {
+          transform: translateY(0);
+        }
+        .search-overlay-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          padding-top: calc(10px + env(safe-area-inset-top));
+          background: #fff;
+          border-bottom: 1px solid #f1f5f9;
+          flex-shrink: 0;
+        }
+        .search-overlay-back {
+          background: none;
+          border: none;
+          font-size: 20px;
+          color: #374151;
+          cursor: pointer;
+          padding: 6px 8px;
+          border-radius: 10px;
+          flex-shrink: 0;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+        }
+        .search-overlay-back:active { background: #f1f5f9; }
+        .search-overlay-form {
+          flex: 1;
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          min-width: 0;
+        }
+        .search-overlay-input {
+          flex: 1;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 10px 13px;
+          font-size: 16px;
+          outline: none;
+          background: #f8fafc;
+          min-width: 0;
+          font-family: inherit;
+        }
+        .search-overlay-input:focus {
+          border-color: #2563eb;
+          background: #fff;
+        }
+        .search-overlay-submit {
+          flex-shrink: 0;
+          padding: 10px 16px;
+          background: #2563eb;
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: inherit;
+        }
+        .search-overlay-submit:active { opacity: 0.85; }
+        .search-overlay-body {
+          flex: 1;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 18px 14px calc(20px + env(safe-area-inset-bottom));
+        }
+        .search-overlay-section-title {
+          font-size: 11px;
+          font-weight: 700;
+          color: #94a3b8;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+          margin-top: 20px;
+        }
+        .search-overlay-section-title:first-child { margin-top: 0; }
+        .search-overlay-history {
+          display: flex;
+          flex-direction: column;
+        }
+        .search-overlay-history-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 11px 8px;
+          border-radius: 10px;
+          cursor: pointer;
+          color: #374151;
+          font-size: 14px;
+          border: none;
+          background: none;
+          text-align: left;
+          width: 100%;
+          font-family: inherit;
+        }
+        .search-overlay-history-item:active { background: #f8fafc; }
+        .search-overlay-history-icon { color: #94a3b8; flex-shrink: 0; }
+        .search-overlay-history-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .search-overlay-clear-btn {
+          display: inline-block;
+          margin-top: 4px;
+          background: none;
+          border: none;
+          font-size: 12px;
+          color: #94a3b8;
+          cursor: pointer;
+          padding: 4px 8px;
+          font-family: inherit;
+        }
+        .search-overlay-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .search-overlay-tag {
+          padding: 7px 14px;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 700;
+          border: 1.5px solid #d1d5db;
+          background: #fff;
+          color: #374151;
+          cursor: pointer;
+          font-family: inherit;
+        }
+        .search-overlay-tag:active { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+        .search-overlay-tag.selected { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
       }
     </style>
   </head>
@@ -2474,24 +2611,28 @@
 
     <div class="comment-sheet-backdrop" id="ranking-comment-sheet" aria-hidden="true">
       <div class="comment-sheet" role="dialog" aria-modal="true" aria-labelledby="ranking-comment-sheet-title">
-        <div class="save-sheet-header">
-          <div>
-            <div class="save-sheet-title" id="ranking-comment-sheet-title">論文コメント</div>
-            <div class="save-sheet-subtitle">ひとこと感想や、臨床で使えるポイントを残せます。</div>
-          </div>
+        <div class="save-sheet-header" style="padding-bottom:8px;">
+          <div class="save-sheet-title" id="ranking-comment-sheet-title">コメント</div>
           <button type="button" class="save-sheet-close" onclick="closeRankingCommentSheet()" aria-label="閉じる">✕</button>
         </div>
         <div class="save-sheet-paper" id="ranking-comment-paper-title"></div>
         <div class="comment-sheet-list" id="ranking-comment-list">
           <div class="comment-sheet-empty">コメントを読み込み中です…</div>
         </div>
-        <form class="comment-sheet-form" onsubmit="submitRankingComment(event)">
-          <textarea class="comment-sheet-textarea" id="ranking-comment-input" placeholder="この論文で気づいたことをひとこと書く"></textarea>
-          <div class="comment-sheet-actions">
-            <div class="comment-sheet-note">あとで論文詳細からも見返せます。</div>
-            <button type="submit" class="save-sheet-submit" id="ranking-comment-submit">コメントする</button>
+        {% if current_user %}
+        <div class="comment-sheet-input-wrap">
+          <div class="comment-sheet-input-avatar">
+            {% if current_user.avatar and (current_user.avatar.startswith('data:') or current_user.avatar.startswith('http')) %}
+              <img src="{{ current_user.avatar }}" alt="avatar">
+            {% elif current_user.avatar and current_user.avatar|length <= 4 %}{{ current_user.avatar }}
+            {% else %}{{ (current_user.display_name or current_user.email or "?")[0]|upper }}{% endif %}
           </div>
-        </form>
+          <div class="comment-sheet-input-box">
+            <textarea class="comment-sheet-textarea" id="ranking-comment-input" placeholder="この論文についてコメントする…" rows="1" oninput="onRankingCommentInput(this)"></textarea>
+            <button type="button" class="comment-sheet-send-btn" id="ranking-comment-submit" onclick="submitRankingComment()" disabled>➤</button>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
 
@@ -2558,6 +2699,7 @@
         paper: null,
         comments: [],
       };
+      const CURRENT_USER_ID = {{ current_user.id | tojson if current_user else 'null' }};
 
       function showToast(msg) {
         const toast = document.getElementById("site-toast");
@@ -2777,6 +2919,21 @@
         return fallback.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       }
 
+      function escHtml(s) {
+        return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+      function relTimeRanking(ts) {
+        if (!ts) return "";
+        const d = new Date(ts.replace(" ","T"));
+        if (isNaN(d)) return ts.slice(0,16).replace("T"," ");
+        const diff = (Date.now() - d.getTime()) / 1000;
+        if (diff < 60) return "たった今";
+        if (diff < 3600) return Math.floor(diff/60) + "分前";
+        if (diff < 86400) return Math.floor(diff/3600) + "時間前";
+        if (diff < 604800) return Math.floor(diff/86400) + "日前";
+        if (diff < 2592000) return Math.floor(diff/604800) + "週間前";
+        return ts.slice(0,10);
+      }
       function renderRankingComments(comments) {
         const list = document.getElementById("ranking-comment-list");
         if (!list) return;
@@ -2784,18 +2941,117 @@
           list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
           return;
         }
-        list.innerHTML = comments.map((comment) => `
-          <div class="comment-item">
-            <div class="comment-item-header">
-              <div class="comment-item-avatar">${renderCommentAvatar(comment)}</div>
-              <div class="comment-item-meta">
-                <div class="comment-item-name">${comment.display_name || "ユーザー"}</div>
-                <div class="comment-item-time">${comment.created_label || ""}</div>
+        list.innerHTML = comments.map((c) => {
+          const av = c.avatar && c.avatar.length > 4
+            ? `<img src="${escHtml(c.avatar)}" alt="avatar">`
+            : escHtml((c.display_name || "?")[0].toUpperCase());
+          return `
+          <div class="comment-item" id="ranking-ci-${c.id}">
+            <div class="comment-avatar">${av}</div>
+            <div class="comment-main">
+              <div class="comment-item-header">
+                <span class="comment-name">${escHtml(c.display_name || "ユーザー")}</span>
+                <span class="comment-time">${relTimeRanking(c.created_at || c.created_label)}</span>
+                ${(CURRENT_USER_ID && c.user_id == CURRENT_USER_ID) ? `
+                <button type="button" class="comment-menu-btn" onclick="toggleRankingCommentMenu(event,${c.id})" aria-label="メニュー">⋯</button>
+                <div class="comment-menu-popup" id="ranking-cmenu-${c.id}">
+                  <button type="button" class="comment-menu-item" onclick="startEditRankingComment(${c.id})">編集</button>
+                  <button type="button" class="comment-menu-item danger" onclick="deleteRankingComment(${c.id})">削除</button>
+                </div>` : ""}
+              </div>
+              <div class="comment-body" id="ranking-cbody-${c.id}">${escHtml(c.content||"").replace(/\n/g,"<br>")}</div>
+              <div class="comment-edit-area" id="ranking-cedit-${c.id}">
+                <textarea class="comment-edit-textarea" id="ranking-cedit-ta-${c.id}" rows="3">${escHtml(c.content||"")}</textarea>
+                <div class="comment-edit-actions">
+                  <button type="button" class="comment-edit-cancel" onclick="cancelEditRankingComment(${c.id})">キャンセル</button>
+                  <button type="button" class="comment-edit-save" onclick="saveEditRankingComment(${c.id})">保存</button>
+                </div>
+              </div>
+              <div class="comment-actions-row">
+                <button type="button" class="comment-like-btn${c.liked_by_me ? ' liked' : ''}" data-cid="${c.id}" onclick="toggleCommentLikeRanking(this)">
+                  ${c.liked_by_me ? '♥' : '♡'} いいね${c.like_count ? ' ' + c.like_count : ''}
+                </button>
               </div>
             </div>
-            <div class="comment-item-body">${(comment.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
-          </div>
-        `).join("");
+          </div>`;
+        }).join("");
+      }
+
+      function toggleRankingCommentMenu(event, cid) {
+        event.stopPropagation();
+        const popup = document.getElementById(`ranking-cmenu-${cid}`);
+        if (!popup) return;
+        const isOpen = popup.classList.contains("open");
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+        if (!isOpen) popup.classList.add("open");
+      }
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+      });
+
+      function startEditRankingComment(cid) {
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+        document.getElementById(`ranking-cbody-${cid}`)?.style.setProperty("display","none");
+        const ea = document.getElementById(`ranking-cedit-${cid}`);
+        if (ea) { ea.classList.add("open"); ea.querySelector("textarea")?.focus(); }
+      }
+      function cancelEditRankingComment(cid) {
+        document.getElementById(`ranking-cbody-${cid}`)?.style.removeProperty("display");
+        document.getElementById(`ranking-cedit-${cid}`)?.classList.remove("open");
+      }
+      async function saveEditRankingComment(cid) {
+        const ta = document.getElementById(`ranking-cedit-ta-${cid}`);
+        if (!ta) return;
+        const content = ta.value.trim();
+        if (!content) { showToast("内容を入力してください"); return; }
+        try {
+          const fd = new FormData(); fd.append("content", content);
+          const r = await fetch(`/comments/${cid}`, { method: "PUT", body: fd });
+          const d = await r.json().catch(()=>({}));
+          if (!d.ok) { showToast(d.message || "更新できませんでした"); return; }
+          const body = document.getElementById(`ranking-cbody-${cid}`);
+          if (body) { body.innerHTML = escHtml(d.content||content).replace(/\n/g,"<br>"); body.style.removeProperty("display"); }
+          document.getElementById(`ranking-cedit-${cid}`)?.classList.remove("open");
+          showToast("更新しました");
+        } catch { showToast("更新に失敗しました"); }
+      }
+      async function deleteRankingComment(cid) {
+        document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+        if (!confirm("このコメントを削除しますか？")) return;
+        try {
+          const r = await fetch(`/comments/${cid}`, { method: "DELETE" });
+          const d = await r.json().catch(()=>({}));
+          if (!d.ok) { showToast(d.message || "削除できませんでした"); return; }
+          document.getElementById(`ranking-ci-${cid}`)?.remove();
+          rankingCommentState.comments = rankingCommentState.comments.filter(c => c.id !== cid);
+          updateRankingCommentCounts(rankingCommentState.paper?.pubmed_id, rankingCommentState.comments.length);
+          const list = document.getElementById("ranking-comment-list");
+          if (list && !list.querySelector(".comment-item")) {
+            list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
+          }
+          showToast("削除しました");
+        } catch { showToast("削除に失敗しました"); }
+      }
+      async function toggleCommentLikeRanking(btn) {
+        const cid = btn.dataset.cid;
+        if (!cid || !CURRENT_USER_ID) return;
+        btn.disabled = true;
+        try {
+          const r = await fetch(`/comments/${cid}/like`, { method: "POST" });
+          const d = await r.json();
+          if (d.ok) {
+            btn.classList.toggle("liked", d.liked);
+            btn.innerHTML = `${d.liked ? '♥' : '♡'} いいね${d.count ? ' ' + d.count : ''}`;
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      }
+      function onRankingCommentInput(ta) {
+        ta.style.height = "auto";
+        ta.style.height = Math.min(ta.scrollHeight, 100) + "px";
+        const btn = document.getElementById("ranking-comment-submit");
+        if (btn) { btn.disabled = !ta.value.trim(); btn.classList.toggle("active", !!ta.value.trim()); }
       }
 
       function updateRankingCommentCounts(pubmedId, count) {
@@ -2843,14 +3099,23 @@
         if (sheet) {
           sheet.classList.remove("open");
           sheet.setAttribute("aria-hidden", "true");
+          // キーボード対応で変更したスタイルをリセット
+          sheet.style.top = "";
+          sheet.style.height = "";
+          sheet.style.bottom = "";
+          sheet.style.paddingBottom = "";
+        }
+        // フォーカスを外してキーボードを確実に閉じる
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === "TEXTAREA" || activeEl.tagName === "INPUT")) {
+          activeEl.blur();
         }
         if (!document.getElementById("ranking-save-sheet")?.classList.contains("open")) {
           document.body.classList.remove("modal-open");
         }
       }
 
-      async function submitRankingComment(event) {
-        event.preventDefault();
+      async function submitRankingComment() {
         const paper = rankingCommentState.paper;
         const input = document.getElementById("ranking-comment-input");
         const submit = document.getElementById("ranking-comment-submit");
@@ -3221,6 +3486,234 @@
         return true;
       }
 
+      // ════════════════════════════════════════
+      // 検索オーバーレイ (案② + キーボード連動案①)
+      // ════════════════════════════════════════
+      const SEARCH_HISTORY_KEY = "reha-search-history-v1";
+      const MAX_SEARCH_HISTORY = 8;
+
+      function _isMobileViewport() {
+        return window.innerWidth < 1024;
+      }
+
+      function _getSearchHistory() {
+        try { return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || "[]"); }
+        catch { return []; }
+      }
+
+      function _addSearchHistory(keyword) {
+        const kw = (keyword || "").trim();
+        if (!kw) return;
+        try {
+          let h = _getSearchHistory().filter(k => k !== kw);
+          h.unshift(kw);
+          localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(h.slice(0, MAX_SEARCH_HISTORY)));
+        } catch {}
+      }
+
+      function _clearSearchHistory() {
+        try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch {}
+        _renderOverlayHistory();
+      }
+
+      function _escHtmlOverlay(s) {
+        return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function _renderOverlayHistory() {
+        const wrap = document.getElementById("search-overlay-history-wrap");
+        if (!wrap) return;
+        const history = _getSearchHistory();
+        if (!history.length) { wrap.innerHTML = ""; return; }
+        wrap.innerHTML = `
+          <div class="search-overlay-section-title">最近の検索</div>
+          <div class="search-overlay-history">
+            ${history.map(k => `
+              <button type="button" class="search-overlay-history-item" onclick="_selectOverlayHistory(${JSON.stringify(k)})">
+                <span class="search-overlay-history-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <span class="search-overlay-history-text">${_escHtmlOverlay(k)}</span>
+              </button>
+            `).join("")}
+          </div>
+          <button type="button" class="search-overlay-clear-btn" onclick="_clearSearchHistory()">履歴をクリア</button>
+        `;
+      }
+
+      function _renderOverlayTags() {
+        const wrap = document.getElementById("search-overlay-tags");
+        if (!wrap) return;
+        const tags = [
+          "脳卒中","歩行","バランス","転倒","整形","骨折",
+          "呼吸器","循環器","高齢者","フレイル","サルコペニア",
+          "ADL","嚥下","認知","廃用","痛み","装具","離床"
+        ];
+        wrap.innerHTML = tags.map(tag =>
+          `<button type="button" class="search-overlay-tag" onclick="_selectOverlayTag(${JSON.stringify(tag)})">${_escHtmlOverlay(tag)}</button>`
+        ).join("");
+      }
+
+      function _selectOverlayHistory(keyword) {
+        const input = document.getElementById("search-overlay-input");
+        if (input) { input.value = keyword; input.focus(); }
+      }
+
+      function _selectOverlayTag(tag) {
+        const input = document.getElementById("search-overlay-input");
+        if (!input) return;
+        const terms = input.value.trim() ? input.value.trim().split(/\s+/) : [];
+        const btn = event.currentTarget;
+        if (terms.includes(tag)) {
+          const idx = terms.indexOf(tag);
+          terms.splice(idx, 1);
+          if (btn) btn.classList.remove("selected");
+        } else {
+          terms.push(tag);
+          if (btn) btn.classList.add("selected");
+        }
+        input.value = terms.join(" ");
+        input.focus();
+      }
+
+      function openSearchOverlay() {
+        if (!_isMobileViewport()) return;
+        const overlay = document.getElementById("search-overlay");
+        const overlayInput = document.getElementById("search-overlay-input");
+        const mainInput = document.querySelector(".search-input");
+        if (!overlay) return;
+        if (mainInput && overlayInput) overlayInput.value = mainInput.value || "";
+        _renderOverlayHistory();
+        _renderOverlayTags();
+        overlay.classList.add("open");
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        setTimeout(() => overlayInput && overlayInput.focus(), 60);
+      }
+
+      function closeSearchOverlay() {
+        const overlay = document.getElementById("search-overlay");
+        const overlayInput = document.getElementById("search-overlay-input");
+        const mainInput = document.querySelector(".search-input");
+        if (!overlay) return;
+        if (mainInput && overlayInput) mainInput.value = overlayInput.value || "";
+        overlay.classList.remove("open");
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        overlayInput && overlayInput.blur();
+      }
+
+      function submitSearchOverlay(form) {
+        const overlayInput = document.getElementById("search-overlay-input");
+        if (overlayInput) _addSearchHistory(overlayInput.value);
+        showSearchLoading(form);
+        return true;
+      }
+
+      // メインの検索inputにフォーカスしたらオーバーレイを開く
+      document.addEventListener("DOMContentLoaded", function() {
+        const mainInput = document.querySelector(".search-input");
+        if (mainInput) {
+          mainInput.addEventListener("focus", function() {
+            if (_isMobileViewport()) {
+              this.blur();
+              openSearchOverlay();
+            }
+          });
+          // タップ（touchstart）でも反応させる（iOSでfocusが遅れる場合）
+          mainInput.addEventListener("touchend", function(e) {
+            if (_isMobileViewport()) {
+              e.preventDefault();
+              this.blur();
+              openSearchOverlay();
+            }
+          }, { passive: false });
+        }
+      });
+
+      // ── 案①: visualViewport でフッター表示制御 ──
+      (function() {
+        const footer = document.querySelector(".mobile-footer");
+        if (!footer || !window.visualViewport) return;
+        let _kbOpen = false;
+        window.visualViewport.addEventListener("resize", function() {
+          const ratio = window.visualViewport.height / window.screen.height;
+          const isOpen = ratio < 0.78;
+          if (isOpen !== _kbOpen) {
+            _kbOpen = isOpen;
+            footer.classList.toggle("keyboard-open", _kbOpen);
+          }
+        });
+      })();
+
+      // ── コメントシート: キーボード出現時の画面ジャンプ防止 ──
+      (function() {
+        if (!window.visualViewport) return;
+        let _raf;
+
+        function syncSheetsToViewport() {
+          cancelAnimationFrame(_raf);
+          _raf = requestAnimationFrame(function() {
+            const vv  = window.visualViewport;
+            // キーボード高さ = layout viewport - visual viewport
+            const kbH   = Math.max(0, window.innerHeight - vv.height);
+            // iOS がフォーカス時に仮想スクロールしたズレ量
+            const vtTop = vv.offsetTop || 0;
+
+            document.querySelectorAll(".comment-sheet-backdrop.open").forEach(function(el) {
+              if (kbH > 80 || vtTop > 1) {
+                // backdrop を visual viewport に合わせてズレを打ち消す
+                el.style.top    = vtTop + "px";
+                el.style.height = vv.height + "px";
+                el.style.bottom = "auto";
+                // シートをキーボードの上に乗せる
+                el.style.paddingBottom = (kbH + 10) + "px";
+              } else {
+                // キーボードなし → CSS 値に戻す
+                el.style.top    = "";
+                el.style.height = "";
+                el.style.bottom = "";
+                el.style.paddingBottom = "";
+              }
+            });
+          });
+        }
+
+        window.visualViewport.addEventListener("resize", syncSheetsToViewport);
+        window.visualViewport.addEventListener("scroll", syncSheetsToViewport);
+      })();
+
     </script>
+
+    <!-- ── モバイル 検索オーバーレイ ── -->
+    <div class="search-overlay" id="search-overlay" aria-hidden="true" role="dialog" aria-label="検索">
+      <div class="search-overlay-header">
+        <button type="button" class="search-overlay-back" onclick="closeSearchOverlay()" aria-label="戻る">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <form class="search-overlay-form" action="/search" method="get" onsubmit="return submitSearchOverlay(this)">
+          <input
+            type="text"
+            name="keyword"
+            class="search-overlay-input"
+            id="search-overlay-input"
+            placeholder="例: 脳卒中 歩行 予後"
+            required
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <button type="submit" class="search-overlay-submit">検索</button>
+        </form>
+      </div>
+      <div class="search-overlay-body">
+        <div id="search-overlay-history-wrap"></div>
+        <div>
+          <div class="search-overlay-section-title">タグから探す</div>
+          <div class="search-overlay-tags" id="search-overlay-tags"></div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

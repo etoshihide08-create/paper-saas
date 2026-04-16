@@ -145,24 +145,48 @@
     .save-sheet-input:focus { border-color: rgba(37,99,235,0.28); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
     .save-sheet-submit { border: none; border-radius: 14px; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; font-size: 13px; font-weight: 800; padding: 0 16px; cursor: pointer; white-space: nowrap; }
     .save-sheet-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-    .comment-sheet-backdrop { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(15,23,42,0.34); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 215; padding: 18px 16px calc(86px + env(safe-area-inset-bottom)); }
+    .comment-sheet-backdrop { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(15,23,42,0.34); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 215; padding: 0 0 env(safe-area-inset-bottom); }
     .comment-sheet-backdrop.open { display: flex; }
-    .comment-sheet { width: min(100%, 560px); background: rgba(255,255,255,0.98); border-radius: 26px 26px 20px 20px; box-shadow: 0 28px 56px rgba(15,23,42,0.24); padding: 18px 16px 16px; max-height: min(80vh, 760px); display: flex; flex-direction: column; }
-    .comment-sheet-list { display: grid; gap: 10px; overflow-y: auto; padding-right: 2px; margin: 2px 0 14px; }
-    .comment-sheet-empty { padding: 14px; border-radius: 16px; background: #f8fafc; color: var(--subtext); font-size: 13px; line-height: 1.7; text-align: center; }
-    .comment-item { padding: 12px 13px; border-radius: 16px; background: #fff; border: 1px solid rgba(37,99,235,0.08); box-shadow: var(--shadow-soft); }
-    .comment-item-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .comment-item-avatar { width: 34px; height: 34px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; overflow: hidden; flex-shrink: 0; }
-    .comment-item-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .comment-item-meta { min-width: 0; }
-    .comment-item-name { font-size: 13px; font-weight: 800; color: var(--secondary); }
-    .comment-item-time { font-size: 11px; color: var(--subtext); margin-top: 2px; }
-    .comment-item-body { font-size: 14px; line-height: 1.7; color: #334155; white-space: pre-wrap; word-break: break-word; }
-    .comment-sheet-form { display: grid; gap: 10px; margin-top: auto; }
-    .comment-sheet-textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid #dbe3ee; border-radius: 16px; padding: 12px 14px; font: inherit; font-size: 14px; line-height: 1.7; outline: none; }
-    .comment-sheet-textarea:focus { border-color: rgba(37,99,235,0.28); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-    .comment-sheet-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .comment-sheet-note { font-size: 12px; color: var(--subtext); line-height: 1.6; }
+    .comment-sheet { width: min(100%, 560px); background: rgba(255,255,255,0.98); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 32px rgba(15,23,42,0.16); padding: 14px 16px 0; height: min(85vh, 100%); display: flex; flex-direction: column; margin-bottom: 16px; }
+    .comment-sheet-list { flex: 1; overflow-y: auto; }
+    .comment-sheet-empty { padding: 24px 16px; text-align: center; color: #94a3b8; font-size: 14px; }
+    /* ── paper.html準拠 コメントアイテム ── */
+    .comment-item { display: flex; gap: 12px; padding: 10px 16px; align-items: flex-start; position: relative; }
+    .comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-main { flex: 1; min-width: 0; }
+    .comment-item-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+    .comment-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+    .comment-time { font-size: 12px; color: #94a3b8; }
+    .comment-menu-btn { background: none; border: none; padding: 4px; cursor: pointer; font-size: 16px; color: #94a3b8; margin-left: auto; }
+    .comment-menu-btn:hover { color: #374151; }
+    .comment-menu-popup { position: absolute; right: 0; top: 24px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.14); min-width: 120px; z-index: 400; overflow: hidden; display: none; }
+    .comment-menu-popup.open { display: block; }
+    .comment-menu-item { display: block; width: 100%; padding: 11px 16px; background: none; border: none; text-align: left; font-size: 14px; cursor: pointer; color: #374151; }
+    .comment-menu-item:hover { background: #f9fafb; }
+    .comment-menu-item.danger { color: #ef4444; }
+    .comment-body { font-size: 14px; line-height: 1.7; color: #1f2937; white-space: pre-wrap; word-break: break-word; }
+    .comment-edit-area { display: none; margin-top: 6px; }
+    .comment-edit-area.open { display: block; }
+    .comment-edit-textarea { width: 100%; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 12px; padding: 8px 12px; font-size: 14px; font-family: inherit; line-height: 1.6; resize: none; outline: none; box-sizing: border-box; }
+    .comment-edit-textarea:focus { border-color: #93c5fd; }
+    .comment-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+    .comment-edit-cancel { background: none; border: 1px solid #d1d5db; border-radius: 8px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: #6b7280; }
+    .comment-edit-save { background: #2563eb; border: none; border-radius: 8px; padding: 5px 14px; font-size: 13px; cursor: pointer; color: #fff; font-weight: 700; }
+    .comment-actions-row { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+    .comment-like-btn { background: none; border: none; padding: 0; cursor: pointer; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 3px; }
+    .comment-like-btn:hover { color: #ef4444; }
+    .comment-like-btn.liked { color: #ef4444; }
+    /* ── Instagram風入力エリア (paper.html準拠) ── */
+    .comment-sheet-input-wrap { flex-shrink: 0; border-top: 1px solid #f1f5f9; background: #fff; padding: 10px 12px; padding-bottom: calc(64px + env(safe-area-inset-bottom)); display: flex; align-items: flex-end; gap: 10px; }
+    .comment-sheet-input-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .comment-sheet-input-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-sheet-input-box { flex: 1; display: flex; align-items: flex-end; background: #f3f4f6; border-radius: 22px; padding: 8px 14px; gap: 8px; }
+    .comment-sheet-textarea { flex: 1; background: none; border: none; outline: none; font-size: 14px; font-family: inherit; line-height: 1.6; resize: none; max-height: 100px; color: #0f172a; overflow-y: auto; }
+    .comment-sheet-textarea::placeholder { color: #94a3b8; }
+    .comment-sheet-send-btn { background: none; border: none; padding: 0; cursor: pointer; font-size: 22px; line-height: 1; color: #2563eb; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .comment-sheet-send-btn.active { opacity: 1; }
+    .comment-sheet-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
     /* Tag filter bar */
     .tag-filter-bar { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: rgba(255,255,255,0.96); border-bottom: 1px solid var(--line); scrollbar-width: none; box-shadow: 0 8px 24px rgba(15,23,42,0.03); }
@@ -323,8 +347,8 @@
       .board-fab { right: 28px; bottom: 28px; }
       .save-sheet-backdrop { align-items: center; padding: 32px; }
       .save-sheet { border-radius: 24px; }
-      .comment-sheet-backdrop { align-items: center; padding: 32px; }
-      .comment-sheet { border-radius: 24px; }
+      .comment-sheet-backdrop { align-items: center; padding: 40px; }
+      .comment-sheet { max-width: 560px; height: min(80vh, 760px); border-radius: 24px; margin-bottom: 0; }
     }
 
     @media (min-width: 980px) {
@@ -874,24 +898,26 @@
   {% if current_user %}
   <div class="comment-sheet-backdrop" id="recommend-comment-sheet" aria-hidden="true">
     <div class="comment-sheet" role="dialog" aria-modal="true" aria-labelledby="recommend-comment-sheet-title">
-      <div class="save-sheet-header">
-        <div>
-          <div class="save-sheet-title" id="recommend-comment-sheet-title">論文コメント</div>
-          <div class="save-sheet-subtitle">ひとこと感想や、臨床で使えるポイントを残せます。</div>
-        </div>
+      <div class="save-sheet-header" style="padding-bottom:8px;">
+        <div class="save-sheet-title" id="recommend-comment-sheet-title">コメント</div>
         <button type="button" class="save-sheet-close" onclick="closeRecommendCommentSheet()" aria-label="閉じる">✕</button>
       </div>
       <div class="save-sheet-paper" id="recommend-comment-paper-title"></div>
       <div class="comment-sheet-list" id="recommend-comment-list">
         <div class="comment-sheet-empty">コメントを読み込み中です…</div>
       </div>
-      <form class="comment-sheet-form" onsubmit="submitRecommendComment(event)">
-        <textarea class="comment-sheet-textarea" id="recommend-comment-input" placeholder="この論文で気づいたことをひとこと書く"></textarea>
-        <div class="comment-sheet-actions">
-          <div class="comment-sheet-note">あとで論文詳細からも見返せます。</div>
-          <button type="submit" class="save-sheet-submit" id="recommend-comment-submit">コメントする</button>
+      <div class="comment-sheet-input-wrap">
+        <div class="comment-sheet-input-avatar">
+          {% if current_user.avatar and (current_user.avatar.startswith('data:') or current_user.avatar.startswith('http')) %}
+            <img src="{{ current_user.avatar }}" alt="avatar">
+          {% elif current_user.avatar and current_user.avatar|length <= 4 %}{{ current_user.avatar }}
+          {% else %}{{ (current_user.display_name or current_user.email or "?")[0]|upper }}{% endif %}
         </div>
-      </form>
+        <div class="comment-sheet-input-box">
+          <textarea class="comment-sheet-textarea" id="recommend-comment-input" placeholder="この論文についてコメントする…" rows="1" oninput="onRecommendCommentInput(this)"></textarea>
+          <button type="button" class="comment-sheet-send-btn" id="recommend-comment-submit" onclick="submitRecommendComment()" disabled>➤</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1050,6 +1076,7 @@
       paper: null,
       comments: [],
     };
+    const CURRENT_USER_ID = {{ current_user.id | tojson if current_user else 'null' }};
 
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("post-form");
@@ -1276,6 +1303,21 @@
       return fallback;
     }
 
+    function escHtml(s) {
+      return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+    function relTimeRecommend(ts) {
+      if (!ts) return "";
+      const d = new Date(ts.replace(" ","T"));
+      if (isNaN(d)) return ts.slice(0,16).replace("T"," ");
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return "たった今";
+      if (diff < 3600) return Math.floor(diff/60) + "分前";
+      if (diff < 86400) return Math.floor(diff/3600) + "時間前";
+      if (diff < 604800) return Math.floor(diff/86400) + "日前";
+      if (diff < 2592000) return Math.floor(diff/604800) + "週間前";
+      return ts.slice(0,10);
+    }
     function renderRecommendComments(comments) {
       const list = document.getElementById("recommend-comment-list");
       if (!list) return;
@@ -1283,18 +1325,114 @@
         list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
         return;
       }
-      list.innerHTML = comments.map((comment) => `
-        <div class="comment-item">
-          <div class="comment-item-header">
-            <div class="comment-item-avatar">${renderCommentAvatar(comment)}</div>
-            <div class="comment-item-meta">
-              <div class="comment-item-name">${comment.display_name || "ユーザー"}</div>
-              <div class="comment-item-time">${comment.created_label || ""}</div>
+      list.innerHTML = comments.map((c) => {
+        const av = c.avatar && c.avatar.length > 4
+          ? `<img src="${escHtml(c.avatar)}" alt="avatar">`
+          : escHtml((c.display_name || "?")[0].toUpperCase());
+        return `
+        <div class="comment-item" id="recommend-ci-${c.id}">
+          <div class="comment-avatar">${av}</div>
+          <div class="comment-main">
+            <div class="comment-item-header">
+              <span class="comment-name">${escHtml(c.display_name || "ユーザー")}</span>
+              <span class="comment-time">${relTimeRecommend(c.created_at || c.created_label)}</span>
+              ${(CURRENT_USER_ID && c.user_id == CURRENT_USER_ID) ? `
+              <button type="button" class="comment-menu-btn" onclick="toggleRecommendCommentMenu(event,${c.id})" aria-label="メニュー">⋯</button>
+              <div class="comment-menu-popup" id="recommend-cmenu-${c.id}">
+                <button type="button" class="comment-menu-item" onclick="startEditRecommendComment(${c.id})">編集</button>
+                <button type="button" class="comment-menu-item danger" onclick="deleteRecommendComment(${c.id})">削除</button>
+              </div>` : ""}
+            </div>
+            <div class="comment-body" id="recommend-cbody-${c.id}">${escHtml(c.content||"").replace(/\n/g,"<br>")}</div>
+            <div class="comment-edit-area" id="recommend-cedit-${c.id}">
+              <textarea class="comment-edit-textarea" id="recommend-cedit-ta-${c.id}" rows="3">${escHtml(c.content||"")}</textarea>
+              <div class="comment-edit-actions">
+                <button type="button" class="comment-edit-cancel" onclick="cancelEditRecommendComment(${c.id})">キャンセル</button>
+                <button type="button" class="comment-edit-save" onclick="saveEditRecommendComment(${c.id})">保存</button>
+              </div>
+            </div>
+            <div class="comment-actions-row">
+              <button type="button" class="comment-like-btn${c.liked_by_me ? ' liked' : ''}" data-cid="${c.id}" onclick="toggleCommentLikeRecommend(this)">
+                ${c.liked_by_me ? '♥' : '♡'} いいね${c.like_count ? ' ' + c.like_count : ''}
+              </button>
             </div>
           </div>
-          <div class="comment-item-body">${(comment.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>
-        </div>
-      `).join("");
+        </div>`;
+      }).join("");
+    }
+
+    function toggleRecommendCommentMenu(event, cid) {
+      event.stopPropagation();
+      const popup = document.getElementById(`recommend-cmenu-${cid}`);
+      if (!popup) return;
+      const isOpen = popup.classList.contains("open");
+      document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+      if (!isOpen) popup.classList.add("open");
+    }
+
+    function startEditRecommendComment(cid) {
+      document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+      document.getElementById(`recommend-cbody-${cid}`)?.style.setProperty("display","none");
+      const ea = document.getElementById(`recommend-cedit-${cid}`);
+      if (ea) { ea.classList.add("open"); ea.querySelector("textarea")?.focus(); }
+    }
+    function cancelEditRecommendComment(cid) {
+      document.getElementById(`recommend-cbody-${cid}`)?.style.removeProperty("display");
+      document.getElementById(`recommend-cedit-${cid}`)?.classList.remove("open");
+    }
+    async function saveEditRecommendComment(cid) {
+      const ta = document.getElementById(`recommend-cedit-ta-${cid}`);
+      if (!ta) return;
+      const content = ta.value.trim();
+      if (!content) { showToast("内容を入力してください"); return; }
+      try {
+        const fd = new FormData(); fd.append("content", content);
+        const r = await fetch(`/comments/${cid}`, { method: "PUT", body: fd });
+        const d = await r.json().catch(()=>({}));
+        if (!d.ok) { showToast(d.message || "更新できませんでした"); return; }
+        const body = document.getElementById(`recommend-cbody-${cid}`);
+        if (body) { body.innerHTML = escHtml(d.content||content).replace(/\n/g,"<br>"); body.style.removeProperty("display"); }
+        document.getElementById(`recommend-cedit-${cid}`)?.classList.remove("open");
+        showToast("更新しました");
+      } catch { showToast("更新に失敗しました"); }
+    }
+    async function deleteRecommendComment(cid) {
+      document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
+      if (!confirm("このコメントを削除しますか？")) return;
+      try {
+        const r = await fetch(`/comments/${cid}`, { method: "DELETE" });
+        const d = await r.json().catch(()=>({}));
+        if (!d.ok) { showToast(d.message || "削除できませんでした"); return; }
+        document.getElementById(`recommend-ci-${cid}`)?.remove();
+        recommendCommentState.comments = recommendCommentState.comments.filter(c => c.id !== cid);
+        updateRecommendCommentCounts(recommendCommentState.paper?.pubmed_id, recommendCommentState.comments.length);
+        const list = document.getElementById("recommend-comment-list");
+        if (list && !list.querySelector(".comment-item")) {
+          list.innerHTML = '<div class="comment-sheet-empty">まだコメントはありません。最初のひとことを残してみましょう。</div>';
+        }
+        showToast("削除しました");
+      } catch { showToast("削除に失敗しました"); }
+    }
+    async function toggleCommentLikeRecommend(btn) {
+      const cid = btn.dataset.cid;
+      if (!cid || !CURRENT_USER_ID) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`/comments/${cid}/like`, { method: "POST" });
+        const d = await r.json();
+        if (d.ok) {
+          btn.classList.toggle("liked", d.liked);
+          btn.innerHTML = `${d.liked ? '♥' : '♡'} いいね${d.count ? ' ' + d.count : ''}`;
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    function onRecommendCommentInput(ta) {
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight, 100) + "px";
+      const btn = document.getElementById("recommend-comment-submit");
+      if (btn) { btn.disabled = !ta.value.trim(); btn.classList.toggle("active", !!ta.value.trim()); }
     }
 
     function updateRecommendCommentCounts(pubmedId, count) {
@@ -1516,6 +1654,16 @@
       if (sheet) {
         sheet.classList.remove("open");
         sheet.setAttribute("aria-hidden", "true");
+        // キーボード対応で変更したスタイルをリセット
+        sheet.style.top = "";
+        sheet.style.height = "";
+        sheet.style.bottom = "";
+        sheet.style.paddingBottom = "";
+      }
+      // フォーカスを外してキーボードを確実に閉じる
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === "TEXTAREA" || activeEl.tagName === "INPUT")) {
+        activeEl.blur();
       }
       if (!document.getElementById("composer-modal")?.classList.contains("open") &&
           !document.getElementById("recommend-save-sheet")?.classList.contains("open")) {
@@ -1523,8 +1671,7 @@
       }
     }
 
-    async function submitRecommendComment(event) {
-      event.preventDefault();
+    async function submitRecommendComment() {
       const paper = recommendCommentState.paper;
       const input = document.getElementById("recommend-comment-input");
       const submit = document.getElementById("recommend-comment-submit");
@@ -1727,6 +1874,7 @@
       if (saveSheet && e.target === saveSheet) closeRecommendSaveSheet();
       const commentSheet = document.getElementById("recommend-comment-sheet");
       if (commentSheet && e.target === commentSheet) closeRecommendCommentSheet();
+      document.querySelectorAll(".comment-menu-popup.open").forEach(p => p.classList.remove("open"));
     });
 
     document.addEventListener("keydown", function(e) {
@@ -1740,6 +1888,38 @@
       setupRecommendCardNavigation();
       setupRecommendAutoReveal();
     });
+
+    // ── コメントシート: キーボード出現時の画面ジャンプ防止 ──
+    (function() {
+      if (!window.visualViewport) return;
+      let _raf;
+
+      function syncSheetsToViewport() {
+        cancelAnimationFrame(_raf);
+        _raf = requestAnimationFrame(function() {
+          const vv  = window.visualViewport;
+          const kbH   = Math.max(0, window.innerHeight - vv.height);
+          const vtTop = vv.offsetTop || 0;
+
+          document.querySelectorAll(".comment-sheet-backdrop.open").forEach(function(el) {
+            if (kbH > 80 || vtTop > 1) {
+              el.style.top    = vtTop + "px";
+              el.style.height = vv.height + "px";
+              el.style.bottom = "auto";
+              el.style.paddingBottom = (kbH + 10) + "px";
+            } else {
+              el.style.top    = "";
+              el.style.height = "";
+              el.style.bottom = "";
+              el.style.paddingBottom = "";
+            }
+          });
+        });
+      }
+
+      window.visualViewport.addEventListener("resize", syncSheetsToViewport);
+      window.visualViewport.addEventListener("scroll", syncSheetsToViewport);
+    })();
   </script>
 </body>
 </html>
