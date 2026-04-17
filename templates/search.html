@@ -179,6 +179,40 @@
         color: var(--text);
       }
 
+      .sort-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .sort-tab {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(255,255,255,0.9);
+        color: var(--subtext);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      .sort-tab:hover {
+        background: rgba(37,99,235,0.06);
+        color: var(--blue);
+        border-color: rgba(37,99,235,0.2);
+      }
+
+      .sort-tab.is-active {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+      }
+
       .result-list {
         margin-top: 22px;
       }
@@ -876,6 +910,12 @@
         <p class="search-info">
           <strong>検索語:</strong> {{ converted_keyword }}
         </p>
+        {% set _sort = current_sort | default('relevance') %}
+        <div class="sort-tabs">
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=relevance" class="sort-tab {% if _sort == 'relevance' %}is-active{% endif %}">関連度順</a>
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=date" class="sort-tab {% if _sort == 'date' %}is-active{% endif %}">新着順</a>
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=clinical" class="sort-tab {% if _sort == 'clinical' %}is-active{% endif %}">臨床参考度順</a>
+        </div>
       </div>
 
       {% if upgrade_nudge %}
@@ -898,20 +938,20 @@
           {% if page|int > 1 %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page - 1 }}"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}"
             >←</a
           >
           {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
           page %}
           <span class="page-btn active">{{ p }}</span>
           {% else %}
-          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}"
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}"
             >{{ p }}</a
           >
           {% endif %} {% endfor %} {% if page|int < total_pages|int %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page + 1 }}"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}"
             >→</a
           >
           {% endif %}
@@ -1036,20 +1076,20 @@
           {% if page|int > 1 %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page - 1 }}"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}"
             >←</a
           >
           {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
           page %}
           <span class="page-btn active">{{ p }}</span>
           {% else %}
-          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}"
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}"
             >{{ p }}</a
           >
           {% endif %} {% endfor %} {% if page|int < total_pages|int %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page + 1 }}"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}"
             >→</a
           >
           {% endif %}
@@ -1087,6 +1127,7 @@
       const SEARCH_KEYWORD = {{ keyword | tojson | safe }};
       const SEARCH_PAGE = {{ page | tojson | safe }};
       const CONVERTED_KEYWORD = {{ converted_keyword | tojson | safe }};
+      const CURRENT_SORT = {{ (current_sort | default('relevance')) | tojson | safe }};
 
       function disableLikedButtons() {
         // no-op: liked state is now server-driven
@@ -1103,6 +1144,7 @@
             page: String(SEARCH_PAGE),
             ids: BACKGROUND_TRANSLATION_IDS.join(","),
             converted_keyword: CONVERTED_KEYWORD,
+            sort: CURRENT_SORT,
           });
           const response = await fetch(`/search/title-translations?${params.toString()}`);
           if (!response.ok) return;

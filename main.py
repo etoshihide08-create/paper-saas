@@ -136,6 +136,7 @@ from db import (
     get_all_friend_promo_codes,
     create_friend_promo_code,
     toggle_friend_promo_code_active,
+    get_papers_aggregate_stats,
     MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
@@ -2657,8 +2658,9 @@ def _build_pubmed_query(keyword: str) -> str:
     return phrase
 
 
-def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
-    cached_id_list = _timed_cache_get(search_id_cache, converted_keyword, SEARCH_CACHE_TTL)
+def _get_search_ids_for_keyword(converted_keyword: str, pubmed_sort: str = "relevance") -> list[str] | None:
+    cache_key = (converted_keyword, pubmed_sort)
+    cached_id_list = _timed_cache_get(search_id_cache, cache_key, SEARCH_CACHE_TTL)
     if cached_id_list is not None:
         return cached_id_list
 
@@ -2675,7 +2677,7 @@ def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
                 db="pubmed",
                 term=query,
                 retmax=100,
-                sort="relevance",
+                sort=pubmed_sort,
             )
             record = Entrez.read(handle)
             handle.close()
@@ -2683,12 +2685,12 @@ def _get_search_ids_for_keyword(converted_keyword: str) -> list[str] | None:
             if not isinstance(id_list, list):
                 id_list = []
             if id_list:
-                _timed_cache_set(search_id_cache, converted_keyword, id_list)
+                _timed_cache_set(search_id_cache, cache_key, id_list)
                 return id_list
         except Exception:
             continue
 
-    _timed_cache_set(search_id_cache, converted_keyword, [])
+    _timed_cache_set(search_id_cache, cache_key, [])
     return []
 
 
@@ -2747,7 +2749,7 @@ def _ask_gpt_for_search_keyword(keyword: str) -> str:
         return ""
 
 
-def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
+def resolve_search_keyword_for_pubmed(keyword: str, pubmed_sort: str = "relevance") -> tuple[str, list[str]]:
     normalized_keyword = normalize_search_keyword(keyword)
     if not normalized_keyword:
         return "", []
@@ -2757,7 +2759,7 @@ def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
     fallback_candidate = candidates[0] if candidates else normalized_keyword
 
     for candidate in candidates:
-        id_list = _get_search_ids_for_keyword(candidate)
+        id_list = _get_search_ids_for_keyword(candidate, pubmed_sort)
         if id_list:
             return candidate, id_list
 
@@ -2765,7 +2767,7 @@ def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
     if contains_japanese(normalized_keyword):
         gpt_candidate = _ask_gpt_for_search_keyword(normalized_keyword)
         if gpt_candidate and gpt_candidate not in candidates:
-            id_list = _get_search_ids_for_keyword(gpt_candidate)
+            id_list = _get_search_ids_for_keyword(gpt_candidate, pubmed_sort)
             if id_list:
                 return gpt_candidate, id_list
             fallback_candidate = gpt_candidate
@@ -2773,21 +2775,46 @@ def resolve_search_keyword_for_pubmed(keyword: str) -> tuple[str, list[str]]:
     return fallback_candidate, []
 
 
-def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "") -> tuple[str, list[str], int, int]:
+_SEARCH_SORT_TO_PUBMED = {
+    "relevance": "relevance",
+    "date": "pub_date",
+    "clinical": "relevance",  # アプリ側で集計して並び替え
+    "likes": "relevance",     # アプリ側で集計して並び替え
+}
+_SEARCH_APP_LEVEL_SORTS = {"clinical", "likes"}
+
+
+def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "", sort: str = "relevance") -> tuple[str, list[str], int, int]:
+    sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
+    pubmed_sort = _SEARCH_SORT_TO_PUBMED[sort]
+
     normalized_keyword = normalize_search_keyword(keyword)
-    keyword_cache_key = normalized_keyword.lower()
+    keyword_cache_key = f"{normalized_keyword.lower()}::{pubmed_sort}"
     converted_keyword = (converted_keyword_hint or "").strip()
     id_list: list[str] = []
     if not converted_keyword:
         converted_keyword = _timed_cache_get(keyword_cache, keyword_cache_key, OPENAI_CACHE_TTL) or ""
         if converted_keyword:
-            id_list = _get_search_ids_for_keyword(converted_keyword) or []
+            id_list = _get_search_ids_for_keyword(converted_keyword, pubmed_sort) or []
     if not converted_keyword or not id_list:
-        converted_keyword, id_list = resolve_search_keyword_for_pubmed(normalized_keyword)
+        converted_keyword, id_list = resolve_search_keyword_for_pubmed(normalized_keyword, pubmed_sort)
         _timed_cache_set(keyword_cache, keyword_cache_key, converted_keyword)
 
     if not id_list:
         return converted_keyword, [], 1, 1
+
+    # アプリ側ソート（臨床参考度順・いいね順）
+    if sort in _SEARCH_APP_LEVEL_SORTS:
+        str_ids = [str(pid) for pid in id_list]
+        agg = get_papers_aggregate_stats(str_ids)
+        if sort == "clinical":
+            def _clinical_key(pid: str) -> float:
+                s = agg.get(pid, {}).get("max_clinical_score")
+                return -(s if s is not None else -1)
+        else:
+            def _clinical_key(pid: str) -> float:  # type: ignore[misc]
+                return -(agg.get(pid, {}).get("total_likes") or 0)
+        id_list = sorted(str_ids, key=_clinical_key)
 
     total_count = len(id_list)
     total_pages = max(1, (total_count + SEARCH_RESULTS_PER_PAGE - 1) // SEARCH_RESULTS_PER_PAGE)
@@ -5530,7 +5557,8 @@ def saved_export(request: Request):
 
 
 @app.get("/search")
-def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
+def search(request: Request, keyword: str = Query(...), page: int = Query(1), sort: str = Query("relevance")):
+    sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
     current_user = get_current_user(request)
     current_plan = get_user_plan(get_user_by_id(current_user["id"])) if current_user else "guest"
     daily_usage = get_user_daily_usage(current_user["id"]) if current_user else 0
@@ -5557,10 +5585,11 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "upgrade_nudge": search_upgrade_nudge,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
+                "current_sort": sort,
             }
         )
 
-    converted_keyword, page_id_list, page, total_pages = _resolve_search_page_context(keyword, page)
+    converted_keyword, page_id_list, page, total_pages = _resolve_search_page_context(keyword, page, sort=sort)
     if not page_id_list:
         return templates.TemplateResponse(
             "search.html",
@@ -5577,6 +5606,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
                 "upgrade_nudge": search_upgrade_nudge,
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
+                "current_sort": sort,
             }
         )
 
@@ -5744,6 +5774,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1)):
             "upgrade_nudge": search_upgrade_nudge,
             "discovery_tags": COMMON_DISCOVERY_TAGS,
             "background_translation_ids": background_translation_ids,
+            "current_sort": sort,
         }
     )
 
@@ -5755,8 +5786,10 @@ def search_title_translations(
     page: int = Query(1),
     ids: str = Query(""),
     converted_keyword: str = Query(""),
+    sort: str = Query("relevance"),
 ):
     keyword = keyword.strip()
+    sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
     requested_ids = [
         item.strip()
         for item in (ids or "").split(",")
@@ -5765,7 +5798,7 @@ def search_title_translations(
     if not keyword or not requested_ids:
         return JSONResponse({"ok": True, "translations": {}})
 
-    _converted_keyword, page_id_list, _page, _total_pages = _resolve_search_page_context(keyword, page, converted_keyword)
+    _converted_keyword, page_id_list, _page, _total_pages = _resolve_search_page_context(keyword, page, converted_keyword, sort=sort)
     if not page_id_list:
         return JSONResponse({"ok": True, "translations": {}})
 

@@ -3556,3 +3556,35 @@ def toggle_friend_promo_code_active(code_id: int) -> bool:
     row = cur.fetchone()
     conn.close()
     return bool(row[0]) if row else False
+
+
+def get_papers_aggregate_stats(pubmed_ids: list[str]) -> dict[str, dict]:
+    """pubmed_id リストに対して、全ユーザー横断の集計値を返す。
+    戻り値: {pubmed_id: {"max_clinical_score": float|None, "total_likes": int}}
+    """
+    ids = [str(pid).strip() for pid in (pubmed_ids or []) if str(pid).strip()]
+    if not ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join(["?"] * len(ids))
+    cur.execute(
+        f"""
+        SELECT pubmed_id,
+               MAX(CASE WHEN clinical_score != '' THEN CAST(clinical_score AS REAL) ELSE NULL END) AS max_clinical_score,
+               SUM(COALESCE(likes, 0)) AS total_likes
+        FROM saved_papers
+        WHERE pubmed_id IN ({placeholders})
+        GROUP BY pubmed_id
+        """,
+        ids,
+    )
+    rows = cur.fetchall()
+    conn.close()
+    result: dict[str, dict] = {}
+    for row in rows:
+        result[str(row["pubmed_id"])] = {
+            "max_clinical_score": row["max_clinical_score"],
+            "total_likes": int(row["total_likes"] or 0),
+        }
+    return result

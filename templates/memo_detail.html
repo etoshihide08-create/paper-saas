@@ -1045,6 +1045,8 @@
         background: linear-gradient(180deg, rgba(244,247,251,0.1), rgba(244,247,251,0.95) 18%, rgba(244,247,251,0.98));
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
+        transition: bottom 0.05s linear;
+        will-change: bottom;
       }
 
       .mobile-toolbar {
@@ -1739,6 +1741,26 @@
     </div>
 
     <script>
+      // キーボード表示時にツールバーをキーボードの上に追従させる
+      (function() {
+        const shell = document.querySelector('.mobile-toolbar-shell');
+        if (!shell || !window.visualViewport) return;
+        function adjustToolbar() {
+          const vv = window.visualViewport;
+          const windowHeight = window.innerHeight;
+          const keyboardHeight = windowHeight - vv.height - vv.offsetTop;
+          if (keyboardHeight > 50) {
+            shell.style.bottom = keyboardHeight + 'px';
+            shell.style.paddingBottom = '10px';
+          } else {
+            shell.style.bottom = '';
+            shell.style.paddingBottom = '';
+          }
+        }
+        window.visualViewport.addEventListener('resize', adjustToolbar);
+        window.visualViewport.addEventListener('scroll', adjustToolbar);
+      })();
+
       function autoResize(el) {
         if (!el) return;
         el.style.height = "auto";
