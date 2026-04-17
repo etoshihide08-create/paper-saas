@@ -137,6 +137,7 @@ from db import (
     create_friend_promo_code,
     toggle_friend_promo_code_active,
     get_papers_aggregate_stats,
+    get_papers_summary_flags,
     MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
@@ -2784,7 +2785,7 @@ _SEARCH_SORT_TO_PUBMED = {
 _SEARCH_APP_LEVEL_SORTS = {"clinical", "likes"}
 
 
-def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "", sort: str = "relevance") -> tuple[str, list[str], int, int]:
+def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint: str = "", sort: str = "relevance", filter_summary: bool = True) -> tuple[str, list[str], int, int]:
     sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
     pubmed_sort = _SEARCH_SORT_TO_PUBMED[sort]
 
@@ -2803,18 +2804,35 @@ def _resolve_search_page_context(keyword: str, page: int, converted_keyword_hint
     if not id_list:
         return converted_keyword, [], 1, 1
 
-    # アプリ側ソート（臨床参考度順・いいね順）
+    str_ids = [str(pid) for pid in id_list]
+
+    # アプリ側ソート（臨床参考度順）
     if sort in _SEARCH_APP_LEVEL_SORTS:
-        str_ids = [str(pid) for pid in id_list]
         agg = get_papers_aggregate_stats(str_ids)
         if sort == "clinical":
-            def _clinical_key(pid: str) -> float:
+            def _sort_key(pid: str) -> float:
                 s = agg.get(pid, {}).get("max_clinical_score")
                 return -(s if s is not None else -1)
         else:
-            def _clinical_key(pid: str) -> float:  # type: ignore[misc]
+            def _sort_key(pid: str) -> float:  # type: ignore[misc]
                 return -(agg.get(pid, {}).get("total_likes") or 0)
-        id_list = sorted(str_ids, key=_clinical_key)
+        str_ids = sorted(str_ids, key=_sort_key)
+
+    # 要約ありフィルター（要約/抄録がある論文を上位に）
+    if filter_summary:
+        flags = get_papers_summary_flags(str_ids)
+        def _summary_rank(pid: str) -> int:
+            f = flags.get(pid) or {}
+            # 0: summary_jp あり, 1: abstract あり, 2: なし
+            if f.get("has_summary_jp"):
+                return 0
+            if f.get("has_abstract"):
+                return 1
+            return 2
+        # 安定ソートで既存並びを保ったまま要約有無で前後に分ける
+        str_ids = sorted(str_ids, key=_summary_rank)
+
+    id_list = str_ids
 
     total_count = len(id_list)
     total_pages = max(1, (total_count + SEARCH_RESULTS_PER_PAGE - 1) // SEARCH_RESULTS_PER_PAGE)
@@ -5557,8 +5575,9 @@ def saved_export(request: Request):
 
 
 @app.get("/search")
-def search(request: Request, keyword: str = Query(...), page: int = Query(1), sort: str = Query("relevance")):
+def search(request: Request, keyword: str = Query(...), page: int = Query(1), sort: str = Query("relevance"), filter_summary: int = Query(1)):
     sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
+    filter_summary_bool = bool(int(filter_summary)) if str(filter_summary).strip() in ("0", "1") else True
     current_user = get_current_user(request)
     current_plan = get_user_plan(get_user_by_id(current_user["id"])) if current_user else "guest"
     daily_usage = get_user_daily_usage(current_user["id"]) if current_user else 0
@@ -5586,10 +5605,11 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1), so
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
                 "current_sort": sort,
+                "current_filter_summary": 1 if filter_summary_bool else 0,
             }
         )
 
-    converted_keyword, page_id_list, page, total_pages = _resolve_search_page_context(keyword, page, sort=sort)
+    converted_keyword, page_id_list, page, total_pages = _resolve_search_page_context(keyword, page, sort=sort, filter_summary=filter_summary_bool)
     if not page_id_list:
         return templates.TemplateResponse(
             "search.html",
@@ -5607,6 +5627,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1), so
                 "discovery_tags": COMMON_DISCOVERY_TAGS,
                 "background_translation_ids": [],
                 "current_sort": sort,
+                "current_filter_summary": 1 if filter_summary_bool else 0,
             }
         )
 
@@ -5775,6 +5796,7 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1), so
             "discovery_tags": COMMON_DISCOVERY_TAGS,
             "background_translation_ids": background_translation_ids,
             "current_sort": sort,
+            "current_filter_summary": 1 if filter_summary_bool else 0,
         }
     )
 
@@ -5787,9 +5809,11 @@ def search_title_translations(
     ids: str = Query(""),
     converted_keyword: str = Query(""),
     sort: str = Query("relevance"),
+    filter_summary: int = Query(1),
 ):
     keyword = keyword.strip()
     sort = sort if sort in _SEARCH_SORT_TO_PUBMED else "relevance"
+    filter_summary_bool = bool(int(filter_summary)) if str(filter_summary).strip() in ("0", "1") else True
     requested_ids = [
         item.strip()
         for item in (ids or "").split(",")
@@ -5798,7 +5822,7 @@ def search_title_translations(
     if not keyword or not requested_ids:
         return JSONResponse({"ok": True, "translations": {}})
 
-    _converted_keyword, page_id_list, _page, _total_pages = _resolve_search_page_context(keyword, page, converted_keyword, sort=sort)
+    _converted_keyword, page_id_list, _page, _total_pages = _resolve_search_page_context(keyword, page, converted_keyword, sort=sort, filter_summary=filter_summary_bool)
     if not page_id_list:
         return JSONResponse({"ok": True, "translations": {}})
 

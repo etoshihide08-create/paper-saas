@@ -3558,6 +3558,39 @@ def toggle_friend_promo_code_active(code_id: int) -> bool:
     return bool(row[0]) if row else False
 
 
+def get_papers_summary_flags(pubmed_ids: list[str]) -> dict[str, dict]:
+    """pubmed_id リストに対して、保存済み論文から要約・抄録の有無を返す。
+    戻り値: {pubmed_id: {"has_summary_jp": bool, "has_abstract": bool}}
+    （複数ユーザーで保存されている場合はいずれか一方でも有ればTrue）
+    """
+    ids = [str(pid).strip() for pid in (pubmed_ids or []) if str(pid).strip()]
+    if not ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join(["?"] * len(ids))
+    cur.execute(
+        f"""
+        SELECT pubmed_id,
+               MAX(CASE WHEN COALESCE(summary_jp, '') != '' THEN 1 ELSE 0 END) AS has_summary_jp,
+               MAX(CASE WHEN COALESCE(abstract, '') != '' THEN 1 ELSE 0 END) AS has_abstract
+        FROM saved_papers
+        WHERE pubmed_id IN ({placeholders})
+        GROUP BY pubmed_id
+        """,
+        ids,
+    )
+    rows = cur.fetchall()
+    conn.close()
+    result: dict[str, dict] = {}
+    for row in rows:
+        result[str(row["pubmed_id"])] = {
+            "has_summary_jp": bool(row["has_summary_jp"]),
+            "has_abstract": bool(row["has_abstract"]),
+        }
+    return result
+
+
 def get_papers_aggregate_stats(pubmed_ids: list[str]) -> dict[str, dict]:
     """pubmed_id リストに対して、全ユーザー横断の集計値を返す。
     戻り値: {pubmed_id: {"max_clinical_score": float|None, "total_likes": int}}

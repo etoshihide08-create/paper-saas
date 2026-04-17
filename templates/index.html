@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>{{ BRAND_TITLE }}</title>
 
     <style>
@@ -350,7 +350,88 @@
       .search-input:focus {
         outline: none;
         border-color: #2563eb;
-        
+
+      }
+
+      .top-search-options {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .top-sort-tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .top-sort-tab {
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 999px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      .top-sort-tab.is-active {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+      }
+
+      .top-filter-toggle {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .top-filter-toggle-text {
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .top-filter-toggle input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 34px;
+        height: 20px;
+        background: #d1d5db;
+        border-radius: 999px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin: 0;
+      }
+
+      .top-filter-toggle input::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        transition: left 0.15s;
+      }
+
+      .top-filter-toggle input:checked {
+        background: var(--blue);
+      }
+
+      .top-filter-toggle input:checked::before {
+        left: 16px;
       }
 
       .search-btn {
@@ -1197,7 +1278,7 @@
       }
       .comment-sheet-textarea {
         flex: 1; background: none; border: none; outline: none;
-        font-size: 14px; font-family: inherit; line-height: 1.6;
+        font-size: 16px; font-family: inherit; line-height: 1.6;
         resize: none; max-height: 100px; color: #0f172a; overflow-y: auto;
       }
       .comment-sheet-textarea::placeholder { color: #94a3b8; }
@@ -2113,6 +2194,19 @@
                   required
                 />
                 <button type="submit" class="search-btn">検索</button>
+              </div>
+              <input type="hidden" name="sort" id="top-sort-input" value="relevance" />
+              <input type="hidden" name="filter_summary" id="top-filter-input" value="1" />
+              <div class="top-search-options">
+                <div class="top-sort-tabs" role="tablist">
+                  <button type="button" class="top-sort-tab is-active" data-sort="relevance">関連度順</button>
+                  <button type="button" class="top-sort-tab" data-sort="date">新着順</button>
+                  <button type="button" class="top-sort-tab" data-sort="clinical">臨床参考度順</button>
+                </div>
+                <label class="top-filter-toggle">
+                  <span class="top-filter-toggle-text">要約あり優先</span>
+                  <input type="checkbox" id="top-filter-summary-toggle" checked>
+                </label>
               </div>
             </form>
 
@@ -3610,26 +3704,28 @@
         return true;
       }
 
-      // メインの検索inputにフォーカスしたらオーバーレイを開く
-      document.addEventListener("DOMContentLoaded", function() {
-        const mainInput = document.querySelector(".search-input");
-        if (mainInput) {
-          mainInput.addEventListener("focus", function() {
-            if (_isMobileViewport()) {
-              this.blur();
-              openSearchOverlay();
-            }
+      // メインの検索inputはその場で入力する（オーバーレイは開かない）
+
+      // トップ検索バーのソートタブとフィルタトグル
+      (function() {
+        const tabs = document.querySelectorAll(".top-sort-tab");
+        const sortInput = document.getElementById("top-sort-input");
+        const filterInput = document.getElementById("top-filter-input");
+        const filterToggle = document.getElementById("top-filter-summary-toggle");
+        if (!tabs.length || !sortInput) return;
+        tabs.forEach(function(tab) {
+          tab.addEventListener("click", function() {
+            tabs.forEach(t => t.classList.remove("is-active"));
+            tab.classList.add("is-active");
+            sortInput.value = tab.dataset.sort || "relevance";
           });
-          // タップ（touchstart）でも反応させる（iOSでfocusが遅れる場合）
-          mainInput.addEventListener("touchend", function(e) {
-            if (_isMobileViewport()) {
-              e.preventDefault();
-              this.blur();
-              openSearchOverlay();
-            }
-          }, { passive: false });
+        });
+        if (filterToggle && filterInput) {
+          filterToggle.addEventListener("change", function() {
+            filterInput.value = filterToggle.checked ? "1" : "0";
+          });
         }
-      });
+      })();
 
       // ── 案①: visualViewport でフッター表示制御 ──
       (function() {

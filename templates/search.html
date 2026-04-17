@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>検索結果 — {{ BRAND_TITLE }}</title>
     <style>
       :root {
@@ -211,6 +211,56 @@
         background: var(--blue);
         color: #fff;
         border-color: var(--blue);
+      }
+
+      .filter-toggle {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--subtext);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .filter-toggle input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 34px;
+        height: 20px;
+        background: #d1d5db;
+        border-radius: 999px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin: 0;
+      }
+
+      .filter-toggle input::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        transition: left 0.15s;
+      }
+
+      .filter-toggle input:checked {
+        background: var(--blue);
+      }
+
+      .filter-toggle input:checked::before {
+        left: 16px;
+      }
+
+      .filter-toggle-text {
+        font-weight: 600;
+        color: var(--text);
       }
 
       .result-list {
@@ -911,10 +961,15 @@
           <strong>検索語:</strong> {{ converted_keyword }}
         </p>
         {% set _sort = current_sort | default('relevance') %}
+        {% set _filter_summary = current_filter_summary | default(1) %}
         <div class="sort-tabs">
-          <a href="/search?keyword={{ keyword | urlencode }}&sort=relevance" class="sort-tab {% if _sort == 'relevance' %}is-active{% endif %}">関連度順</a>
-          <a href="/search?keyword={{ keyword | urlencode }}&sort=date" class="sort-tab {% if _sort == 'date' %}is-active{% endif %}">新着順</a>
-          <a href="/search?keyword={{ keyword | urlencode }}&sort=clinical" class="sort-tab {% if _sort == 'clinical' %}is-active{% endif %}">臨床参考度順</a>
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=relevance&filter_summary={{ _filter_summary }}" class="sort-tab {% if _sort == 'relevance' %}is-active{% endif %}">関連度順</a>
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=date&filter_summary={{ _filter_summary }}" class="sort-tab {% if _sort == 'date' %}is-active{% endif %}">新着順</a>
+          <a href="/search?keyword={{ keyword | urlencode }}&sort=clinical&filter_summary={{ _filter_summary }}" class="sort-tab {% if _sort == 'clinical' %}is-active{% endif %}">臨床参考度順</a>
+          <label class="filter-toggle">
+            <span class="filter-toggle-text">要約あり優先</span>
+            <input type="checkbox" id="filter-summary-toggle" {% if _filter_summary %}checked{% endif %}>
+          </label>
         </div>
       </div>
 
@@ -938,20 +993,20 @@
           {% if page|int > 1 %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >←</a
           >
           {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
           page %}
           <span class="page-btn active">{{ p }}</span>
           {% else %}
-          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}"
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >{{ p }}</a
           >
           {% endif %} {% endfor %} {% if page|int < total_pages|int %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >→</a
           >
           {% endif %}
@@ -1076,20 +1131,20 @@
           {% if page|int > 1 %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}"
+            href="/search?keyword={{ keyword }}&page={{ page - 1 }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >←</a
           >
           {% endif %} {% for p in range(start_page, end_page + 1) %} {% if p ==
           page %}
           <span class="page-btn active">{{ p }}</span>
           {% else %}
-          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}"
+          <a class="page-btn" href="/search?keyword={{ keyword }}&page={{ p }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >{{ p }}</a
           >
           {% endif %} {% endfor %} {% if page|int < total_pages|int %}
           <a
             class="page-btn"
-            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}"
+            href="/search?keyword={{ keyword }}&page={{ page + 1 }}&sort={{ _sort }}&filter_summary={{ _filter_summary }}"
             >→</a
           >
           {% endif %}
@@ -1128,6 +1183,18 @@
       const SEARCH_PAGE = {{ page | tojson | safe }};
       const CONVERTED_KEYWORD = {{ converted_keyword | tojson | safe }};
       const CURRENT_SORT = {{ (current_sort | default('relevance')) | tojson | safe }};
+      const CURRENT_FILTER_SUMMARY = {{ (current_filter_summary | default(1)) | tojson | safe }};
+
+      (function() {
+        const toggle = document.getElementById("filter-summary-toggle");
+        if (!toggle) return;
+        toggle.addEventListener("change", () => {
+          const url = new URL(window.location.href);
+          url.searchParams.set("filter_summary", toggle.checked ? "1" : "0");
+          url.searchParams.delete("page");
+          window.location.href = url.toString();
+        });
+      })();
 
       function disableLikedButtons() {
         // no-op: liked state is now server-driven
@@ -1145,6 +1212,7 @@
             ids: BACKGROUND_TRANSLATION_IDS.join(","),
             converted_keyword: CONVERTED_KEYWORD,
             sort: CURRENT_SORT,
+            filter_summary: String(CURRENT_FILTER_SUMMARY),
           });
           const response = await fetch(`/search/title-translations?${params.toString()}`);
           if (!response.ok) return;
