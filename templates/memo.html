@@ -264,9 +264,28 @@
         z-index: 1;
       }
 
-      #memo-sample-quick .memo-card,
-      #memo-sample-paper .memo-card {
+      a.memo-card#memo-sample-quick,
+      a.memo-card#memo-sample-paper,
+      button.memo-card#memo-sample-quick {
         padding-top: 34px;
+      }
+      .memo-sample-wrap { margin: 0; padding: 0; display: block; }
+      button.memo-card.memo-sample-card {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--card);
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        display: block;
+        position: relative;
+      }
+      .memo-sample-hint {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--blue);
+        font-weight: 700;
       }
 
       .helper-sample {
@@ -1599,6 +1618,7 @@
                 {% endif %}
               </div>
               <a href="/memo/export?fmt=print" target="_blank" class="utility-chip">📥 エクスポート</a>
+              <a href="/memo/demo/{{ 'paper' if tab == 'paper' else 'quick' }}" class="utility-chip" style="background:#fff7ed; color:#c2410c; border-color:#fed7aa;">💡 使い方を見る</a>
             </div>
             <div class="memo-tab-bar">
               <a href="/memo?tab=quick"
@@ -1646,24 +1666,23 @@
 
           {% set can_add = (memo_limit is none) or (total_count < memo_limit) %}
 
-          {% if total_count == 0 and tab != 'map' %}
-          <section class="context-guide">
-            <div>
-              <div class="context-guide-title">まずは一言メモから始めると続けやすいです</div>
-              <div class="context-guide-body">気づいたことを1行だけ残しておくだけでも、あとで学びがつながりやすくなります。</div>
-            </div>
-            {% if can_add %}
-            <a href="#" class="context-guide-btn" onclick="createQuickMemo(event)">クイックメモを作る</a>
-            {% else %}
-            <a href="/plans" class="context-guide-btn">プランを見る</a>
-            {% endif %}
-          </section>
-          {% endif %}
-
           <!-- クイックメモタブ -->
           {% if tab == 'quick' %}
-            {% if quick_memos %}
-            <div class="memo-list">
+            <div class="memo-list" data-has-memos="{{ 1 if quick_memos else 0 }}">
+              {% if featured_paper and not quick_memos %}
+              <form method="POST" action="/memo/create_sample" id="memo-sample-quick-form" class="memo-sample-wrap">
+                <button type="submit" class="memo-card memo-sample-card" id="memo-sample-quick">
+                  <div class="memo-sample-badge">使い方例</div>
+                  <span class="memo-sample-close" role="button" aria-label="サンプルを閉じる" onclick="event.preventDefault(); event.stopPropagation(); dismissSampleQuick();">×</span>
+                  <div class="memo-card-header">
+                    <div class="memo-card-title">膝術後の可動域評価メモ</div>
+                    <div class="memo-card-date">2026-04-18</div>
+                  </div>
+                  <div class="memo-card-preview">【結論】スマートインプラントで正確に評価できる / ・術後の可動域は1.9倍 / ・外来評価と高い相関あり / ✔ 次にやること：再評価のタイミング確認</div>
+                  <div class="memo-sample-hint">👆 タップしてそのまま編集できます</div>
+                </button>
+              </form>
+              {% endif %}
               {% for memo in quick_memos %}
               <a href="/memo/{{ memo.id }}" class="memo-card">
                 <div class="memo-card-header">
@@ -1680,20 +1699,8 @@
               </a>
               {% endfor %}
             </div>
-            {% elif featured_paper %}
-            <div class="memo-list" id="memo-sample-quick">
-              <div class="memo-card" style="position:relative; cursor:default;">
-                <div class="memo-sample-badge">使い方例</div>
-                <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="dismissSampleQuick()">×</button>
-                <div class="memo-card-header">
-                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:40] }}</div>
-                  <div class="memo-card-date">2026-04-18</div>
-                </div>
-                <div class="memo-card-preview">【結論】術後膝可動域をスマートインプラントで正確に評価できる。 / 可動域×1.9・機能的膝可動域×1.86 の計測値で診察時と統計的差なし。 / <b>遠隔モニタリング</b>の可能性 → 通院回数削減。</div>
-              </div>
-            </div>
-            {% else %}
-            <div class="empty-state">
+            {% if not quick_memos %}
+            <div class="empty-state" id="memo-empty-quick" style="display:none;">
               <div class="empty-icon">✏️</div>
               <div class="empty-title">クイックメモはまだありません</div>
               <div class="empty-sub">右下の + ボタンで<br>すぐにメモを始められます</div>
@@ -1706,8 +1713,21 @@
 
           <!-- 論文メモタブ -->
           {% elif tab == 'paper' %}
-            {% if paper_memos %}
-            <div class="memo-list">
+            <div class="memo-list" data-has-memos="{{ 1 if paper_memos else 0 }}">
+              {% if featured_paper and not paper_memos %}
+              <a href="/memo/demo/paper" class="memo-card" id="memo-sample-paper" style="position:relative;">
+                <div class="memo-sample-badge">使い方例</div>
+                <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="event.preventDefault(); event.stopPropagation(); dismissSamplePaper();">×</button>
+                <div class="memo-card-header">
+                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:50] }}</div>
+                  <div class="memo-card-date">2026-04-18</div>
+                </div>
+                <div class="memo-card-preview">確認事項：〇〇さんの医学的情報を再度確認する。 / 次に試すこと：〇〇さんの膝関節の関節可動域を確認する。 / 遠隔での膝可動域モニタリングの可能性を示唆している。</div>
+                <div class="memo-paper-tag">
+                  📄 PMID: {{ featured_paper.pubmed_id }}
+                </div>
+              </a>
+              {% endif %}
               {% for memo in paper_memos %}
               <a href="/memo/paper/{{ memo.id }}" class="memo-card">
                 <div class="memo-card-header">
@@ -1727,23 +1747,8 @@
               </a>
               {% endfor %}
             </div>
-            {% elif featured_paper %}
-            <div class="memo-list" id="memo-sample-paper">
-              <div class="memo-card" style="position:relative; cursor:default;">
-                <div class="memo-sample-badge">使い方例</div>
-                <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="dismissSamplePaper()">×</button>
-                <div class="memo-card-header">
-                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:50] }}</div>
-                  <div class="memo-card-date">2026-04-18</div>
-                </div>
-                <div class="memo-card-preview">確認事項：〇〇さんの医学的情報を再度確認する。 / 次に試すこと：〇〇さんの膝関節の関節可動域を確認する。 / 遠隔での膝可動域モニタリングの可能性を示唆している。</div>
-                <div class="memo-paper-tag">
-                  📄 PMID: {{ featured_paper.pubmed_id }}
-                </div>
-              </div>
-            </div>
-            {% else %}
-            <div class="empty-state">
+            {% if not paper_memos %}
+            <div class="empty-state" id="memo-empty-paper" style="display:none;">
               <div class="empty-icon">📄</div>
               <div class="empty-title">論文メモはまだありません</div>
               <div class="empty-sub">保存済みの論文にメモを紐付けて<br>知識を体系化できます</div>
@@ -1963,26 +1968,34 @@
     </div>
 
     <script>
+      function _revealEmptyIfNoMemos(tab) {
+        const sampleId = tab === "paper" ? "memo-sample-paper" : "memo-sample-quick";
+        const emptyId = tab === "paper" ? "memo-empty-paper" : "memo-empty-quick";
+        const sample = document.getElementById(sampleId);
+        const empty = document.getElementById(emptyId);
+        if (sample) sample.style.display = "none";
+        // メモ0件なら empty-state を表示
+        const list = sample ? sample.parentElement : null;
+        const hasMemos = list && list.getAttribute("data-has-memos") === "1";
+        if (empty && !hasMemos) empty.style.display = "";
+      }
+
       function dismissSampleQuick() {
-        const el = document.getElementById("memo-sample-quick");
-        if (el) el.style.display = "none";
+        _revealEmptyIfNoMemos("quick");
         try { localStorage.setItem("memo-sample-quick-dismissed", "1"); } catch (error) {}
       }
 
       function dismissSamplePaper() {
-        const el = document.getElementById("memo-sample-paper");
-        if (el) el.style.display = "none";
+        _revealEmptyIfNoMemos("paper");
         try { localStorage.setItem("memo-sample-paper-dismissed", "1"); } catch (error) {}
       }
 
       try {
         if (localStorage.getItem("memo-sample-quick-dismissed")) {
-          const el = document.getElementById("memo-sample-quick");
-          if (el) el.style.display = "none";
+          _revealEmptyIfNoMemos("quick");
         }
         if (localStorage.getItem("memo-sample-paper-dismissed")) {
-          const el = document.getElementById("memo-sample-paper");
-          if (el) el.style.display = "none";
+          _revealEmptyIfNoMemos("paper");
         }
       } catch (error) {}
 

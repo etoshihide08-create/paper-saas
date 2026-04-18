@@ -7940,12 +7940,12 @@ def memo_list(request: Request, tab: str = "quick", map_file_id: int | None = Qu
             if len(mind_map_papers) >= 6:
                 break
 
+    # 使い方例カードは全ユーザーに対して表示し、クライアント側で localStorage で dismiss 管理
     featured_paper = None
-    if total_count == 0:
-        try:
-            featured_paper = get_featured_memo_paper()
-        except Exception:
-            featured_paper = None
+    try:
+        featured_paper = get_featured_memo_paper()
+    except Exception:
+        featured_paper = None
 
     return templates.TemplateResponse(
         "memo.html",
@@ -8143,6 +8143,49 @@ def memo_create(request: Request, title: str = Form(""), body: str = Form("")):
 
     memo_id = create_memo(user_id, title.strip(), normalize_memo_body_for_storage(body))
     return RedirectResponse(f"/memo/{memo_id}", status_code=303)
+
+
+@app.post("/memo/create_sample")
+def memo_create_sample(request: Request):
+    """使い方例カードから呼ばれる：プリセット入りクイックメモを新規作成して編集画面へ。
+    from=sample クエリを残し、未編集離脱時に /memo/{id}/delete_if_empty で自動削除される前提。"""
+    current_user = get_current_user(request)
+    if not current_user:
+        return RedirectResponse("/login?from=memo", status_code=303)
+    user_id = current_user["id"]
+    plan = get_user_plan(current_user)
+    limits = get_plan_limits(plan)
+    memo_limit = limits["memo_limit"]
+    if memo_limit is not None:
+        total = count_user_all_memos(user_id)
+        if total >= memo_limit:
+            return RedirectResponse("/memo?tab=quick&error=limit_reached", status_code=303)
+
+    sample_title = "膝術後の可動域評価メモ"
+    sample_body = (
+        "<p>【結論】スマートインプラントで正確に評価できる</p>"
+        "<ul><li>術後の可動域は1.9倍</li><li>外来評価と高い相関あり</li></ul>"
+        "<p>✔ 次にやること</p>"
+        "<ul><li>再評価のタイミング確認</li></ul>"
+    )
+    memo_id = create_memo(user_id, sample_title, normalize_memo_body_for_storage(sample_body))
+    return RedirectResponse(f"/memo/{memo_id}?from=sample", status_code=303)
+
+
+@app.get("/memo/demo/{mode}")
+def memo_demo(request: Request, mode: str):
+    """メモ機能の使い方例（読み取り専用デモ画面）"""
+    if mode not in ("quick", "paper"):
+        return RedirectResponse("/memo", status_code=303)
+    current_user = get_current_user(request)
+    return templates.TemplateResponse(
+        "memo_demo.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "mode": mode,
+        }
+    )
 
 
 @app.get("/memo/{memo_id}")

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>メモの使い方例 | {{ BRAND_TITLE }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #111827;
+        --subtext: #6b7280;
+        --line: #e5e7eb;
+        --blue: #2563eb;
+        --blue-soft: #eff6ff;
+        --green: #16a34a;
+        --green-soft: #dcfce7;
+        --orange: #f97316;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .demo-wrap { max-width: 720px; margin: 0 auto; padding: 0 0 120px; }
+
+      /* デモバナー（薄グレー・1行） */
+      .demo-banner {
+        position: sticky; top: 0; z-index: 50;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .demo-banner-text { flex: 1; line-height: 1.4; }
+      .demo-banner-sub { display: none; }
+      .demo-banner-close {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .demo-banner-close:hover { background: #f8fafc; }
+
+      /* ヘッダー（←メモ + アクションボタン群） */
+      .memo-topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--bg);
+        gap: 8px;
+      }
+      .memo-back {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .memo-quick-kicker {
+        flex: 1; padding: 0 10px;
+        line-height: 1.3;
+      }
+      .memo-quick-kicker .kicker-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--blue);
+      }
+      .memo-quick-kicker .kicker-sub {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .topbar-actions { display: flex; align-items: center; gap: 8px; }
+      .icon-btn {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        cursor: default;
+      }
+      .save-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .save-pill.dark {
+        background: #16a34a;
+        color: #fff;
+      }
+      .check-pill {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: #16a34a;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      /* 論文カード（論文メモ用） */
+      .memo-paper-ref {
+        margin: 0 16px 16px;
+        padding: 14px;
+        background: var(--blue-soft);
+        border: 1px solid #dbeafe;
+        border-radius: 14px;
+      }
+      .memo-paper-ref-title {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.6;
+        color: var(--text);
+      }
+      .memo-paper-ref-pmid {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--subtext);
+      }
+      .memo-paper-ref-actions {
+        margin-top: 12px;
+        display: flex; gap: 10px;
+      }
+      .memo-paper-ref-btn {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        cursor: default;
+      }
+      .memo-paper-ref-btn.primary {
+        background: #1e3a8a;
+        color: #fff;
+        border-color: #1e3a8a;
+      }
+
+      /* メタ情報 */
+      .memo-meta {
+        padding: 0 16px;
+        font-size: 12px;
+        color: var(--subtext);
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      }
+      .memo-meta .dot { color: #cbd5e1; }
+
+      /* ツールバー */
+      .memo-toolbar {
+        display: flex; gap: 6px; flex-wrap: wrap;
+        padding: 10px 16px;
+        background: var(--bg);
+      }
+      .memo-toolbar.bottom {
+        position: fixed; left: 0; right: 0; bottom: 0;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        background: var(--card);
+        border-top: 1px solid var(--line);
+        z-index: 20;
+      }
+      .tool-btn {
+        min-width: 36px; height: 36px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        padding: 0 10px;
+        cursor: default;
+      }
+      .tool-btn.active {
+        background: var(--blue-soft);
+        color: var(--blue);
+        border-color: #bfdbfe;
+      }
+
+      /* 本文エリア */
+      .memo-content {
+        background: #fff;
+        margin: 0 16px;
+        padding: 18px 20px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        font-size: 15px;
+        line-height: 1.8;
+        color: var(--text);
+      }
+      .memo-content h1 {
+        font-size: 20px;
+        font-weight: 800;
+        margin: 0 0 14px;
+        line-height: 1.5;
+      }
+      .memo-content h2 {
+        font-size: 17px;
+        font-weight: 800;
+        margin: 22px 0 10px;
+      }
+      .memo-content blockquote {
+        margin: 14px 0;
+        padding: 10px 14px;
+        border-left: 4px solid var(--blue);
+        background: #f8fbff;
+        border-radius: 0 10px 10px 0;
+        color: #1f2937;
+        font-size: 14px;
+      }
+      .memo-content blockquote u {
+        text-decoration: underline;
+        text-decoration-color: var(--blue);
+        text-decoration-thickness: 2px;
+        text-underline-offset: 2px;
+      }
+      .memo-content ol { padding-left: 22px; margin: 10px 0; }
+      .memo-content ol li { margin: 6px 0; }
+      .memo-content ol li.is-struck { text-decoration: line-through; color: #94a3b8; }
+      .memo-content p { margin: 10px 0; }
+      .memo-content .todo {
+        display: flex; align-items: flex-start; gap: 8px;
+        margin: 10px 0 4px;
+      }
+      .memo-content .todo-box {
+        display: inline-block;
+        width: 16px; height: 16px;
+        border: 1.5px solid #94a3b8;
+        border-radius: 3px;
+        flex-shrink: 0;
+        margin-top: 4px;
+      }
+      .memo-content .todo-label {
+        font-weight: 700;
+      }
+      .memo-content .todo-body {
+        padding-left: 26px;
+        color: #1f2937;
+      }
+
+      /* フッター（セッションログを表示） */
+      .session-log-bar {
+        position: fixed; left: 0; right: 0; bottom: 0;
+        background: var(--card);
+        border-top: 1px solid var(--line);
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 12px;
+        color: var(--subtext);
+        z-index: 10;
+      }
+      .memo-toolbar.bottom + .session-log-bar {
+        position: static;
+        border-top: 1px solid var(--line);
+      }
+
+      @media (max-width: 560px) {
+        .memo-topbar { padding: 10px 12px; flex-wrap: wrap; }
+        .memo-content { margin: 0 12px; padding: 16px; }
+        .memo-toolbar { padding: 10px 12px; }
+        .memo-paper-ref { margin: 0 12px 14px; }
+        .memo-meta { padding: 0 12px; }
+        /* モバイルでは kicker を1行下に、アクションを整理 */
+        .memo-quick-kicker { order: 3; flex-basis: 100%; padding: 6px 0 0; }
+        .memo-quick-kicker .kicker-label { font-size: 10px; }
+        .memo-quick-kicker .kicker-sub { font-size: 12px; }
+        .topbar-actions { gap: 6px; }
+        .icon-btn { width: 32px; height: 32px; font-size: 14px; }
+        .save-pill { padding: 6px 10px; font-size: 11px; }
+        .check-pill { width: 36px; height: 36px; font-size: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-banner">
+      <div class="demo-banner-text">💡 これは使い方例（読み取り専用）です</div>
+      <a href="/memo?tab={{ 'paper' if mode == 'paper' else 'quick' }}" class="demo-banner-close">閉じる</a>
+    </div>
+
+    <div class="demo-wrap">
+
+      {% if mode == 'paper' %}
+      <!-- ============ 論文メモ デモ ============ -->
+      <div class="memo-topbar">
+        <a href="/memo?tab=paper" class="memo-back">← メモ</a>
+        <div style="flex:1"></div>
+        <div class="topbar-actions">
+          <span class="icon-btn" aria-hidden="true">↶</span>
+          <span class="icon-btn" aria-hidden="true">↷</span>
+          <span class="icon-btn" aria-hidden="true">＋</span>
+          <span class="check-pill" aria-hidden="true">✓</span>
+        </div>
+      </div>
+
+      <div class="memo-paper-ref">
+        <div class="memo-paper-ref-title">📄 人工膝関節全置換術後の診察室における可動域とPersona IQスマートインプラントデータの相関</div>
+        <div class="memo-paper-ref-pmid">PMID: 41853227</div>
+        <div class="memo-paper-ref-actions">
+          <span class="memo-paper-ref-btn">要約を見る</span>
+          <span class="memo-paper-ref-btn primary">論文を見る</span>
+        </div>
+      </div>
+
+      <div class="memo-meta">
+        <span>✏️ 2026-04-18 更新</span>
+        <span class="dot">•</span>
+        <span>📖 2026-04-18 作成</span>
+        <span class="dot">•</span>
+        <span>論文メモ</span>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="memo-content">
+        <p>スマートインプラントを用いることで、術後の膝関節可動域を正確に測定でき、実際の診察での可動域評価と高い相関を示した。これにより、遠隔でのリハビリ管理や通院回数の削減が期待できる。</p>
+      </div>
+
+      <div class="memo-toolbar bottom">
+        <span class="tool-btn"><b>B</b></span>
+        <span class="tool-btn"><i>I</i></span>
+        <span class="tool-btn"><u>U</u></span>
+        <span class="tool-btn"><s>S</s></span>
+        <span class="tool-btn">🔗</span>
+        <span class="tool-btn">•</span>
+        <span class="tool-btn">1.</span>
+        <span class="tool-btn">☑</span>
+      </div>
+
+      {% else %}
+      <!-- ============ クイックメモ デモ ============ -->
+      <div class="memo-topbar">
+        <a href="/memo?tab=quick" class="memo-back">← メモ</a>
+        <div class="memo-quick-kicker">
+          <span class="kicker-label">QUICK MEMO</span>
+          <span class="kicker-sub">気づきをすぐ残せるドキュメントメモ</span>
+        </div>
+        <div class="topbar-actions">
+          <span class="icon-btn" aria-hidden="true">↶</span>
+          <span class="icon-btn" aria-hidden="true">↷</span>
+          <span class="icon-btn" aria-hidden="true">＋</span>
+          <span class="save-pill">✓ 自動保存済み</span>
+          <span class="save-pill dark">✓ 保存済み</span>
+        </div>
+      </div>
+
+      <div class="memo-toolbar">
+        <span class="tool-btn"><b>B</b></span>
+        <span class="tool-btn"><i>I</i></span>
+        <span class="tool-btn"><u>U</u></span>
+        <span class="tool-btn"><s>S</s></span>
+        <span class="tool-btn active">H2</span>
+        <span class="tool-btn">•</span>
+        <span class="tool-btn">1.</span>
+        <span class="tool-btn">☑</span>
+        <span class="tool-btn">&quot;</span>
+        <span class="tool-btn">🔗</span>
+        <span class="tool-btn">⏱</span>
+      </div>
+
+      <div class="memo-content">
+        <h1>人工膝関節全置換術後の診察室における可動域とPersona IQスマートインプラントデータの相関</h1>
+
+        <blockquote>
+          スマートインプラントを用いることで、術後の膝関節可動域を正確に測定でき、実際の診察での<u>可動域評価と高い相関を示した</u>。これにより、<u>遠隔でのリハビリ管理や通院回数の削減が期待できる。</u>
+        </blockquote>
+
+        <ol>
+          <li>スマートインプラントの計測値（脛骨の可動域×1.9、機能的膝可動域×1.86）を用いると術後可動域が正確に評価可能。</li>
+          <li class="is-struck">術後2週、6週、12週の評価で診察時の可動域と統計的に差がなかった。</li>
+          <li>遠隔での膝可動域モニタリングの可能性を示唆している。</li>
+        </ol>
+
+        <h2>2026/04/18 14:05</h2>
+
+        <div class="todo">
+          <span class="todo-box"></span>
+          <span class="todo-label">確認事項</span>
+        </div>
+        <div class="todo-body">〇〇さんの医学的情報を再度確認する。</div>
+
+        <div class="todo">
+          <span class="todo-box"></span>
+          <span class="todo-label">次に試すこと</span>
+        </div>
+        <div class="todo-body">〇〇さんの膝関節の関節可動域を確認する。</div>
+      </div>
+
+      <div class="session-log-bar">
+        <span>セッションログを表示</span>
+        <span>∧</span>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
