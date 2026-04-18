@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>メモ — {{ BRAND_TITLE }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
 
     <style>
       :root {
@@ -232,6 +234,39 @@
         font-size: 12px;
         font-weight: 800;
         white-space: nowrap;
+      }
+
+      .memo-sample-badge {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: var(--secondary-soft, #e0e7ff);
+        color: var(--blue);
+        z-index: 1;
+      }
+
+      .memo-sample-close {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        border: none;
+        background: transparent;
+        color: var(--subtext);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+        line-height: 1;
+        z-index: 1;
+      }
+
+      #memo-sample-quick .memo-card,
+      #memo-sample-paper .memo-card {
+        padding-top: 34px;
       }
 
       .helper-sample {
@@ -1623,15 +1658,6 @@
             <a href="/plans" class="context-guide-btn">プランを見る</a>
             {% endif %}
           </section>
-          <section class="helper-sample" id="memo-helper-sample" hidden>
-            <div class="helper-sample-head">
-              <div class="helper-sample-kicker">使い方例</div>
-              <button type="button" class="helper-sample-close" aria-label="サンプルを閉じる" onclick="dismissMemoHelperSample()">×</button>
-            </div>
-            <div class="helper-sample-title">たとえば「明日見返したいこと」を 1 行だけ残すところからで十分です。</div>
-            <div class="helper-sample-body">例: 歩行速度の数字だけ先に覚える。あとで論文メモにつなげる。</div>
-            <div class="helper-sample-chip">例: 気づき → 1 行だけメモ</div>
-          </section>
           {% endif %}
 
           <!-- クイックメモタブ -->
@@ -1653,6 +1679,18 @@
                 {% endif %}
               </a>
               {% endfor %}
+            </div>
+            {% elif featured_paper %}
+            <div class="memo-list" id="memo-sample-quick">
+              <div class="memo-card" style="position:relative; cursor:default;">
+                <div class="memo-sample-badge">使い方例</div>
+                <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="dismissSampleQuick()">×</button>
+                <div class="memo-card-header">
+                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:40] }}</div>
+                  <div class="memo-card-date">2026-04-18</div>
+                </div>
+                <div class="memo-card-preview">【結論】術後膝可動域をスマートインプラントで正確に評価できる。 / 可動域×1.9・機能的膝可動域×1.86 の計測値で診察時と統計的差なし。 / <b>遠隔モニタリング</b>の可能性 → 通院回数削減。</div>
+              </div>
             </div>
             {% else %}
             <div class="empty-state">
@@ -1688,6 +1726,21 @@
                 </div>
               </a>
               {% endfor %}
+            </div>
+            {% elif featured_paper %}
+            <div class="memo-list" id="memo-sample-paper">
+              <div class="memo-card" style="position:relative; cursor:default;">
+                <div class="memo-sample-badge">使い方例</div>
+                <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="dismissSamplePaper()">×</button>
+                <div class="memo-card-header">
+                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:50] }}</div>
+                  <div class="memo-card-date">2026-04-18</div>
+                </div>
+                <div class="memo-card-preview">確認事項：〇〇さんの医学的情報を再度確認する。 / 次に試すこと：〇〇さんの膝関節の関節可動域を確認する。 / 遠隔での膝可動域モニタリングの可能性を示唆している。</div>
+                <div class="memo-paper-tag">
+                  📄 PMID: {{ featured_paper.pubmed_id }}
+                </div>
+              </div>
             </div>
             {% else %}
             <div class="empty-state">
@@ -1910,26 +1963,28 @@
     </div>
 
     <script>
-      const memoHelperSample = document.getElementById("memo-helper-sample");
-
-      function dismissMemoHelperSample() {
-        if (!memoHelperSample) return;
-        memoHelperSample.hidden = true;
-        try {
-          localStorage.setItem("memo-helper-sample-dismissed", "1");
-        } catch (error) {}
+      function dismissSampleQuick() {
+        const el = document.getElementById("memo-sample-quick");
+        if (el) el.style.display = "none";
+        try { localStorage.setItem("memo-sample-quick-dismissed", "1"); } catch (error) {}
       }
 
-      if (memoHelperSample) {
-        try {
-          const dismissed = localStorage.getItem("memo-helper-sample-dismissed");
-          if (!dismissed) {
-            memoHelperSample.hidden = false;
-          }
-        } catch (error) {
-          memoHelperSample.hidden = false;
+      function dismissSamplePaper() {
+        const el = document.getElementById("memo-sample-paper");
+        if (el) el.style.display = "none";
+        try { localStorage.setItem("memo-sample-paper-dismissed", "1"); } catch (error) {}
+      }
+
+      try {
+        if (localStorage.getItem("memo-sample-quick-dismissed")) {
+          const el = document.getElementById("memo-sample-quick");
+          if (el) el.style.display = "none";
         }
-      }
+        if (localStorage.getItem("memo-sample-paper-dismissed")) {
+          const el = document.getElementById("memo-sample-paper");
+          if (el) el.style.display = "none";
+        }
+      } catch (error) {}
 
       function createQuickMemo(e) {
         e.preventDefault();

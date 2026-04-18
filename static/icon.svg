@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dx="0" dy="8" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.22"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <path d="M 136 120 L 352 120 L 400 168 L 400 392 Q 400 408 384 408 L 136 408 Q 120 408 120 392 L 120 136 Q 120 120 136 120 Z" fill="url(#paper)"/>
+    <path d="M 352 120 L 400 168 L 360 168 Q 352 168 352 160 Z" fill="#CBD5E1"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="156" y1="360" x2="372" y2="360" stroke="#E2E8F0" stroke-width="3"/>
+    <polyline points="156,342 198,320 240,298 282,262 324,232 366,198" stroke="#2563EB" stroke-width="12"/>
+    <circle cx="156" cy="342" r="7" fill="#2563EB"/>
+    <circle cx="198" cy="320" r="7" fill="#2563EB"/>
+    <circle cx="240" cy="298" r="7" fill="#2563EB"/>
+    <circle cx="282" cy="262" r="7" fill="#2563EB"/>
+    <circle cx="324" cy="232" r="7" fill="#2563EB"/>
+    <circle cx="366" cy="198" r="10" fill="#F97316"/>
+  </g>
+  <g>
+    <circle cx="150" cy="150" r="40" fill="#F97316" stroke="#FFFFFF" stroke-width="7"/>
+    <path d="M 132 150 L 145 163 L 170 136" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

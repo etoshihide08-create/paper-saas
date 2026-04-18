@@ -3558,6 +3558,39 @@ def toggle_friend_promo_code_active(code_id: int) -> bool:
     return bool(row[0]) if row else False
 
 
+def get_featured_memo_paper() -> dict | None:
+    """メモ画面用のおすすめ論文（臨床参考度が高く要約・翻訳がある1件）を返す。"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT pubmed_id,
+               MAX(COALESCE(title, '')) AS title,
+               MAX(COALESCE(jp_title, '')) AS jp_title,
+               MAX(CAST(NULLIF(clinical_score, '') AS REAL)) AS score,
+               MAX(COALESCE(summary_jp, '')) AS summary_jp
+        FROM saved_papers
+        WHERE COALESCE(summary_jp, '') != ''
+          AND COALESCE(jp_title, '') != ''
+          AND COALESCE(clinical_score, '') != ''
+        GROUP BY pubmed_id
+        ORDER BY score DESC, SUM(COALESCE(likes, 0)) DESC
+        LIMIT 1
+        """
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {
+        "pubmed_id": str(row["pubmed_id"]),
+        "title": row["title"] or "",
+        "jp_title": row["jp_title"] or "",
+        "clinical_score": row["score"],
+        "summary_jp": (row["summary_jp"] or "")[:180],
+    }
+
+
 def get_papers_summary_flags(pubmed_ids: list[str]) -> dict[str, dict]:
     """pubmed_id リストに対して、保存済み論文から要約・抄録の有無を返す。
     戻り値: {pubmed_id: {"has_summary_jp": bool, "has_abstract": bool}}

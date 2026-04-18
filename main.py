@@ -138,6 +138,7 @@ from db import (
     toggle_friend_promo_code_active,
     get_papers_aggregate_stats,
     get_papers_summary_flags,
+    get_featured_memo_paper,
     MANUAL_FOLDER_SOURCES,
     MANUAL_SAVED_SOURCES,
 )
@@ -7939,6 +7940,13 @@ def memo_list(request: Request, tab: str = "quick", map_file_id: int | None = Qu
             if len(mind_map_papers) >= 6:
                 break
 
+    featured_paper = None
+    if total_count == 0:
+        try:
+            featured_paper = get_featured_memo_paper()
+        except Exception:
+            featured_paper = None
+
     return templates.TemplateResponse(
         "memo.html",
         {
@@ -7959,6 +7967,7 @@ def memo_list(request: Request, tab: str = "quick", map_file_id: int | None = Qu
             "total_count": total_count,
             "memo_limit": memo_limit,
             "upgrade_nudge": memo_upgrade_nudge,
+            "featured_paper": featured_paper,
         }
     )
 

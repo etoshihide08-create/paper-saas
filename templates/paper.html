@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>論文詳細 — {{ BRAND_TITLE }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
     <style>
       :root {
         --bg: #f7f8fb;
@@ -980,7 +982,8 @@
 
       .comment-sheet {
         width: min(560px, 100%);
-        height: min(85vh, 100%);
+        height: min(85dvh, 100%);
+        max-height: 100%;
         background: #fff;
         border-radius: 20px 20px 0 0;
         display: flex;
@@ -988,6 +991,24 @@
         overflow: hidden;
         box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
         margin-bottom: 16px;
+      }
+      /* コメントシート上部の論文タイトル（コンパクト表示で常に見える） */
+      #paper-comment-paper-title {
+        flex-shrink: 0;
+        margin: 8px 14px 6px;
+        padding: 8px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.5;
+        color: #1f2937;
+        background: #f8fbff;
+        border: 1px solid #dbeafe;
+        border-radius: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .comment-sheet-drag {
@@ -1040,7 +1061,8 @@
 
       /* スクロール可能なコメント一覧 */
       .comment-sheet-list {
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         padding: 8px 0;
@@ -2094,7 +2116,7 @@
               {% else %}{{ (current_user.display_name or current_user.email or "?")[0]|upper if current_user else "?" }}{% endif %}
             </div>
             <div class="comment-sheet-input-box">
-              <textarea class="comment-sheet-textarea" id="paper-comment-input" placeholder="この論文についてコメントする…" rows="1" oninput="onCommentInput(this)"></textarea>
+              <textarea class="comment-sheet-textarea" id="paper-comment-input" placeholder="この論文についてコメントする…" rows="1" oninput="onCommentInput(this)" onfocus="scrollCommentListToLatest()"></textarea>
               <button type="button" class="comment-sheet-send-btn" id="paper-comment-submit" onclick="submitPaperCommentNew()" disabled>➤</button>
             </div>
           </div>
@@ -2420,6 +2442,14 @@
 
       function closePaperCommentSheetBackdrop(event) {
         if (event.target === event.currentTarget) closePaperCommentSheet();
+      }
+
+      function scrollCommentListToLatest() {
+        const list = document.getElementById("paper-comment-list");
+        if (!list) return;
+        // キーボード展開直後にレイアウトが確定するのを待って末尾までスクロール
+        setTimeout(() => { list.scrollTop = list.scrollHeight; }, 120);
+        setTimeout(() => { list.scrollTop = list.scrollHeight; }, 320);
       }
 
       function onCommentInput(el) {
@@ -2922,6 +2952,9 @@
                 el.style.height = vv.height + "px";
                 el.style.bottom = "auto";
                 el.style.paddingBottom = (kbH + 10) + "px";
+                // キーボード出現時は直近のコメントが入力欄の真上に残るよう末尾へ
+                const list = el.querySelector("#paper-comment-list");
+                if (list) list.scrollTop = list.scrollHeight;
               } else {
                 el.style.top    = "";
                 el.style.height = "";
