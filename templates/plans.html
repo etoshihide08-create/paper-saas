@@ -6,6 +6,11 @@
     <title>料金プラン — RehaEvidence</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RehaEvidence" />
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -579,6 +584,7 @@
     </style>
 </head>
 <body>
+{% include "_splash.html" %}
     <!-- Hero -->
     <div class="hero">
         <div class="hero-inner">

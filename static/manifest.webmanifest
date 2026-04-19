@@ -1,0 +1,26 @@
+{
+  "name": "RehaEvidence",
+  "short_name": "RehaEvidence",
+  "description": "英語論文を日本語でわかりやすく。保存・メモ・要約で、PT・OTの学びと臨床判断が積み上がる。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2563EB",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

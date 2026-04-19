@@ -6,6 +6,11 @@
   <title>学ぶ – {{ BRAND_TITLE }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RehaEvidence" />
   <style>
     :root {
       --bg: #f4f7fb;
@@ -494,6 +499,7 @@
   </style>
 </head>
 <body>
+{% include "_splash.html" %}
   <div class="app-layout">
     <aside class="sidebar">
       <div class="sidebar-brand">
