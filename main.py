@@ -169,16 +169,12 @@ BRAND_COPY_LINES = [
     "PT・OTの学びと臨床判断が積み上がる。",
 ]
 BRAND_TITLE = f"{BRAND_NAME_EN} | {BRAND_NAME_JA}"
-# 2色ワードマーク: "Reha" をダークネイビー、"Evidence" を青で強調。
-# font-weight / size は親要素のスタイルに従うので、既存の H1・sidebar-title 等の
-# 見た目を保ちつつ色だけ差し替わる。
+# ワードマーク: 色は親要素から継承（単色・元どおり）、タイポだけ高級 serif に差し替え。
+# Fraunces は現代的な variable serif で、医学ジャーナル的な権威感と程よい柔らかさを
+# 両立する。.reha-wordmark クラスに対する font-family / letter-spacing 指定は
+# _brand_head.html パーシャルで行う。
 from markupsafe import Markup as _Markup
-BRAND_WORDMARK_HTML = _Markup(
-    '<span class="reha-wordmark">'
-    '<span style="color:#0F172A">Reha</span>'
-    '<span style="color:#2563EB">Evidence</span>'
-    '</span>'
-)
+BRAND_WORDMARK_HTML = _Markup('<span class="reha-wordmark">RehaEvidence</span>')
 templates.env.globals.update(
     BRAND_NAME_EN=BRAND_NAME_EN,
     BRAND_NAME_JA=BRAND_NAME_JA,

@@ -6,6 +6,7 @@
   <title>学ぶ – {{ BRAND_TITLE }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="apple-touch-icon" href="/static/icon.svg" />
+    {% include "_brand_head.html" %}
     <link rel="manifest" href="/static/manifest.webmanifest" />
     <meta name="theme-color" content="#FFFFFF" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -504,7 +505,7 @@
     <aside class="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-title">{{ BRAND_WORDMARK_HTML }}</div>
-        <div class="sidebar-subtext">{{ BRAND_NAME_JA }}<br>{{ BRAND_COPY }}</div>
+        <div class="sidebar-subtext">{{ BRAND_COPY }}</div>
       </div>
 
       <nav class="sidebar-nav">

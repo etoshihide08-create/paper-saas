@@ -1,0 +1,21 @@
+{# RehaEvidence ブランドタイポグラフィ。
+   Fraunces は optical size を display に振り、wght=700 で重厚感を出す。
+   色は指定せず親要素（H1 / sidebar-title / logo-name）から継承させる。 #}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..800,30..80&display=swap"
+/>
+<style>
+  .reha-wordmark {
+    font-family: "Fraunces", "Noto Serif JP", "Hiragino Mincho ProN",
+      "Yu Mincho", Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    letter-spacing: -0.015em;
+    /* 親要素のサイズと色を継承 */
+    font-style: normal;
+    line-height: 1.05;
+  }
+</style>

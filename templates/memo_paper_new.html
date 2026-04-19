@@ -7,6 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="apple-touch-icon" href="/static/icon.svg" />
 
+    {% include "_brand_head.html" %}
     <style>
       :root {
         --bg: #f5f7fb;
@@ -387,7 +388,7 @@
       <aside class="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-title">{{ BRAND_WORDMARK_HTML }}</div>
-          <div class="sidebar-subtext">{{ BRAND_NAME_JA }}<br>{{ BRAND_COPY }}</div>
+          <div class="sidebar-subtext">{{ BRAND_COPY }}</div>
         </div>
         <nav class="sidebar-nav">
           <a href="/" class="sidebar-link"><span class="sidebar-icon">🏠</span><span>検索</span></a>
