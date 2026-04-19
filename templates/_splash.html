@@ -1,8 +1,11 @@
 {# RehaEvidence splash overlay (shown once per browser session).
-   SVG is inlined so the icon paints on the first frame together with the
-   white background (no white-flash → icon-pop transition). #}
-<div id="re-splash" aria-hidden="true">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120" aria-hidden="true" focusable="false">
+   Critical positioning is set via inline style so the very first frame
+   paints as "fullscreen white + centered icon" — avoiding a flash where
+   the div is briefly laid out in normal flow before the <style> block
+   applies position:fixed. #}
+<div id="re-splash" aria-hidden="true"
+     style="position:fixed;inset:0;background:#ffffff;display:flex;align-items:center;justify-content:center;z-index:2147483647;pointer-events:none;opacity:1;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120" aria-hidden="true" focusable="false" style="width:120px;height:120px;display:block;">
     <defs>
       <linearGradient id="re-splash-bg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#60A5FA"/>
@@ -41,25 +44,9 @@
   </svg>
 </div>
 <style>
-  #re-splash {
-    position: fixed;
-    inset: 0;
-    background: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2147483647;
-    opacity: 1;
-    transition: opacity 0.2s ease-out;
-    pointer-events: none;
-  }
-  #re-splash svg {
-    width: 120px;
-    height: 120px;
-    display: block;
-  }
+  #re-splash { transition: opacity 0.2s ease-out; }
   #re-splash.re-splash-hidden { opacity: 0; }
-  #re-splash.re-splash-gone { display: none; }
+  #re-splash.re-splash-gone { display: none !important; }
   @media (prefers-reduced-motion: reduce) {
     #re-splash { transition: none; }
   }
@@ -77,6 +64,7 @@
     }
     if (alreadyShown) {
       splash.style.transition = 'none';
+      splash.style.display = 'none';
       splash.classList.add('re-splash-hidden', 're-splash-gone');
       return;
     }
