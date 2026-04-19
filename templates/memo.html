@@ -1714,17 +1714,17 @@
           <!-- 論文メモタブ -->
           {% elif tab == 'paper' %}
             <div class="memo-list" data-has-memos="{{ 1 if paper_memos else 0 }}">
-              {% if featured_paper and not paper_memos %}
+              {% if not paper_memos %}
               <a href="/memo/demo/paper" class="memo-card" id="memo-sample-paper" style="position:relative;">
                 <div class="memo-sample-badge">使い方例</div>
                 <button type="button" class="memo-sample-close" aria-label="サンプルを閉じる" onclick="event.preventDefault(); event.stopPropagation(); dismissSamplePaper();">×</button>
                 <div class="memo-card-header">
-                  <div class="memo-card-title">{{ (featured_paper.jp_title or featured_paper.title)[:50] }}</div>
+                  <div class="memo-card-title">人工膝関節全置換術後の可動域とスマートインプラントデータの相関</div>
                   <div class="memo-card-date">2026-04-18</div>
                 </div>
                 <div class="memo-card-preview">確認事項：〇〇さんの医学的情報を再度確認する。 / 次に試すこと：〇〇さんの膝関節の関節可動域を確認する。 / 遠隔での膝可動域モニタリングの可能性を示唆している。</div>
                 <div class="memo-paper-tag">
-                  📄 PMID: {{ featured_paper.pubmed_id }}
+                  📄 PMID: 41853227
                 </div>
               </a>
               {% endif %}
