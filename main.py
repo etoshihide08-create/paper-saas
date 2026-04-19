@@ -169,12 +169,23 @@ BRAND_COPY_LINES = [
     "PT・OTの学びと臨床判断が積み上がる。",
 ]
 BRAND_TITLE = f"{BRAND_NAME_EN} | {BRAND_NAME_JA}"
+# 2色ワードマーク: "Reha" をダークネイビー、"Evidence" を青で強調。
+# font-weight / size は親要素のスタイルに従うので、既存の H1・sidebar-title 等の
+# 見た目を保ちつつ色だけ差し替わる。
+from markupsafe import Markup as _Markup
+BRAND_WORDMARK_HTML = _Markup(
+    '<span class="reha-wordmark">'
+    '<span style="color:#0F172A">Reha</span>'
+    '<span style="color:#2563EB">Evidence</span>'
+    '</span>'
+)
 templates.env.globals.update(
     BRAND_NAME_EN=BRAND_NAME_EN,
     BRAND_NAME_JA=BRAND_NAME_JA,
     BRAND_COPY=BRAND_COPY,
     BRAND_COPY_LINES=BRAND_COPY_LINES,
     BRAND_TITLE=BRAND_TITLE,
+    BRAND_WORDMARK_HTML=BRAND_WORDMARK_HTML,
 )
 _original_template_response = templates.TemplateResponse
 
