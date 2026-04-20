@@ -7666,6 +7666,7 @@ def _google_redirect_uri(request: Request) -> str:
 async def google_auth_login(
     request: Request,
     from_page: str = Query(default="", alias="from"),
+    ref: str = Query(default=""),
 ):
     if oauth_google is None:
         return RedirectResponse(
@@ -7673,6 +7674,13 @@ async def google_auth_login(
         )
     # Remember where to send the user after successful callback.
     request.session["post_google_from"] = (from_page or "").strip()[:64]
+    # Stash the referral code (if provided) so the callback can apply it
+    # to brand-new accounts. Upper-cased to match /register handling.
+    ref_clean = (ref or "").strip().upper()[:32]
+    if ref_clean:
+        request.session["post_google_ref_code"] = ref_clean
+    else:
+        request.session.pop("post_google_ref_code", None)
     redirect_uri = _google_redirect_uri(request)
     return await oauth_google.authorize_redirect(request, redirect_uri)
 
@@ -7713,6 +7721,7 @@ async def google_auth_callback(request: Request):
 
     # 1) Previously linked Google account → sign in directly.
     user = get_user_by_google_sub(google_sub)
+    is_new_user = False
 
     # 2) Existing email/password account with same email → link and sign in.
     if user is None:
@@ -7729,13 +7738,53 @@ async def google_auth_callback(request: Request):
             display_name=display_name,
             avatar=picture,
         )
+        is_new_user = user is not None
 
     if user is None:
         return RedirectResponse(url="/login?error=google_failed", status_code=303)
 
     request.session["user_id"] = user["id"]
 
+    # Apply referral bonus if the user was just created via Google AND
+    # carried a ref_code through the /auth/google/login handoff. We only
+    # apply on first-time creation — never on login-with-existing-account.
+    pending_ref = (request.session.pop("post_google_ref_code", "") or "").strip().upper()
+    ref_result = ""  # "success" | "invalid" | ""
+    if is_new_user and pending_ref:
+        referrer = get_user_by_ref_code(pending_ref)
+        if referrer and referrer.get("id") != user["id"]:
+            ok, reason = apply_referral_bonus(
+                referrer_id=referrer["id"],
+                referred_user_id=user["id"],
+            )
+            if ok:
+                today = datetime.now()
+                trial_end = today + timedelta(days=7)
+                update_user_plan(
+                    user_id=user["id"],
+                    plan="pro",
+                    trial_ends_at=trial_end.strftime("%Y-%m-%d"),
+                    plan_started_at=today.strftime("%Y-%m-%d"),
+                    plan_renews_at=trial_end.strftime("%Y-%m-%d"),
+                    is_yearly=0,
+                    trial_used=1,
+                )
+                ref_result = "success"
+            else:
+                # `already_used` / `self_referral` / `not_found` etc.
+                # Surface softly on /plans rather than blocking signup.
+                ref_result = reason or "invalid"
+        else:
+            ref_result = "not_found"
+
     from_page = (request.session.pop("post_google_from", "") or "").strip()
+
+    # Surface referral result via /plans query params (matches email+password flow).
+    if ref_result == "success":
+        return RedirectResponse(url="/plans?ref_success=1", status_code=303)
+    if ref_result and ref_result != "":
+        return RedirectResponse(url=f"/plans?ref_error={ref_result}", status_code=303)
+
     if from_page == "plans":
         return RedirectResponse(url="/plans", status_code=303)
     if from_page == "mypage":
