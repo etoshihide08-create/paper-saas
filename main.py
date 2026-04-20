@@ -51,6 +51,10 @@ from db import (
     create_user,
     verify_user,
     get_user_by_id,
+    get_user_by_email,
+    get_user_by_google_sub,
+    link_google_account,
+    create_user_from_google,
     get_folder_name_suggestions,
     count_user_saved_papers,
     update_user_plan,
@@ -159,6 +163,31 @@ app.add_middleware(
     https_only=SESSION_HTTPS_ONLY,
     session_cookie="rehaevidence_session",
 )
+
+# ── Google OAuth (Authlib) ────────────────────────────────────────────
+# Lazy-initialized. If env vars are missing we simply don't register the
+# client — routes check `oauth_google` and 503 out cleanly so the rest of
+# the app keeps working (e.g. in local dev without credentials).
+oauth_google = None
+try:
+    _google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    _google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+    if _google_client_id and _google_client_secret:
+        from authlib.integrations.starlette_client import OAuth
+
+        _oauth_registry = OAuth()
+        _oauth_registry.register(
+            name="google",
+            client_id=_google_client_id,
+            client_secret=_google_client_secret,
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
+        )
+        oauth_google = _oauth_registry.google
+except Exception as exc:  # pragma: no cover — degrade gracefully
+    print(f"[google-oauth] disabled: {exc}")
+    oauth_google = None
+
 templates = Jinja2Templates(directory="templates")
 BRAND_NAME_EN = "RehaEvidence"
 BRAND_NAME_JA = "リハエビデンス"
@@ -7465,6 +7494,7 @@ def login_page(
     campaign: str = Query(""),
     promo_code: str = Query(""),
     locked_email: str = Query(""),
+    error: str = Query(""),
 ):
     current_user = get_current_user(request)
 
@@ -7473,11 +7503,19 @@ def login_page(
 
     article_attribution = get_article_marketing_attribution(request)
 
+    google_error_messages = {
+        "google_unavailable": "現在Googleログインが利用できません。メールアドレスとパスワードでログインしてください。",
+        "google_failed": "Googleログインに失敗しました。もう一度お試しください。",
+        "google_missing_profile": "Googleアカウントの情報を取得できませんでした。",
+        "google_email_unverified": "Googleアカウントのメールアドレスが確認済みではないためログインできません。",
+    }
+    error_message = google_error_messages.get((error or "").strip(), "")
+
     return templates.TemplateResponse(
         "login.html",
         {
             "request": request,
-            "error": "",
+            "error": error_message,
             "from_page": from_page,
             "supporter_offer": get_supporter_offer_state(),
             "selected_campaign": get_campaign_display(campaign),
@@ -7612,6 +7650,96 @@ def login(
 @app.get("/logout")
 def logout(request: Request):
     request.session.clear()
+    return RedirectResponse(url="/", status_code=303)
+
+
+# ── Google OAuth routes ──────────────────────────────────────────────
+def _google_redirect_uri(request: Request) -> str:
+    """Prefer the env override (authoritative for Google's allow-list)."""
+    override = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
+    if override:
+        return override
+    return str(request.url_for("google_auth_callback"))
+
+
+@app.get("/auth/google/login", name="google_auth_login")
+async def google_auth_login(
+    request: Request,
+    from_page: str = Query(default="", alias="from"),
+):
+    if oauth_google is None:
+        return RedirectResponse(
+            url="/login?error=google_unavailable", status_code=303
+        )
+    # Remember where to send the user after successful callback.
+    request.session["post_google_from"] = (from_page or "").strip()[:64]
+    redirect_uri = _google_redirect_uri(request)
+    return await oauth_google.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/auth/google/callback", name="google_auth_callback")
+async def google_auth_callback(request: Request):
+    if oauth_google is None:
+        return RedirectResponse(
+            url="/login?error=google_unavailable", status_code=303
+        )
+
+    try:
+        token = await oauth_google.authorize_access_token(request)
+    except Exception as exc:
+        print(f"[google-oauth] token exchange failed: {exc}")
+        return RedirectResponse(url="/login?error=google_failed", status_code=303)
+
+    # userinfo: authlib parses the id_token for us when server_metadata_url is set.
+    userinfo = token.get("userinfo") or {}
+    if not userinfo:
+        try:
+            userinfo = await oauth_google.userinfo(token=token)
+        except Exception as exc:
+            print(f"[google-oauth] userinfo fetch failed: {exc}")
+            userinfo = {}
+
+    google_sub = str(userinfo.get("sub") or "").strip()
+    email = str(userinfo.get("email") or "").strip().lower()
+    email_verified = bool(userinfo.get("email_verified"))
+    display_name = str(userinfo.get("name") or "").strip()
+    picture = str(userinfo.get("picture") or "").strip()
+
+    if not google_sub or not email:
+        return RedirectResponse(url="/login?error=google_missing_profile", status_code=303)
+
+    if not email_verified:
+        return RedirectResponse(url="/login?error=google_email_unverified", status_code=303)
+
+    # 1) Previously linked Google account → sign in directly.
+    user = get_user_by_google_sub(google_sub)
+
+    # 2) Existing email/password account with same email → link and sign in.
+    if user is None:
+        existing = get_user_by_email(email)
+        if existing:
+            link_google_account(existing["id"], google_sub)
+            user = get_user_by_id(existing["id"])
+
+    # 3) Brand-new user.
+    if user is None:
+        user = create_user_from_google(
+            email=email,
+            google_sub=google_sub,
+            display_name=display_name,
+            avatar=picture,
+        )
+
+    if user is None:
+        return RedirectResponse(url="/login?error=google_failed", status_code=303)
+
+    request.session["user_id"] = user["id"]
+
+    from_page = (request.session.pop("post_google_from", "") or "").strip()
+    if from_page == "plans":
+        return RedirectResponse(url="/plans", status_code=303)
+    if from_page == "mypage":
+        return RedirectResponse(url="/mypage", status_code=303)
     return RedirectResponse(url="/", status_code=303)
 
 

@@ -276,6 +276,8 @@ def init_db():
         "ALTER TABLE users ADD COLUMN acquisition_article_draft_id INTEGER",
         "ALTER TABLE users ADD COLUMN acquisition_article_variant TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN acquisition_at TEXT DEFAULT ''",
+        # Google OAuth identity (nullable). Unique index is created separately below.
+        "ALTER TABLE users ADD COLUMN google_sub TEXT DEFAULT ''",
     ]:
         try:
             cur.execute(sql)
@@ -298,6 +300,8 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_paper_fulltext_pmcid ON paper_fulltext_cache(pmcid)",
         "CREATE INDEX IF NOT EXISTS idx_paper_comment_likes_comment ON paper_comment_likes(comment_id)",
         "CREATE INDEX IF NOT EXISTS idx_paper_comment_likes_user ON paper_comment_likes(user_id)",
+        # Google OAuth: unique index on non-empty google_sub (partial unique via filtered index)
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub) WHERE google_sub != ''",
     ]:
         cur.execute(sql)
     conn.commit()
@@ -1682,6 +1686,109 @@ def verify_user(email: str, password: str):
         return user
 
     return None
+
+
+# ── Google OAuth helpers ──────────────────────────────────────────────
+def get_user_by_google_sub(google_sub: str):
+    """Find a user previously linked to this Google account."""
+    sub = (google_sub or "").strip()
+    if not sub:
+        return None
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE google_sub = ?", (sub,))
+    row = cur.fetchone()
+    conn.close()
+
+    return dict(row) if row else None
+
+
+def link_google_account(user_id: int, google_sub: str) -> bool:
+    """Attach a Google sub to an existing user (idempotent)."""
+    sub = (google_sub or "").strip()
+    if not user_id or not sub:
+        return False
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "UPDATE users SET google_sub = ? WHERE id = ?",
+            (sub, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except sqlite3.IntegrityError:
+        # Another user already owns this sub — leave as-is.
+        return False
+    finally:
+        conn.close()
+
+
+def create_user_from_google(
+    email: str,
+    google_sub: str,
+    display_name: str = "",
+    avatar: str = "",
+):
+    """Create a brand-new account backed by Google sign-in.
+
+    Stores a random password_hash (password_hash NOT NULL in schema) so the
+    row remains valid; the user can set a real password later via a
+    password-reset style flow if they want email+password fallback.
+    """
+    email = (email or "").strip().lower()
+    sub = (google_sub or "").strip()
+    if not email or not sub:
+        return None
+
+    existing = get_user_by_email(email)
+    if existing:
+        # Same email already exists — just link and return.
+        link_google_account(existing["id"], sub)
+        return get_user_by_id(existing["id"])
+
+    salt = secrets.token_hex(16)
+    # Random unguessable password — blocks email/password login until user
+    # explicitly sets one via reset flow.
+    password_hash = hash_password(secrets.token_urlsafe(32), salt)
+    ref_code = generate_ref_code()
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO users (
+                email, password_hash, salt, plan,
+                trial_ends_at, plan_started_at, plan_renews_at, is_yearly,
+                usage_date, daily_usage_count, trial_used,
+                ref_code, ref_by, trial_extend_days,
+                display_name, bio, avatar, google_sub
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                email, password_hash, salt, "free",
+                "", "", "", 0,
+                "", 0, 0,
+                ref_code, None, 0,
+                (display_name or "").strip()[:80],
+                "",
+                (avatar or "").strip()[:512],
+                sub,
+            ),
+        )
+        conn.commit()
+        user_id = cur.lastrowid
+    except sqlite3.IntegrityError:
+        conn.close()
+        # Race: another request just linked this sub. Fall back to lookup.
+        return get_user_by_google_sub(sub) or get_user_by_email(email)
+    conn.close()
+
+    return get_user_by_id(user_id)
 
 
 # --------------------------
