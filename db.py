@@ -380,6 +380,16 @@ def init_db():
         except sqlite3.OperationalError:
             pass
 
+    # user_feedback: resolved フラグを後付けマイグレーション
+    for sql in [
+        "ALTER TABLE user_feedback ADD COLUMN resolved INTEGER DEFAULT 0",
+    ]:
+        try:
+            cur.execute(sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS supporter_campaign_claims (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -3527,6 +3537,80 @@ def create_user_feedback(user_id: int, category: str, message: str, page_context
             normalized_message,
             normalized_context,
         )
+    )
+    conn.commit()
+    new_id = cur.lastrowid
+    conn.close()
+    return new_id  # 呼び出し元でメール通知のIDに使用
+
+
+def list_user_feedback(only_unresolved: bool = False, limit: int = 200) -> list:
+    """マスター用: フィードバック一覧を新着順で返す。
+    only_unresolved=True のとき未解決のみを返す。
+    """
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    if only_unresolved:
+        cur.execute(
+            """
+            SELECT f.id, f.user_id, f.category, f.message, f.page_context,
+                   f.status, f.resolved, f.created_at,
+                   u.email AS user_email, u.name AS user_name
+              FROM user_feedback f
+              LEFT JOIN users u ON u.id = f.user_id
+             WHERE f.resolved = 0
+             ORDER BY f.created_at DESC
+             LIMIT ?
+            """,
+            (limit,),
+        )
+    else:
+        cur.execute(
+            """
+            SELECT f.id, f.user_id, f.category, f.message, f.page_context,
+                   f.status, f.resolved, f.created_at,
+                   u.email AS user_email, u.name AS user_name
+              FROM user_feedback f
+              LEFT JOIN users u ON u.id = f.user_id
+             ORDER BY f.created_at DESC
+             LIMIT ?
+            """,
+            (limit,),
+        )
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+
+def get_user_feedback_by_id(feedback_id: int):
+    """指定IDのフィードバック1件を返す（存在しなければ None）。"""
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT f.id, f.user_id, f.category, f.message, f.page_context,
+               f.status, f.resolved, f.created_at,
+               u.email AS user_email, u.name AS user_name
+          FROM user_feedback f
+          LEFT JOIN users u ON u.id = f.user_id
+         WHERE f.id = ?
+        """,
+        (feedback_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def mark_feedback_resolved(feedback_id: int, resolved: bool = True) -> None:
+    """フィードバックの解決済みフラグを切り替える。"""
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE user_feedback SET resolved = ? WHERE id = ?",
+        (1 if resolved else 0, feedback_id),
     )
     conn.commit()
     conn.close()

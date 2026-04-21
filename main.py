@@ -134,6 +134,9 @@ from db import (
     set_user_article_attribution,
     get_master_article_marketing_summary,
     create_user_feedback,
+    list_user_feedback,
+    get_user_feedback_by_id,
+    mark_feedback_resolved,
     upsert_paper_fulltext_cache,
     delete_user_account,
     seed_initial_promo_codes,
@@ -187,6 +190,61 @@ try:
 except Exception as exc:  # pragma: no cover — degrade gracefully
     print(f"[google-oauth] disabled: {exc}")
     oauth_google = None
+
+# ── Resend メール通知 ──────────────────────────────────────────────────
+def send_feedback_notification_email(
+    user_email: str,
+    user_name: str,
+    category: str,
+    message: str,
+    feedback_id: int,
+) -> None:
+    """フィードバック受信時にマスターメールへ通知する。
+    RESEND_API_KEY が未設定のときは静かにスキップ（本番以外でも安全）。
+    """
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    to_email = os.getenv("FEEDBACK_TO_EMAIL", "e.toshihide08@gmail.com").strip()
+    from_email = os.getenv("FEEDBACK_FROM_EMAIL", "noreply@reha-evidence.up.railway.app").strip()
+    if not api_key:
+        print(f"[feedback-mail] RESEND_API_KEY not set — skipping notification (feedback_id={feedback_id})")
+        return
+    try:
+        import resend as _resend
+        _resend.api_key = api_key
+        category_label = {
+            "general": "一般",
+            "bug": "不具合報告",
+            "feature": "機能要望",
+            "content": "コンテンツ",
+            "other": "その他",
+        }.get(category, category)
+        admin_url = f"{os.getenv('APP_BASE_URL', 'http://localhost:8000').rstrip('/')}/master/feedback"
+        html_body = f"""
+<p>RehaEvidence にフィードバックが届きました。</p>
+<table border="0" cellpadding="6" style="border-collapse:collapse;font-size:14px;">
+  <tr><td><b>ID</b></td><td>#{feedback_id}</td></tr>
+  <tr><td><b>送信者</b></td><td>{user_name or "(名前なし)"} &lt;{user_email}&gt;</td></tr>
+  <tr><td><b>カテゴリ</b></td><td>{category_label}</td></tr>
+  <tr><td><b>内容</b></td><td style="white-space:pre-wrap;">{message}</td></tr>
+</table>
+<p><a href="{admin_url}">▶ マスター管理画面で確認する</a></p>
+"""
+        params = {
+            "from": f"RehaEvidence <{from_email}>",
+            "to": [to_email],
+            "reply_to": user_email if user_email else None,
+            "subject": f"[RehaEvidence] フィードバック #{feedback_id}：{category_label}",
+            "html": html_body,
+        }
+        # reply_to が None のときはキーを消す（resend SDK が None を受け付けないため）
+        if not params["reply_to"]:
+            del params["reply_to"]
+        _resend.Emails.send(params)
+        print(f"[feedback-mail] sent to {to_email} (feedback_id={feedback_id})")
+    except Exception as exc:
+        # メール失敗はアプリ動作に影響させない
+        print(f"[feedback-mail] ERROR: {exc}")
+
 
 templates = Jinja2Templates(directory="templates")
 BRAND_NAME_EN = "RehaEvidence"
@@ -5275,6 +5333,48 @@ def master_promo_code_toggle(request: Request, code_id: int):
     )
 
 
+# ── /master/feedback ─────────────────────────────────────────────────
+@app.get("/master/feedback")
+def master_feedback_list(
+    request: Request,
+    filter: str = Query("all"),   # "all" | "unresolved"
+    notice: str = Query(""),
+):
+    user, redirect = require_master_user(request)
+    if redirect:
+        return redirect
+    only_unresolved = (filter == "unresolved")
+    feedbacks = list_user_feedback(only_unresolved=only_unresolved)
+    return templates.TemplateResponse(
+        "master_feedback.html",
+        {
+            "request": request,
+            "user": user,
+            "feedbacks": feedbacks,
+            "filter": filter,
+            "notice": notice,
+            "unresolved_count": sum(1 for f in feedbacks if not f.get("resolved")),
+        },
+    )
+
+
+@app.post("/master/feedback/{feedback_id}/resolve")
+def master_feedback_resolve(request: Request, feedback_id: int):
+    user, redirect = require_master_user(request)
+    if redirect:
+        return redirect
+    fb = get_user_feedback_by_id(feedback_id)
+    if not fb:
+        return RedirectResponse("/master/feedback?notice=not_found", status_code=303)
+    new_resolved = not bool(fb.get("resolved"))
+    mark_feedback_resolved(feedback_id, resolved=new_resolved)
+    label = "解決済みにしました" if new_resolved else "未解決に戻しました"
+    return RedirectResponse(
+        f"/master/feedback?notice={_urlparse.quote(label)}",
+        status_code=303,
+    )
+
+
 @app.post("/mypage/avatar")
 def mypage_avatar_update(
     request: Request,
@@ -5345,12 +5445,26 @@ def mypage_feedback_submit(
     if len(normalized_message) > 1200:
         return RedirectResponse("/mypage?feedback_error=too_long", status_code=303)
 
-    create_user_feedback(
+    normalized_category = (category or "general").strip() or "general"
+    new_feedback_id = create_user_feedback(
         user_id=current_user["id"],
-        category=(category or "general").strip() or "general",
+        category=normalized_category,
         message=normalized_message,
         page_context=(page_context or "mypage").strip() or "mypage",
     )
+    # マスターへメール通知（バックグラウンド／失敗してもリダイレクトは正常に行う）
+    import threading as _threading
+    _threading.Thread(
+        target=send_feedback_notification_email,
+        kwargs={
+            "user_email": current_user.get("email", ""),
+            "user_name": current_user.get("name", "") or current_user.get("email", ""),
+            "category": normalized_category,
+            "message": normalized_message,
+            "feedback_id": new_feedback_id or 0,
+        },
+        daemon=True,
+    ).start()
     return RedirectResponse("/mypage?feedback_notice=sent", status_code=303)
 
 
