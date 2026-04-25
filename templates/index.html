@@ -3718,6 +3718,8 @@
           form.querySelector('button[type="submit"]');
 
         if (submitButton) {
+          /* bfcache 復元時に元テキストに戻せるよう保存 */
+          submitButton.dataset.originalText = submitButton.textContent;
           submitButton.textContent = "検索中...";
           submitButton.disabled = true;
           submitButton.style.opacity = "0.7";

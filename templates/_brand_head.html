@@ -93,6 +93,26 @@
 
   /* popstate（ブラウザ戻る/進む）でも完了にする */
   window.addEventListener('popstate', done);
+
+  /* bfcache復元（ブラウザの戻るで古いページが丸ごと返ってくるケース）
+     - ローディングバーをリセット
+     - disabled になったままの submit ボタンを全て復元する */
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;          /* 通常ロードは無視 */
+    done();                            /* バーをリセット */
+    document.querySelectorAll(
+      'button[type="submit"][disabled], input[type="submit"][disabled]'
+    ).forEach(function (btn) {
+      btn.disabled        = false;
+      btn.style.opacity   = '';
+      btn.style.cursor    = '';
+      /* data-original-text が保存されていれば元のラベルに戻す */
+      if (btn.dataset.originalText) {
+        btn.textContent = btn.dataset.originalText;
+        delete btn.dataset.originalText;
+      }
+    });
+  });
 }());
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
