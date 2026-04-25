@@ -5910,6 +5910,23 @@ def search(request: Request, keyword: str = Query(...), page: int = Query(1), so
     papers_map = {str(p["pubmed_id"]): p for p in papers}
     papers = [papers_map[str(pmid)] for pmid in page_id_list if str(pmid) in papers_map]
     papers = rerank_search_papers(papers, keyword, converted_keyword)
+
+    # 要約あり優先フィルターが ON のとき、rerank で崩れた順番を再整列する。
+    # 全ユーザーの saved_papers から要約フラグを取得し、安定ソートで
+    # 「summary_jp あり → abstract あり → なし」の 3 段階に並べ直す。
+    # 各段階内では rerank スコアによる並びをそのまま維持する。
+    if filter_summary_bool:
+        _page_pmids = [str(p["pubmed_id"]) for p in papers]
+        _summary_flags = get_papers_summary_flags(_page_pmids)
+        def _post_summary_rank(p: dict) -> int:
+            f = _summary_flags.get(str(p["pubmed_id"])) or {}
+            if f.get("has_summary_jp"):
+                return 0
+            if f.get("has_abstract"):
+                return 1
+            return 2
+        papers.sort(key=_post_summary_rank)  # Python の sort は安定ソートなので rerank 順を維持
+
     papers = attach_fulltext_availability(papers)
 
     untranslated_items = [
