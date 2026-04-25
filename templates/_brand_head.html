@@ -1,6 +1,100 @@
 {# RehaEvidence ブランドタイポグラフィ。
    Fraunces は optical size を display に振り、wght=700 で重厚感を出す。
    色は指定せず親要素（H1 / sidebar-title / logo-name）から継承させる。 #}
+
+{# ─── ページ遷移ローディングバー ─────────────────────────────────────
+   リンククリック・フォーム送信時に上端を青い光が左→右へ流れる。
+   外部リンク・ハッシュ・mailto・target=_blank は対象外。
+   CDN 不要・JS 依存ゼロのカスタム実装。 #}
+<style>
+#rha-bar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0%;
+  height: 2.5px;
+  z-index: 99999;
+  pointer-events: none;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg,
+    #1d4ed8 0%,
+    #60a5fa 45%,
+    #93c5fd 55%,
+    #2563eb 100%
+  );
+  background-size: 250% 100%;
+  animation: rha-shimmer 1.4s ease-in-out infinite;
+  opacity: 0;
+  transition: width 0.18s ease-out, opacity 0.25s ease;
+  box-shadow: 0 0 8px rgba(96,165,250,0.7);
+}
+#rha-bar.rha-active {
+  opacity: 1;
+  width: 72%;
+}
+#rha-bar.rha-done {
+  width: 100% !important;
+  opacity: 0;
+  transition: width 0.15s ease-in, opacity 0.3s ease 0.12s;
+}
+@keyframes rha-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -50%  0; }
+}
+</style>
+<div id="rha-bar"></div>
+<script>
+(function () {
+  var bar = document.getElementById('rha-bar');
+  var tid;
+
+  function start() {
+    clearTimeout(tid);
+    bar.classList.remove('rha-done');
+    /* width をリセットするためリフロー強制 */
+    bar.style.width = '';
+    bar.style.transition = 'none';
+    void bar.offsetWidth;
+    bar.style.transition = '';
+    bar.classList.add('rha-active');
+  }
+
+  function done() {
+    bar.classList.remove('rha-active');
+    bar.classList.add('rha-done');
+    tid = setTimeout(function () {
+      bar.classList.remove('rha-done');
+      bar.style.width = '';
+    }, 500);
+  }
+
+  /* ページ読み込み完了で完了アニメーション */
+  document.addEventListener('DOMContentLoaded', done);
+
+  /* リンククリックで開始 */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (a.target === '_blank')       return;
+    if (href === '' || href === '#')  return;
+    if (/^#/.test(href))             return;
+    if (/^mailto:/i.test(href))      return;
+    if (/^javascript:/i.test(href))  return;
+    if (/^tel:/i.test(href))         return;
+    if (/^https?:/i.test(href) && a.hostname !== location.hostname) return;
+    start();
+  }, true);
+
+  /* フォーム送信で開始（data-no-progress 付きは除外） */
+  document.addEventListener('submit', function (e) {
+    if (e.target.dataset.noProgress !== undefined) return;
+    start();
+  }, true);
+
+  /* popstate（ブラウザ戻る/進む）でも完了にする */
+  window.addEventListener('popstate', done);
+}());
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
